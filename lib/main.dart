@@ -37,7 +37,7 @@ class KewpieCupApp extends StatelessWidget {
   }
 }
 
-class LandscapeWrapper extends StatelessWidget {
+class LandscapeWrapper extends StatefulWidget {
   const LandscapeWrapper({
     super.key,
     required this.child,
@@ -46,76 +46,115 @@ class LandscapeWrapper extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    return OrientationBuilder(
-      builder: (context, orientation) {
-        final size = MediaQuery.of(context).size;
-        final isPortrait = orientation == Orientation.portrait && size.width < size.height;
+  State<LandscapeWrapper> createState() => _LandscapeWrapperState();
+}
 
-        return Stack(
-          children: [
-            child,
-            if (isPortrait)
-              Positioned.fill(
-                child: Container(
-                  color: const Color(0xFF0D0D11),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.red.shade900.withValues(alpha: 0.85),
-                              border: Border.all(color: Colors.amberAccent, width: 2.5),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black87,
-                                  blurRadius: 15,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.screen_rotation,
-                              color: Colors.amberAccent,
-                              size: 52,
+class _LandscapeWrapperState extends State<LandscapeWrapper> {
+  bool _isDismissedManually = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLandscape = size.width > size.height;
+
+    // Reset manual dismissal if phone is turned landscape
+    if (isLandscape && _isDismissedManually) {
+      _isDismissedManually = false;
+    }
+
+    final showOverlay = !isLandscape && !_isDismissedManually;
+
+    return Stack(
+      children: [
+        widget.child,
+        if (showOverlay)
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xFF0D0D11),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.red.shade900.withValues(alpha: 0.85),
+                            border: Border.all(color: Colors.amberAccent, width: 2.5),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black87,
+                                blurRadius: 15,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.screen_rotation,
+                            color: Colors.amberAccent,
+                            size: 44,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          '画面を横向きにしてください',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.amberAccent,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'スマホを横向きに傾けると横画面で快適にプレイできます。\n'
+                          '※スマホの「画面縦向きロック」がオンの場合は解除してください。',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.normal,
+                            height: 1.4,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber.shade900,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            side: const BorderSide(color: Colors.amberAccent, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            '画面を横向きにしてください',
-                            textAlign: TextAlign.center,
+                          onPressed: () {
+                            setState(() {
+                              _isDismissedManually = true;
+                            });
+                          },
+                          icon: const Icon(Icons.play_arrow, size: 20),
+                          label: const Text(
+                            'このまま対戦を開始する',
                             style: TextStyle(
-                              color: Colors.amberAccent,
-                              fontSize: 20,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                              decoration: TextDecoration.none,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'スマホを横向きに傾けると対戦を開始できます',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal,
-                              decoration: TextDecoration.none,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+      ],
     );
   }
 }
