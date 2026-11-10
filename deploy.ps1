@@ -45,7 +45,11 @@ Write-Host "[GIT] Staging and committing files..." -ForegroundColor Cyan
 git add .
 git commit -m "Deploy $RepoName web release" 2>$null
 
-# 5. Deploy build\web to GitHub Pages via gh-pages
+# 5. Push source code to GitHub main branch
+Write-Host "[GIT] Pushing source code to GitHub main branch..." -ForegroundColor Cyan
+git push -u origin main 2>$null
+
+# 6. Deploy build\web to GitHub Pages via gh-pages
 Write-Host "[DEPLOY] Deploying build\web to GitHub Pages..." -ForegroundColor Green
 npx --yes gh-pages -d build/web
 

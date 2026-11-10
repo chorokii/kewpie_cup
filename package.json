@@ -1,0 +1,12 @@
+{
+  "name": "kewpie_cup",
+  "version": "1.0.0",
+  "description": "Kewpie Cup Kendo Game Web App",
+  "private": true,
+  "scripts": {
+    "deploy": "gh-pages -d build/web"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}
