@@ -1,0 +1,4741 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+android/
+  app/
+    src/
+      debug/
+        AndroidManifest.xml
+      main/
+        kotlin/
+          com/
+            example/
+              kewpie_cup/
+                MainActivity.kt
+        res/
+          drawable/
+            launch_background.xml
+          drawable-v21/
+            launch_background.xml
+          mipmap-hdpi/
+            ic_launcher.png
+          mipmap-mdpi/
+            ic_launcher.png
+          mipmap-xhdpi/
+            ic_launcher.png
+          mipmap-xxhdpi/
+            ic_launcher.png
+          mipmap-xxxhdpi/
+            ic_launcher.png
+          values/
+            styles.xml
+          values-night/
+            styles.xml
+        AndroidManifest.xml
+      profile/
+        AndroidManifest.xml
+    build.gradle.kts
+  gradle/
+    wrapper/
+      gradle-wrapper.properties
+  .gitignore
+  build.gradle.kts
+  gradle.properties
+  settings.gradle.kts
+assets/
+  images/
+    stage/
+      dojo_background.png_org
+lib/
+  game/
+    audio/
+      sound_manager.dart
+    components/
+      debug_grid.dart
+      dojo_stage.dart
+      kendo_fighter.dart
+    enums/
+      facing_direction.dart
+    kendo_game.dart
+  widgets/
+    fighting_hud.dart
+  main.dart
+test/
+  widget_test.dart
+web/
+  icons/
+    Icon-192.png
+    Icon-512.png
+    Icon-maskable-192.png
+    Icon-maskable-512.png
+  favicon.png
+  index.html
+  manifest.json
+windows/
+  flutter/
+    CMakeLists.txt
+    generated_plugin_registrant.cc
+    generated_plugin_registrant.h
+    generated_plugins.cmake
+  runner/
+    resources/
+      app_icon.ico
+    CMakeLists.txt
+    flutter_window.cpp
+    flutter_window.h
+    main.cpp
+    resource.h
+    runner.exe.manifest
+    Runner.rc
+    utils.cpp
+    utils.h
+    win32_window.cpp
+    win32_window.h
+  .gitignore
+  CMakeLists.txt
+.gitignore
+.metadata
+.repomixignore
+analysis_options.yaml
+CURRENT_CONTEXT.md
+pubspec.yaml
+README.md
+repomix.config.json
+REPORT.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="android/app/src/debug/AndroidManifest.xml">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The INTERNET permission is required for development. Specifically,
+         the Flutter tool needs it to communicate with the running application
+         to allow setting breakpoints, to provide hot reload, etc.
+    -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>
+</file>
+
+<file path="android/app/src/main/kotlin/com/example/kewpie_cup/MainActivity.kt">
+package com.example.kewpie_cup
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()
+</file>
+
+<file path="android/app/src/main/res/drawable/launch_background.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modify this file to customize your launch splash screen -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white" />
+
+    <!-- You can insert your own image assets here -->
+    <!-- <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/launch_image" />
+    </item> -->
+</layer-list>
+</file>
+
+<file path="android/app/src/main/res/drawable-v21/launch_background.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modify this file to customize your launch splash screen -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="?android:colorBackground" />
+
+    <!-- You can insert your own image assets here -->
+    <!-- <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/launch_image" />
+    </item> -->
+</layer-list>
+</file>
+
+<file path="android/app/src/main/res/values/styles.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <!-- Show a splash screen on the activity. Automatically removed when
+             the Flutter engine draws its first frame -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <!-- Theme applied to the Android Window as soon as the process has started.
+         This theme determines the color of the Android Window while your
+         Flutter UI initializes, as well as behind your Flutter UI while its
+         running.
+
+         This Theme is only used starting with V2 of Flutter's Android embedding. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>
+</file>
+
+<file path="android/app/src/main/res/values-night/styles.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is on -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <!-- Show a splash screen on the activity. Automatically removed when
+             the Flutter engine draws its first frame -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <!-- Theme applied to the Android Window as soon as the process has started.
+         This theme determines the color of the Android Window while your
+         Flutter UI initializes, as well as behind your Flutter UI while its
+         running.
+
+         This Theme is only used starting with V2 of Flutter's Android embedding. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>
+</file>
+
+<file path="android/app/src/main/AndroidManifest.xml">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:label="kewpie_cup"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>
+</file>
+
+<file path="android/app/src/profile/AndroidManifest.xml">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The INTERNET permission is required for development. Specifically,
+         the Flutter tool needs it to communicate with the running application
+         to allow setting breakpoints, to provide hot reload, etc.
+    -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>
+</file>
+
+<file path="android/app/build.gradle.kts">
+plugins {
+    id("com.android.application")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
+}
+
+android {
+    namespace = "com.example.kewpie_cup"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId = "com.example.kewpie_cup"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
+        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
+        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
+        // flag during build.
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
+flutter {
+    source = "../.."
+}
+</file>
+
+<file path="android/gradle/wrapper/gradle-wrapper.properties">
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-9.3.1-all.zip
+</file>
+
+<file path="android/.gitignore">
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/*.keystore
+**/*.jks
+</file>
+
+<file path="android/build.gradle.kts">
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+val newBuildDir: Directory =
+    rootProject.layout.buildDirectory
+        .dir("../../build")
+        .get()
+rootProject.layout.buildDirectory.value(newBuildDir)
+
+subprojects {
+    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
+    project.layout.buildDirectory.value(newSubprojectBuildDir)
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register<Delete>("clean") {
+    delete(rootProject.layout.buildDirectory)
+}
+</file>
+
+<file path="android/gradle.properties">
+org.gradle.jvmargs=-Xmx8G -XX:MaxMetaspaceSize=4G -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError
+android.useAndroidX=true
+# This newDsl flag was added by the Flutter template
+android.newDsl=false
+# This builtInKotlin flag was added by the Flutter template
+android.builtInKotlin=false
+</file>
+
+<file path="android/settings.gradle.kts">
+pluginManagement {
+    val flutterSdkPath =
+        run {
+            val properties = java.util.Properties()
+            file("local.properties").inputStream().use { properties.load(it) }
+            val flutterSdkPath = properties.getProperty("flutter.sdk")
+            require(flutterSdkPath != null) { "flutter.sdk not set in local.properties" }
+            flutterSdkPath
+        }
+
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id("dev.flutter.flutter-plugin-loader") version "1.0.0"
+    id("com.android.application") version "9.1.0" apply false
+    id("org.jetbrains.kotlin.android") version "2.4.0" apply false
+}
+
+include(":app")
+</file>
+
+<file path="lib/game/audio/sound_manager.dart">
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/widgets.dart';
+
+class SoundManager {
+  static bool isEnabled = true;
+
+  // 短いSE用の AudioPool（ガード音・ヒット音のみ）
+  static AudioPool? _guardPool;
+  static AudioPool? _hitPool;
+
+  static bool get _isBindingReady {
+    try {
+      return isEnabled;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> init() async {
+    if (!isEnabled || !_isBindingReady) return;
+    try {
+      // Android等の音声フォーカス喪失・連続再生時ミュートを防止
+      await AudioPlayer.global.setAudioContext(
+        AudioContext(
+          android: AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: false,
+            contentType: AndroidContentType.sonification,
+            usageType: AndroidUsageType.game,
+            audioFocus: AndroidAudioFocus.none,
+          ),
+        ),
+      );
+
+      // 短音用プールの初期化（ガード音・ヒット音のみ）
+      _guardPool = await AudioPool.create(
+        source: AssetSource('audio/sfx/guard.mp3'),
+        maxPlayers: 2,
+      );
+
+      _hitPool = await AudioPool.create(
+        source: AssetSource('audio/sfx/hit.mp3'),
+        maxPlayers: 2,
+      );
+    } catch (e, st) {
+      debugPrint('SoundManager init warning: $e\n$st');
+    }
+  }
+
+  /// チャージ音の再生（一時停止要請のため無効化）
+  static Future<void> playCharge() async {
+    // チャージ音の再生を停止し、ガード音・打撃音のみに限定
+    return;
+  }
+
+  /// チャージ音の即時停止（一時停止要請のため無効化）
+  static Future<void> stopCharge() async {
+    return;
+  }
+
+  /// 防御音（ガード成功時）
+  static Future<void> playGuard() async {
+    if (!isEnabled || !_isBindingReady) return;
+    try {
+      await _guardPool?.start();
+    } catch (e) {
+      debugPrint('SoundManager playGuard error: $e');
+    }
+  }
+
+  /// 打撃音（命中・一本時）
+  static Future<void> playHit() async {
+    if (!isEnabled || !_isBindingReady) return;
+    try {
+      await _hitPool?.start();
+    } catch (e) {
+      debugPrint('SoundManager playHit error: $e');
+    }
+  }
+
+  /// リソース解放
+  static void dispose() {
+    try {
+      _guardPool?.dispose();
+      _hitPool?.dispose();
+    } catch (e) {
+      debugPrint('SoundManager dispose error: $e');
+    }
+  }
+}
+</file>
+
+<file path="lib/game/components/debug_grid.dart">
+import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
+
+class DebugGrid extends PositionComponent {
+  DebugGrid() {
+    priority = 100; // 最前面に表示
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    // ==========================================
+    // ペイント設定
+    // ==========================================
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.25)
+      ..strokeWidth = 1.0;
+
+    final centerLinePaint = Paint()
+      ..color = Colors.redAccent.withValues(alpha: 0.8)
+      ..strokeWidth = 2.0;
+
+    final boundaryPaint = Paint()
+      ..color = Colors.greenAccent.withValues(alpha: 0.8)
+      ..strokeWidth = 2.0;
+
+    final stageLimitPaint = Paint()
+      ..color = Colors.amberAccent.withValues(alpha: 0.7)
+      ..strokeWidth = 1.5;
+
+    // ==========================================
+    // 1. 横方向（Y軸）水平ガイドライン描画
+    // ==========================================
+    for (double y = -350; y <= 350; y += 50) {
+      if (y == 0) {
+        canvas.drawLine(const Offset(-640, 0), const Offset(640, 0), centerLinePaint);
+        _drawLabel(canvas, 'Y = 0 (Center)', const Offset(-620, -16), Colors.redAccent);
+      } else {
+        canvas.drawLine(Offset(-640, y), Offset(640, y), linePaint);
+        _drawLabel(canvas, 'Y = ${y.toInt()}', Offset(-620, y - 12), Colors.white70);
+      }
+    }
+
+    // 上端・下端境界線
+    canvas.drawLine(const Offset(-640, -360), const Offset(640, -360), boundaryPaint);
+    _drawLabel(canvas, 'Y = -360 (Top)', const Offset(-600, -350), Colors.greenAccent);
+
+    canvas.drawLine(const Offset(-640, 360), const Offset(640, 360), boundaryPaint);
+    _drawLabel(canvas, 'Y = +360 (Bottom)', const Offset(-600, 340), Colors.greenAccent);
+
+    // ==========================================
+    // 2. 縦方向（X軸）垂直ガイドライン描画
+    // ==========================================
+    // 100px 刻みで描画（-600 から +600）
+    for (double x = -600; x <= 600; x += 100) {
+      if (x == 0) {
+        // 中央垂直線
+        canvas.drawLine(const Offset(0, -360), const Offset(0, 360), centerLinePaint);
+        _drawLabel(canvas, 'X = 0', const Offset(-20, -340), Colors.redAccent);
+      } else {
+        canvas.drawLine(Offset(x, -360), Offset(x, 360), linePaint);
+        _drawLabel(canvas, '${x.toInt()}', Offset(x - 18, -340), Colors.white70);
+      }
+    }
+
+    // ステージ壁境界線（X = ±520）
+    canvas.drawLine(const Offset(-520, -360), const Offset(-520, 360), stageLimitPaint);
+    _drawLabel(canvas, 'Stage Min (-520)', const Offset(-515, -310), Colors.amberAccent);
+
+    canvas.drawLine(const Offset(520, -360), const Offset(520, 360), stageLimitPaint);
+    _drawLabel(canvas, 'Stage Max (+520)', const Offset(410, -310), Colors.amberAccent);
+
+    // 画面左右端境界線（X = ±640）
+    canvas.drawLine(const Offset(-640, -360), const Offset(-640, 360), boundaryPaint);
+    _drawLabel(canvas, 'X = -640 (Left)', const Offset(-635, -280), Colors.greenAccent);
+
+    canvas.drawLine(const Offset(640, -360), const Offset(640, 360), boundaryPaint);
+    _drawLabel(canvas, 'X = +640 (Right)', const Offset(530, -280), Colors.greenAccent);
+  }
+
+  void _drawLabel(Canvas canvas, String text, Offset offset, Color color) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          backgroundColor: Colors.black87,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    painter.paint(canvas, offset);
+  }
+}
+</file>
+
+<file path="lib/game/components/dojo_stage.dart">
+import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
+
+class DojoStage extends PositionComponent {
+  DojoStage({
+    required this.stageWidth,
+    required this.groundY,
+  }) {
+    size = Vector2(stageWidth, 720);
+    anchor = Anchor.center;
+    position = Vector2(0, 0);
+    priority = -10; // Lowest layer (background)
+  }
+
+  final double stageWidth;
+  final double groundY;
+
+  Sprite? _bgSprite;
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    try {
+      final sprite = await Sprite.load('stage/dojo_background.png');
+      // Use background sprite if valid full-size image (>10px), otherwise fallback to procedural Canvas dojo
+      if (sprite.image.width > 10 && sprite.image.height > 10) {
+        _bgSprite = sprite;
+      } else {
+        _bgSprite = null;
+      }
+    } catch (_) {
+      // Fallback to procedural Canvas drawing if asset fails or is missing
+      _bgSprite = null;
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    if (_bgSprite != null) {
+      _bgSprite!.render(canvas, size: size);
+    } else {
+      _renderFallback(canvas);
+    }
+  }
+
+  void _renderFallback(Canvas canvas) {
+    // Local coordinate space for 1280x720 with Anchor.center: X: [-640, 640], Y: [-360, 360]
+    final rect = Rect.fromLTWH(-size.x / 2, -size.y / 2, size.x, size.y);
+
+    // 1. Dojo Background Wall (Local Y = -360 to +180)
+    final wallPaint = Paint()..color = const Color(0xFF3E2723);
+    canvas.drawRect(Rect.fromLTWH(-size.x / 2, -size.y / 2, size.x, 540), wallPaint);
+
+    // Wall panel lines
+    final linePaint = Paint()
+      ..color = const Color(0xFF271510)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    for (double x = -size.x / 2; x < size.x / 2; x += 80) {
+      canvas.drawLine(Offset(x, -size.y / 2), Offset(x, 180), linePaint);
+    }
+
+    // Shoji Screen windows (upper wall)
+    final shojiFramePaint = Paint()..color = const Color(0xFF5D4037);
+    final shojiPaperPaint = Paint()..color = const Color(0xFFFFF8E1);
+
+    for (double x = -size.x / 2 + 40; x < size.x / 2 - 120; x += 180) {
+      final shojiRect = Rect.fromLTWH(x, -260, 120, 100);
+      canvas.drawRect(shojiRect, shojiPaperPaint);
+      canvas.drawRect(shojiRect, shojiFramePaint..style = PaintingStyle.stroke..strokeWidth = 4);
+
+      // Grid lines inside Shoji
+      canvas.drawLine(Offset(x + 60, -260), Offset(x + 60, -160), shojiFramePaint..strokeWidth = 2);
+      canvas.drawLine(Offset(x, -210), Offset(x + 120, -210), shojiFramePaint..strokeWidth = 2);
+    }
+
+    // Calligraphy Banner (掛軸: "正々堂々")
+    final scrollRect = Rect.fromLTWH(-60, -280, 120, 180);
+    canvas.drawRect(scrollRect, Paint()..color = const Color(0xFFFFFDD0));
+    canvas.drawRect(
+      scrollRect,
+      Paint()
+        ..color = const Color(0xFF8B0000)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4,
+    );
+
+    // Banner Text Style
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: '正\n々\n堂\n堂',
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          height: 1.1,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout();
+
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width / 2, -265),
+    );
+
+    // 2. Baseboard / Wall-Floor Boundary (Local Y = +180)
+    final baseboardPaint = Paint()..color = const Color(0xFF271510);
+    canvas.drawRect(Rect.fromLTWH(-size.x / 2, 172, size.x, 8), baseboardPaint);
+
+    final baseboardLinePaint = Paint()
+      ..color = const Color(0xFF1B0000)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+    canvas.drawLine(Offset(-size.x / 2, 180), Offset(size.x / 2, 180), baseboardLinePaint);
+
+    // 3. Dojo Floor (Local Y = +180 to +360)
+    final floorRect = Rect.fromLTWH(-size.x / 2, 180, size.x, 180);
+    final floorPaint = Paint()..color = const Color(0xFF8D6E63);
+    canvas.drawRect(floorRect, floorPaint);
+
+    // Floor board planks
+    final plankPaint = Paint()
+      ..color = const Color(0xFF5D4037)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    for (double y = 180; y <= size.y / 2; y += 25) {
+      canvas.drawLine(Offset(-size.x / 2, y), Offset(size.x / 2, y), plankPaint);
+    }
+
+    // Center Match Mark (床面中央標: 「｜   ×   ｜」 Local Y = 240, matching fighterGroundY)
+    final centerMarkPainter = TextPainter(
+      text: const TextSpan(
+        text: '｜   ×   ｜',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 6,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout();
+
+    centerMarkPainter.paint(
+      canvas,
+      Offset(-centerMarkPainter.width / 2, 215),
+    );
+
+    // Stage outer walls
+    final wallBorderPaint = Paint()
+      ..color = const Color(0xFF1B0000)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 12.0;
+    canvas.drawRect(rect, wallBorderPaint);
+  }
+}
+</file>
+
+<file path="lib/game/components/kendo_fighter.dart">
+import 'dart:math' as math;
+
+import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
+
+import '../enums/facing_direction.dart';
+
+class KendoFighter extends PositionComponent {
+  KendoFighter({
+    required this.name,
+    required this.isPlayer,
+    required double startX,
+    required double groundY,
+    required this.keikogiColor,
+    required this.ribbonColor,
+    this.hakamaColor = const Color(0xFF1A237E),
+    this.doBandColor = const Color(0xFFD32F2F),
+  }) {
+    // 描画基準点(0, 0)が足元であるため、アンカーを Anchor.topCenter に設定
+    // これにより position が直接足元のワールド座標と一致します
+    size = Vector2(60, 100);
+    anchor = Anchor.topCenter;
+    position = Vector2(startX, groundY);
+    scale = Vector2.all(3.0); // 3倍拡大
+    facingDirection = startX < 0 ? FacingDirection.right : FacingDirection.left;
+    priority = 10; // Foreground layer (in front of background stage)
+  }
+
+  final String name;
+  final bool isPlayer;
+  final Color keikogiColor;
+  final Color ribbonColor;
+  final Color hakamaColor;
+  final Color doBandColor;
+
+  FacingDirection facingDirection = FacingDirection.right;
+
+  double velocityX = 0.0;
+  bool isMoving = false;
+  double walkAnimationTimer = 0.0;
+
+  final double walkSpeed = 160.0;
+  final double guardSpeedMultiplier = 0.3;
+
+  // Combat stats
+  double health = 100.0;
+  final double maxHealth = 100.0;
+  int winCount = 0;
+
+  // Action states
+  bool isGuarding = false;
+  static const double guardActiveDuration = 0.4; // 防御アクティブウィンドウ持続時間（0.4秒）
+  static const double guardCooldownDuration = 0.2; // 防御クールダウン時間（0.2秒）
+  double guardTimer = 0.0;
+  double guardCooldownTimer = 0.0;
+
+  bool isAttacking = false;
+  double attackTimer = 0.0;
+  static const double attackDuration = 0.45;
+  bool hasDealtDamageThisAttack = false;
+
+  // CPU 3-Tier Attack Windup Flash Durations (短: 0.3s / 中: 0.5s / 長: 0.8s) & Fixed Hold Duration (0.5s)
+  static const List<double> cpuBlinkDurations = [0.3, 0.5, 0.8];
+  static const double postBlinkHoldDuration = 0.5; // 点滅終了後の固定タメ時間（0.5秒）
+  double currentBlinkDuration = 0.5; // デフォルト中（0.5s）
+
+  // CPU Vulnerable Window / Guard-Break Timer (1.5s 反撃チャンス)
+  double cpuVulnerableTimer = 0.0;
+
+  // Tsubazeriai & Disengage
+  bool isTsubazeriai = false;
+  bool isDisengaging = false;
+  double disengageTimer = 0.0;
+  static const double disengageDuration = 0.25;
+  static const double disengageSpeed = 320.0;
+
+  // Pass-Through (すれ違い・駆け抜け) & Turnaround (振り返り)
+  bool isPassingThrough = false;
+  double passThroughTargetX = 0.0;
+  bool isTurningAround = false;
+  double turnaroundTimer = 0.0;
+  static const double turnaroundDuration = 0.28;
+
+  double hitStunTimer = 0.0;
+
+  void move(double directionInput) {
+    if (isDisengaging || isAttacking || isPassingThrough || isTurningAround) return;
+
+    // If in Tsubazeriai and moving backward, trigger disengage backstep
+    final forwardDir = facingDirection == FacingDirection.right ? 1.0 : -1.0;
+    final isMovingBackward = (directionInput * forwardDir) < 0;
+
+    if (isTsubazeriai && isMovingBackward) {
+      disengage();
+      return;
+    }
+
+    final speed = isGuarding ? (walkSpeed * guardSpeedMultiplier) : walkSpeed;
+    velocityX = directionInput * speed;
+  }
+
+  void stop() {
+    if (!isDisengaging && !isAttacking && !isPassingThrough && !isTurningAround) {
+      velocityX = 0.0;
+    }
+  }
+
+  void startGuard() {
+    if (isGuarding || guardCooldownTimer > 0 || isAttacking || isDisengaging || isPassingThrough || isTurningAround || hitStunTimer > 0) {
+      return;
+    }
+
+    isGuarding = true;
+    guardTimer = guardActiveDuration;
+    if (velocityX != 0.0) {
+      final dir = velocityX > 0 ? 1.0 : -1.0;
+      velocityX = dir * walkSpeed * guardSpeedMultiplier;
+    }
+  }
+
+  void stopGuard() {
+    if (isGuarding) {
+      isGuarding = false;
+      guardTimer = 0.0;
+      guardCooldownTimer = guardCooldownDuration;
+    }
+  }
+
+  void attack({double? blinkDuration}) {
+    if (isAttacking || hitStunTimer > 0 || isDisengaging || isPassingThrough || isTurningAround) return;
+
+    if (isTsubazeriai) {
+      disengage();
+      return;
+    }
+
+    if (!isPlayer && blinkDuration != null) {
+      currentBlinkDuration = blinkDuration;
+    }
+
+    isAttacking = true;
+    attackTimer = 0.0;
+    hasDealtDamageThisAttack = false;
+    isGuarding = false;
+    guardTimer = 0.0;
+  }
+
+  void disengage() {
+    if (isDisengaging || hitStunTimer > 0 || isPassingThrough) return;
+    isDisengaging = true;
+    isTsubazeriai = false;
+    isGuarding = false;
+    guardTimer = 0.0;
+    isAttacking = false;
+    disengageTimer = 0.0;
+
+    final backwardDir = facingDirection == FacingDirection.right ? -1.0 : 1.0;
+    velocityX = backwardDir * disengageSpeed;
+  }
+
+  void startPassThrough({required double targetX}) {
+    isPassingThrough = true;
+    passThroughTargetX = targetX;
+    isTsubazeriai = false;
+    isDisengaging = false;
+    isGuarding = false;
+    guardTimer = 0.0;
+  }
+
+  void startTurnaround({required FacingDirection newFacing}) {
+    isPassingThrough = false;
+    isTurningAround = true;
+    turnaroundTimer = 0.0;
+    facingDirection = newFacing;
+    velocityX = 0.0;
+    isMoving = false;
+    isTsubazeriai = false;
+    isGuarding = false;
+    guardTimer = 0.0;
+    isAttacking = false;
+    attackTimer = 0.0;
+  }
+
+  void takeDamage(double amount) {
+    health = (health - amount).clamp(0.0, maxHealth);
+    hitStunTimer = 0.2;
+    isTsubazeriai = false;
+    isAttacking = false;
+    isDisengaging = false;
+    isPassingThrough = false;
+    isTurningAround = false;
+    isGuarding = false;
+    guardTimer = 0.0;
+    cpuVulnerableTimer = 0.0;
+  }
+
+  void resetRound({required double startX}) {
+    health = maxHealth;
+    position.x = startX;
+    velocityX = 0.0;
+    isMoving = false;
+    isGuarding = false;
+    guardTimer = 0.0;
+    guardCooldownTimer = 0.0;
+    isAttacking = false;
+    isTsubazeriai = false;
+    isDisengaging = false;
+    isPassingThrough = false;
+    isTurningAround = false;
+    attackTimer = 0.0;
+    hasDealtDamageThisAttack = false;
+    hitStunTimer = 0.0;
+    cpuVulnerableTimer = 0.0;
+    currentBlinkDuration = 0.5;
+  }
+
+  void resetMatch({required double startX}) {
+    winCount = 0;
+    resetRound(startX: startX);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    if (hitStunTimer > 0) {
+      hitStunTimer -= dt;
+      if (hitStunTimer < 0) hitStunTimer = 0;
+    }
+
+    if (cpuVulnerableTimer > 0) {
+      cpuVulnerableTimer -= dt;
+      if (cpuVulnerableTimer < 0) cpuVulnerableTimer = 0;
+    }
+
+    // Handle Guard Active Duration and Cooldown Timers
+    if (isGuarding) {
+      guardTimer -= dt;
+      if (guardTimer <= 0.0) {
+        isGuarding = false;
+        guardTimer = 0.0;
+        guardCooldownTimer = guardCooldownDuration;
+      }
+    } else if (guardCooldownTimer > 0) {
+      guardCooldownTimer -= dt;
+      if (guardCooldownTimer < 0.0) {
+        guardCooldownTimer = 0.0;
+      }
+    }
+
+    // Handle Turnaround (振り返り・振りかぶり)
+    if (isTurningAround) {
+      turnaroundTimer += dt;
+      velocityX = 0.0;
+      if (turnaroundTimer >= turnaroundDuration) {
+        isTurningAround = false;
+        turnaroundTimer = 0.0;
+      }
+    }
+
+    // Handle Pass-Through Run
+    if (isPassingThrough) {
+      final forwardDir = facingDirection == FacingDirection.right ? 1.0 : -1.0;
+      velocityX = forwardDir * 280.0;
+
+      final reachedTarget = facingDirection == FacingDirection.right
+          ? position.x >= passThroughTargetX
+          : position.x <= passThroughTargetX;
+
+      if (reachedTarget) {
+        velocityX = 0.0;
+      }
+    }
+
+    // Handle Disengage Backstep
+    if (isDisengaging) {
+      disengageTimer += dt;
+      final backwardDir = facingDirection == FacingDirection.right ? -1.0 : 1.0;
+      velocityX = backwardDir * disengageSpeed;
+
+      if (disengageTimer >= disengageDuration) {
+        isDisengaging = false;
+        disengageTimer = 0.0;
+        velocityX = 0.0;
+      }
+    }
+
+    // Handle Attack Logic: Player (0.45s 2-phase lunge) vs CPU (currentBlinkDuration + 0.5s hold + 0.3s Men strike)
+    if (isAttacking && !isPassingThrough) {
+      attackTimer += dt;
+      final forwardDir = facingDirection == FacingDirection.right ? 1.0 : -1.0;
+
+      if (isPlayer) {
+        if (attackTimer < 0.18) {
+          velocityX = forwardDir * 200.0;
+        } else if (attackTimer < 0.38) {
+          velocityX = forwardDir * 260.0;
+        } else if (attackTimer < attackDuration) {
+          velocityX = 0.0;
+        } else {
+          isAttacking = false;
+          attackTimer = 0.0;
+          velocityX = 0.0;
+        }
+      } else {
+        // CPU Attack: Phase 1 Windup (0.0s to totalWindup), Phase 2 Men Strike (totalWindup to totalWindup + 0.3s)
+        final totalWindup = currentBlinkDuration + postBlinkHoldDuration;
+        if (attackTimer < totalWindup) {
+          velocityX = 0.0;
+        } else if (attackTimer < totalWindup + 0.30) {
+          velocityX = forwardDir * 260.0;
+        } else {
+          isAttacking = false;
+          attackTimer = 0.0;
+          velocityX = 0.0;
+        }
+      }
+    }
+
+    if (velocityX != 0.0) {
+      isMoving = true;
+      walkAnimationTimer += dt * 8.0;
+      position.x += velocityX * dt;
+    } else {
+      isMoving = false;
+      walkAnimationTimer = 0.0;
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    canvas.save();
+
+    if (facingDirection == FacingDirection.left) {
+      canvas.scale(-1.0, 1.0);
+    }
+
+    _drawKendoFighter(canvas);
+
+    canvas.restore();
+  }
+
+  void _drawKendoFighter(Canvas canvas) {
+    // Stepping bounce: feet step upward (-2px max) during sliding walk, planted at Y = 0
+    final stepBounce = isMoving ? -(math.sin(walkAnimationTimer).abs() * 2.0) : 0.0;
+
+    double shinaiAngle = 0.0;
+    if (isTurningAround) {
+      if (turnaroundTimer < 0.16) {
+        shinaiAngle = -1.2;
+      } else {
+        final progress = ((turnaroundTimer - 0.16) / (turnaroundDuration - 0.16)).clamp(0.0, 1.0);
+        shinaiAngle = -1.2 * (1.0 - progress);
+      }
+    } else if (isTsubazeriai) {
+      shinaiAngle = -0.65 + (math.sin(walkAnimationTimer * 12.0) * 0.03);
+    } else if (isGuarding) {
+      shinaiAngle = -0.85;
+    } else if (isAttacking) {
+      if (isPlayer) {
+        if (attackTimer < 0.18) {
+          final p1 = (attackTimer / 0.18).clamp(0.0, 1.0);
+          shinaiAngle = -1.3 * p1;
+        } else if (attackTimer < 0.38) {
+          final p2 = ((attackTimer - 0.18) / 0.20).clamp(0.0, 1.0);
+          shinaiAngle = -1.3 + (1.9 * p2);
+        } else {
+          shinaiAngle = 0.6;
+        }
+      } else {
+        // CPU Attack Posture: Phase 1 Windup (High) -> Phase 2 Men Strike (Down)
+        final totalWindup = currentBlinkDuration + postBlinkHoldDuration;
+        if (attackTimer < totalWindup) {
+          shinaiAngle = -1.3;
+        } else {
+          shinaiAngle = 0.6;
+        }
+      }
+    } else if (isMoving) {
+      shinaiAngle = math.sin(walkAnimationTimer * 0.8) * 0.05;
+    }
+
+    // Shadow (Flat oval centered at Y = 0 on ground surface)
+    final shadowPaint = Paint()
+      ..color = const Color(0x66000000)
+      ..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: const Offset(0, 0),
+        width: 44,
+        height: 8,
+      ),
+      shadowPaint,
+    );
+
+    // Tsubazeriai visual spark / badge
+    if (isTsubazeriai) {
+      final tsubaSparkPaint = Paint()
+        ..color = const Color(0xFFFFD54F)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+      canvas.drawCircle(Offset(22, -60 + stepBounce), 12, tsubaSparkPaint);
+
+      final textPainter = TextPainter(
+        text: const TextSpan(
+          text: '鍔迫り合い',
+          style: TextStyle(
+            color: Colors.amberAccent,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            shadows: [Shadow(color: Colors.black, blurRadius: 3)],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(canvas, Offset(-textPainter.width / 2, -112 + stepBounce));
+    }
+
+    // Guard Aura
+    if (isGuarding) {
+      final guardArcPaint = Paint()
+        ..color = const Color(0xAA64B5F6)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset(12, -50 + stepBounce), radius: 30),
+        -math.pi / 3,
+        2 * math.pi / 3,
+        false,
+        guardArcPaint,
+      );
+    }
+
+    // Attack Effects (Player vs CPU 2-phase attack)
+    if (isAttacking) {
+      if (isPlayer) {
+        if (attackTimer >= 0.18 && attackTimer <= 0.36) {
+          final slashPaint = Paint()
+            ..color = const Color(0xDDFFD54F)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4.0;
+          canvas.drawArc(
+            Rect.fromCircle(center: Offset(30, -50 + stepBounce), radius: 38),
+            -math.pi / 4,
+            math.pi / 2,
+            false,
+            slashPaint,
+          );
+        }
+      } else {
+        // CPU 2-phase attack effects
+        final totalWindup = currentBlinkDuration + postBlinkHoldDuration;
+        if (attackTimer < totalWindup) {
+          // Phase 1-A: Rapid Flashing White Windup (0.0s <= attackTimer < currentBlinkDuration)
+          // Phase 1-B: Flash stops (currentBlinkDuration <= attackTimer < totalWindup) for 0.5s hold time
+          if (attackTimer < currentBlinkDuration) {
+            final isFlashVisible = (attackTimer * 20).floor() % 2 == 0;
+            if (isFlashVisible) {
+              final windupPaint = Paint()
+                ..color = Colors.white.withValues(alpha: 0.85)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 4.0;
+              canvas.drawArc(
+                Rect.fromCircle(center: Offset(10, -70 + stepBounce), radius: 34),
+                -math.pi * 0.8,
+                math.pi * 0.6,
+                false,
+                windupPaint,
+              );
+              canvas.drawCircle(
+                Offset(14, -85 + stepBounce),
+                10,
+                Paint()..color = Colors.white.withValues(alpha: 0.6),
+              );
+            }
+          }
+        } else {
+          // Phase 2: Men Strike (Red Effect / 面打ち)
+          final strikePaint = Paint()
+            ..color = const Color(0xFFFF1744)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 5.0;
+          canvas.drawArc(
+            Rect.fromCircle(center: Offset(30, -50 + stepBounce), radius: 40),
+            -math.pi / 4,
+            math.pi / 2,
+            false,
+            strikePaint,
+          );
+        }
+      }
+    }
+
+    // Staggered / Vulnerable Window Badge (反撃チャンス) for CPU
+    if (!isPlayer && cpuVulnerableTimer > 0) {
+      final vulnCirclePaint = Paint()
+        ..color = const Color(0xAAFFD54F)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0;
+      canvas.drawCircle(Offset(0, -60 + stepBounce), 36, vulnCirclePaint);
+
+      final textPainter = TextPainter(
+        text: const TextSpan(
+          text: '体勢崩れ！',
+          style: TextStyle(
+            color: Colors.amberAccent,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(canvas, Offset(-textPainter.width / 2, -114 + stepBounce));
+    }
+
+    // Hit Stun
+    if (hitStunTimer > 0) {
+      final hitFlashPaint = Paint()
+        ..color = const Color(0x66FF1744)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(0, -60 + stepBounce), 36, hitFlashPaint);
+    }
+
+    // 1. Hakama (1P: Navy, 2P: Black)
+    final hakamaPaint = Paint()..color = hakamaColor;
+    final hakamaPath = Path()
+      ..moveTo(-18, -10 + stepBounce)
+      ..lineTo(18, -10 + stepBounce)
+      ..lineTo(22, -45 + stepBounce)
+      ..lineTo(-22, -45 + stepBounce)
+      ..close();
+    canvas.drawPath(hakamaPath, hakamaPaint);
+
+    // Bare feet / Tabi (Bottom edge reaches Y = 0 when stepBounce = 0)
+    final footPaint = Paint()..color = const Color(0xFFFAFAFA);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-16, -10 + stepBounce, 12, 10),
+        const Radius.circular(3),
+      ),
+      footPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(4, -10 + stepBounce, 12, 10),
+        const Radius.circular(3),
+      ),
+      footPaint,
+    );
+
+    // 2. Tare
+    final tarePaint = Paint()..color = const Color(0xFF212121);
+    final tareOutline = Paint()
+      ..color = const Color(0xFF757575)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final tareRect = Rect.fromLTWH(-16, -50 + stepBounce, 32, 22);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(tareRect, const Radius.circular(2)),
+      tarePaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(tareRect, const Radius.circular(2)),
+      tareOutline,
+    );
+
+    // Name tag
+    final zekkenRect = Rect.fromLTWH(-6, -46 + stepBounce, 12, 14);
+    canvas.drawRect(zekkenRect, Paint()..color = const Color(0xFFFFFFFF));
+    canvas.drawRect(
+      zekkenRect,
+      Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+
+    // 3. Keikogi & Do
+    final giPaint = Paint()..color = keikogiColor;
+    canvas.drawRect(
+      Rect.fromLTWH(-18, -75 + stepBounce, 36, 28),
+      giPaint,
+    );
+
+    // Do (Lacquered Chest Armor & Accent Band - 1P: Red, 2P: White)
+    final doPaint = Paint()..color = const Color(0xFF111111);
+    final doHighlight = Paint()..color = doBandColor;
+    final doRect = Rect.fromLTWH(-15, -70 + stepBounce, 30, 22);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(doRect, const Radius.circular(4)),
+      doPaint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(-15, -62 + stepBounce, 30, 4),
+      doHighlight,
+    );
+
+    // 4. Men
+    final menBackPaint = Paint()..color = const Color(0xFF1A1A1A);
+    final menHeadRect = Rect.fromCenter(
+      center: Offset(0, -82 + stepBounce),
+      width: 24,
+      height: 26,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(menHeadRect, const Radius.circular(6)),
+      menBackPaint,
+    );
+
+    // Mengane Grill
+    final grillPaint = Paint()
+      ..color = const Color(0xFFB0BEC5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    for (double y = -90; y <= -78; y += 3) {
+      canvas.drawLine(
+        Offset(2, y + stepBounce),
+        Offset(12, y + stepBounce),
+        grillPaint,
+      );
+    }
+
+    // Ribbon
+    final ribbonPaint = Paint()..color = ribbonColor;
+    canvas.drawRect(
+      Rect.fromLTWH(-12, -94 + stepBounce, 8, 4),
+      ribbonPaint,
+    );
+
+    // 5. Shinai
+    canvas.save();
+    canvas.translate(8, -60 + stepBounce);
+    canvas.rotate(shinaiAngle);
+
+    // Hands
+    final kotePaint = Paint()..color = const Color(0xFF37474F);
+    canvas.drawCircle(const Offset(0, 0), 6, kotePaint);
+    canvas.drawCircle(const Offset(10, -2), 5, kotePaint);
+
+    // Tsuba
+    final tsubaPaint = Paint()..color = const Color(0xFF424242);
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(14, -3), width: 4, height: 12),
+      tsubaPaint,
+    );
+
+    // Bamboo Blade
+    final shinaiPaint = Paint()..color = const Color(0xFFFFE082);
+    final shinaiTipPaint = Paint()..color = const Color(0xFFFAFAFA);
+
+    final shinaiPath = Path()
+      ..moveTo(16, -5)
+      ..lineTo(65, -15)
+      ..lineTo(65, -12)
+      ..lineTo(16, -2)
+      ..close();
+    canvas.drawPath(shinaiPath, shinaiPaint);
+
+    // Shinai Tip
+    canvas.drawRect(
+      Rect.fromLTWH(62, -16, 5, 5),
+      shinaiTipPaint,
+    );
+
+    canvas.restore();
+  }
+}
+</file>
+
+<file path="lib/game/enums/facing_direction.dart">
+enum FacingDirection {
+  left,
+  right;
+
+  double get scaleX => this == FacingDirection.right ? 1.0 : -1.0;
+}
+</file>
+
+<file path="lib/game/kendo_game.dart">
+import 'dart:math' as math;
+
+import 'package:flame/camera.dart';
+import 'package:flame/events.dart';
+import 'package:flame/game.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+
+import 'audio/sound_manager.dart';
+import 'components/debug_grid.dart';
+import 'components/dojo_stage.dart';
+import 'components/kendo_fighter.dart';
+import 'enums/facing_direction.dart';
+
+enum KendoGameState {
+  playing,
+  roundOver,
+  matchOver,
+}
+
+class KendoGame extends FlameGame with KeyboardEvents {
+  static const double stageWidth = 1280.0; // 1280x720 16:9 full background resolution
+  static const double stageGroundY = 0.0; // Stage floor world Y coordinate
+  static const double fighterGroundY = 250.0; // Target position Y = 250.0
+
+  late final DojoStage stage;
+  late final KendoFighter p1;
+  late final KendoFighter p2;
+
+  final double minFighterDistance = 108.0; // Scaled 3x (36.0 -> 108.0)
+  final double stageMinX = -520.0;
+  final double stageMaxX = 520.0;
+
+  // Game lifecycle & HUD ValueNotifiers
+  final gameStateNotifier = ValueNotifier<KendoGameState>(KendoGameState.playing);
+  final p1HealthNotifier = ValueNotifier<double>(100.0);
+  final p2HealthNotifier = ValueNotifier<double>(100.0);
+  final p1WinsNotifier = ValueNotifier<int>(0);
+  final p2WinsNotifier = ValueNotifier<int>(0);
+  final overlayTextNotifier = ValueNotifier<String>('');
+  final isPausedNotifier = ValueNotifier<bool>(false);
+
+  // Round Timer (30-second countdown)
+  static const double roundDuration = 30.0;
+  double roundTimer = roundDuration;
+  final roundTimerNotifier = ValueNotifier<int>(30);
+
+  double roundOverTimer = 0.0;
+  static const double roundOverDelay = 1.8;
+
+  // CPU AI & Tsubazeriai State variables
+  double cpuDecisionTimer = 0.0;
+  double cpuGuardTimer = 0.0;
+  double cpuTsubazeriaiTimer = 0.0;
+  bool _hasStoppedChargeSound = false;
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+
+    // 0. Initialize Audio Sound Manager
+    await SoundManager.init();
+
+    // 1. Fixed Resolution Viewport & Camera Setup
+    camera.viewport = FixedResolutionViewport(resolution: Vector2(1280, 720));
+    camera.viewfinder.position = Vector2(0.0, 0.0);
+    camera.viewfinder.zoom = 1.0;
+
+    // 2. Stage Component (Anchored to stageGroundY = 0.0)
+    stage = DojoStage(
+      stageWidth: stageWidth,
+      groundY: stageGroundY,
+    );
+    world.add(stage);
+
+    // 3. Player 1 (Red Ribbon / White Keikogi / Navy Hakama / Red Do Band)
+    p1 = KendoFighter(
+      name: '剣士1',
+      isPlayer: true,
+      startX: -260.0,
+      groundY: fighterGroundY,
+      keikogiColor: const Color(0xFFFAFAFA),
+      ribbonColor: const Color(0xFFD32F2F),
+      hakamaColor: const Color(0xFF1A237E),
+      doBandColor: const Color(0xFFD32F2F),
+    );
+    world.add(p1);
+
+    // 4. Player 2 / CPU (White Ribbon / Navy Keikogi / Black Hakama / White Do Band)
+    p2 = KendoFighter(
+      name: '剣士2',
+      isPlayer: false,
+      startX: 260.0,
+      groundY: fighterGroundY,
+      keikogiColor: const Color(0xFF1A237E),
+      ribbonColor: const Color(0xFFFFFFFF),
+      hakamaColor: const Color(0xFF212121),
+      doBandColor: const Color(0xFFFAFAFA),
+    );
+    world.add(p2);
+
+    // 5. Debug Grid Component
+    world.add(DebugGrid());
+  }
+
+  void togglePause() {
+    if (gameStateNotifier.value == KendoGameState.matchOver) return;
+
+    if (isPausedNotifier.value) {
+      resumeEngine();
+      isPausedNotifier.value = false;
+    } else {
+      pauseEngine();
+      isPausedNotifier.value = true;
+    }
+  }
+
+  // Unified Screen Tap / Hotkey Input Handlers (左右入力・画面タップ・Q/Eキー共通ハンドラ)
+  void handleLeftInputDown() {
+    if (isPausedNotifier.value) return;
+    if (p1.position.x < p2.position.x) {
+      guardP1Start();
+    } else {
+      attackP1();
+    }
+  }
+
+  void handleLeftInputUp() {
+    if (isPausedNotifier.value) return;
+    if (p1.position.x < p2.position.x) {
+      guardP1Stop();
+    }
+  }
+
+  void handleRightInputDown() {
+    if (isPausedNotifier.value) return;
+    if (p1.position.x < p2.position.x) {
+      attackP1();
+    } else {
+      guardP1Start();
+    }
+  }
+
+  void handleRightInputUp() {
+    if (isPausedNotifier.value) return;
+    if (p1.position.x >= p2.position.x) {
+      guardP1Stop();
+    }
+  }
+
+  void moveP1Left() {
+    if (isPausedNotifier.value) return;
+    p1.move(-1.0);
+  }
+
+  void moveP1Right() {
+    if (isPausedNotifier.value) return;
+    p1.move(1.0);
+  }
+
+  void stopP1() {
+    p1.stop();
+  }
+
+  void guardP1Start() {
+    if (isPausedNotifier.value) return;
+    p1.startGuard();
+  }
+
+  void guardP1Stop() {
+    p1.stopGuard();
+  }
+
+  void attackP1() {
+    if (isPausedNotifier.value) return;
+    p1.attack();
+  }
+
+  void disengageP1() {
+    if (isPausedNotifier.value) return;
+    p1.disengage();
+  }
+
+  void resetMatch() {
+    if (isPausedNotifier.value) {
+      resumeEngine();
+      isPausedNotifier.value = false;
+    }
+    _hasStoppedChargeSound = true;
+    SoundManager.stopCharge();
+    p1.resetMatch(startX: -260.0);
+    p2.resetMatch(startX: 260.0);
+    gameStateNotifier.value = KendoGameState.playing;
+    overlayTextNotifier.value = '';
+    roundTimer = roundDuration;
+    roundTimerNotifier.value = 30;
+    roundOverTimer = 0.0;
+    cpuTsubazeriaiTimer = 0.0;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    final currentGameState = gameStateNotifier.value;
+
+    // 1. Handle Round Over timer (delay before starting next round after Ippon)
+    if (currentGameState == KendoGameState.roundOver) {
+      roundOverTimer += dt;
+      if (roundOverTimer >= roundOverDelay) {
+        _hasStoppedChargeSound = true;
+        SoundManager.stopCharge();
+        p1.resetRound(startX: -260.0);
+        p2.resetRound(startX: 260.0);
+        roundTimer = roundDuration;
+        roundTimerNotifier.value = 30;
+        gameStateNotifier.value = KendoGameState.playing;
+        overlayTextNotifier.value = '';
+        cpuTsubazeriaiTimer = 0.0;
+      }
+    }
+
+    // 2. Active Round Countdown Timer
+    if (currentGameState == KendoGameState.playing) {
+      roundTimer -= dt;
+      final displaySeconds = roundTimer.ceil().clamp(0, 30);
+      roundTimerNotifier.value = displaySeconds;
+
+      if (roundTimer <= 0.0) {
+        // Time-Out! CPU (p2) scores Ippon on time expiration
+        roundTimer = 0.0;
+        roundTimerNotifier.value = 0;
+        _scoreIppon(attacker: p2, defender: p1);
+      }
+    }
+
+    // Sync HUD ValueNotifiers
+    p1HealthNotifier.value = p1.health;
+    p2HealthNotifier.value = p2.health;
+    p1WinsNotifier.value = p1.winCount;
+    p2WinsNotifier.value = p2.winCount;
+
+    // 3. Monitor CPU attack windup flash end to stop charge SE
+    if (p2.isAttacking && !_hasStoppedChargeSound) {
+      if (p2.attackTimer >= p2.currentBlinkDuration) {
+        _hasStoppedChargeSound = true;
+        SoundManager.stopCharge();
+      }
+    }
+
+    // 4. Stage Boundary Collisions
+    if (p1.position.x < stageMinX) {
+      p1.position.x = stageMinX;
+    } else if (p1.position.x > stageMaxX) {
+      p1.position.x = stageMaxX;
+    }
+
+    if (p2.position.x < stageMinX) {
+      p2.position.x = stageMinX;
+    } else if (p2.position.x > stageMaxX) {
+      p2.position.x = stageMaxX;
+    }
+
+    // 5. Body Pushing & Collision (Bypassed during Pass-Through or Turnaround)
+    final isPassingOrTurning = p1.isPassingThrough || p2.isPassingThrough ||
+        p1.isTurningAround || p2.isTurningAround;
+
+    if (!isPassingOrTurning) {
+      final diffX = p1.position.x - p2.position.x;
+      final absDist = diffX.abs();
+
+      if (absDist < minFighterDistance) {
+        final pushAmount = (minFighterDistance - absDist) / 2.0;
+        if (diffX < 0) {
+          p1.position.x -= pushAmount;
+          p2.position.x += pushAmount;
+        } else {
+          p1.position.x += pushAmount;
+          p2.position.x -= pushAmount;
+        }
+      }
+    }
+
+    // 6. Auto-Facing Direction (Bypassed during Pass-Through or Turnaround)
+    if (!isPassingOrTurning) {
+      if (p1.position.x < p2.position.x) {
+        p1.facingDirection = FacingDirection.right;
+        p2.facingDirection = FacingDirection.left;
+      } else {
+        p1.facingDirection = FacingDirection.left;
+        p2.facingDirection = FacingDirection.right;
+      }
+    }
+
+    // 7. Active Combat & Pass-Through logic
+    if (currentGameState == KendoGameState.playing) {
+      _updatePassThroughState();
+      _updateTsubazeriai(dt);
+      _updateCpu(dt);
+      _checkAttack(attacker: p1, defender: p2);
+      _checkAttack(attacker: p2, defender: p1);
+    }
+
+    // 8. Fixed Camera Position at Origin Vector2(0.0, 0.0)
+    camera.viewfinder.position = Vector2(0.0, 0.0);
+  }
+
+  void _updatePassThroughState() {
+    final p1Arrived = p1.isPassingThrough &&
+        ((p1.facingDirection == FacingDirection.right && p1.position.x >= p1.passThroughTargetX) ||
+         (p1.facingDirection == FacingDirection.left && p1.position.x <= p1.passThroughTargetX) ||
+         p1.velocityX.abs() < 1.0);
+
+    final p2Arrived = p2.isPassingThrough &&
+        ((p2.facingDirection == FacingDirection.right && p2.position.x >= p2.passThroughTargetX) ||
+         (p2.facingDirection == FacingDirection.left && p2.position.x <= p2.passThroughTargetX) ||
+         p2.velocityX.abs() < 1.0);
+
+    if (p1Arrived || p2Arrived) {
+      p1.isPassingThrough = false;
+      p2.isPassingThrough = false;
+
+      // Calculate new facing directions so both turn and face each other!
+      FacingDirection p1NewFacing;
+      FacingDirection p2NewFacing;
+      if (p1.position.x < p2.position.x) {
+        p1NewFacing = FacingDirection.right;
+        p2NewFacing = FacingDirection.left;
+      } else {
+        p1NewFacing = FacingDirection.left;
+        p2NewFacing = FacingDirection.right;
+      }
+
+      // Trigger simultaneous turnaround and overhead posture (振り返り)
+      p1.startTurnaround(newFacing: p1NewFacing);
+      p2.startTurnaround(newFacing: p2NewFacing);
+    }
+  }
+
+  bool _tryTriggerPassThrough({required KendoFighter attacker, required KendoFighter defender}) {
+    if (attacker.isPassingThrough || defender.isPassingThrough) return false;
+    if (attacker.isTurningAround || defender.isTurningAround) return false;
+
+    final forwardDir = attacker.facingDirection == FacingDirection.right ? 1.0 : -1.0;
+    final backSpace = forwardDir > 0
+        ? (stageMaxX - defender.position.x)
+        : (defender.position.x - stageMinX);
+
+    if (backSpace >= 280.0) {
+      final targetX = forwardDir > 0
+          ? (defender.position.x + 270.0).clamp(stageMinX + 10.0, stageMaxX - 10.0)
+          : (defender.position.x - 270.0).clamp(stageMinX + 10.0, stageMaxX - 10.0);
+
+      attacker.startPassThrough(targetX: targetX);
+      return true;
+    }
+    return false;
+  }
+
+  void _updateTsubazeriai(double dt) {
+    if (p1.isPassingThrough || p2.isPassingThrough || p1.isTurningAround || p2.isTurningAround) {
+      p1.isTsubazeriai = false;
+      p2.isTsubazeriai = false;
+      cpuTsubazeriaiTimer = 0.0;
+      return;
+    }
+
+    final dist = (p1.position.x - p2.position.x).abs();
+    const double tsubazeriaiDist = 114.0; // Scaled 3x (38.0 -> 114.0)
+
+    if (dist <= tsubazeriaiDist && !p1.isDisengaging && !p2.isDisengaging) {
+      p1.isTsubazeriai = true;
+      p2.isTsubazeriai = true;
+
+      if (!p2.isPlayer) {
+        cpuTsubazeriaiTimer += dt;
+        if (cpuTsubazeriaiTimer >= 0.35) {
+          p2.disengage();
+          cpuTsubazeriaiTimer = 0.0;
+        }
+      }
+    } else {
+      if (dist > 135.0) { // Scaled 3x (45.0 -> 135.0)
+        p1.isTsubazeriai = false;
+        p2.isTsubazeriai = false;
+        cpuTsubazeriaiTimer = 0.0;
+      }
+    }
+  }
+
+  void _checkAttack({required KendoFighter attacker, required KendoFighter defender}) {
+    if (!attacker.isAttacking || attacker.hasDealtDamageThisAttack) return;
+
+    final dist = (attacker.position.x - defender.position.x).abs();
+    const attackRange = 255.0; // 一足一刀の間合い
+
+    if (attacker.isPlayer) {
+      // -------------------------------------------------------------
+      // PLAYER ATTACKING CPU
+      // -------------------------------------------------------------
+      if (attacker.attackTimer < 0.18 || attacker.attackTimer > 0.36) return;
+
+      if (dist <= attackRange) {
+        attacker.hasDealtDamageThisAttack = true;
+
+        if (defender.cpuVulnerableTimer > 0) {
+          // CPU is in Vulnerable Window (Counter Opportunity) -> Hit connects!
+          _hasStoppedChargeSound = true;
+          SoundManager.stopCharge();
+          SoundManager.playHit();
+          _tryTriggerPassThrough(attacker: attacker, defender: defender);
+          final wasZeroHealth = defender.health <= 0;
+          defender.takeDamage(25.0);
+
+          if (wasZeroHealth || defender.health <= 0) {
+            _scoreIppon(attacker: attacker, defender: defender);
+          }
+        } else {
+          // CPU is in Normal State -> CPU automatically blocks Player's attack!
+          defender.hitStunTimer = 0.15;
+          attacker.hitStunTimer = 0.25; // Player recoil on block
+        }
+      }
+    } else {
+      // -------------------------------------------------------------
+      // CPU ATTACKING PLAYER
+      // -------------------------------------------------------------
+      // Hit window: Phase 2 Men Strike (totalWindup <= attackTimer <= totalWindup + 0.28s)
+      final totalWindup = attacker.currentBlinkDuration + KendoFighter.postBlinkHoldDuration;
+      if (attacker.attackTimer < totalWindup || attacker.attackTimer > totalWindup + 0.28) return;
+
+      if (dist <= attackRange) {
+        attacker.hasDealtDamageThisAttack = true;
+
+        if (defender.isGuarding) {
+          // Just Guard Success! (ジャスト防御成功 - 先守後攻)
+          // Player blocked CPU's Men strike -> Stop Charge SE & Play Guard SE!
+          _hasStoppedChargeSound = true;
+          SoundManager.stopCharge();
+          SoundManager.playGuard();
+          attacker.isAttacking = false;
+          attacker.attackTimer = 0.0;
+          attacker.hitStunTimer = 0.3;
+          attacker.cpuVulnerableTimer = 1.5; // 1.5s Vulnerable Window!
+          defender.hitStunTimer = 0.15;
+        } else {
+          // Player failed to guard -> Men strike hits Player! Stop Charge SE & Play Hit SE!
+          _hasStoppedChargeSound = true;
+          SoundManager.stopCharge();
+          SoundManager.playHit();
+          _tryTriggerPassThrough(attacker: attacker, defender: defender);
+          final wasZeroHealth = defender.health <= 0;
+          defender.takeDamage(25.0);
+
+          if (wasZeroHealth || defender.health <= 0) {
+            _scoreIppon(attacker: attacker, defender: defender);
+          }
+        }
+      }
+    }
+  }
+
+  void _scoreIppon({required KendoFighter attacker, required KendoFighter defender}) {
+    attacker.winCount++;
+    if (attacker.winCount >= 2) {
+      gameStateNotifier.value = KendoGameState.matchOver;
+      overlayTextNotifier.value = attacker.isPlayer ? 'あなたの勝ち' : 'あなたの負け';
+    } else {
+      gameStateNotifier.value = KendoGameState.roundOver;
+      roundOverTimer = 0.0;
+      overlayTextNotifier.value = '';
+    }
+  }
+
+  void _updateCpu(double dt) {
+    if (p2.isPlayer) return;
+
+    final dist = (p1.position.x - p2.position.x).abs();
+
+    cpuDecisionTimer += dt;
+    if (cpuDecisionTimer >= 0.25) {
+      cpuDecisionTimer = 0.0;
+
+      if (p2.cpuVulnerableTimer > 0) {
+        // CPU is vulnerable / staggered -> cannot move or attack
+        p2.stop();
+        p2.stopGuard();
+        return;
+      }
+
+      if (dist > 240.0) { // Scaled 3x (80.0 -> 240.0)
+        // Approach player
+        if (p2.position.x > p1.position.x) {
+          p2.move(-1.0);
+        } else {
+          p2.move(1.0);
+        }
+        p2.stopGuard();
+      } else {
+        // Close / Strike range
+        p2.stop();
+        if (!p2.isGuarding && !p2.isTsubazeriai && !p2.isPassingThrough && !p2.isTurningAround && !p2.isAttacking) {
+          final rand = math.Random().nextDouble();
+          if (rand < 0.50) {
+            // CPU initiates 2-phase attack with randomly chosen flash duration (0.3s Short / 0.5s Medium / 0.8s Long)
+            final blinkDurations = KendoFighter.cpuBlinkDurations;
+            final chosenBlink = blinkDurations[math.Random().nextInt(blinkDurations.length)];
+            p2.attack(blinkDuration: chosenBlink);
+            _hasStoppedChargeSound = false;
+            SoundManager.playCharge(); // Play Charge SE on CPU attack windup start
+          } else if (rand < 0.70) {
+            p2.startGuard();
+            cpuGuardTimer = 0.35;
+          }
+        }
+      }
+    }
+
+    if (p2.isGuarding && cpuGuardTimer > 0) {
+      cpuGuardTimer -= dt;
+      if (cpuGuardTimer <= 0) {
+        p2.stopGuard();
+        cpuGuardTimer = 0.0;
+      }
+    }
+  }
+
+  @override
+  KeyEventResult onKeyEvent(
+    KeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    // 0. Toggle Pause Key (P)
+    if (event.logicalKey == LogicalKeyboardKey.keyP) {
+      if (event is KeyDownEvent) {
+        togglePause();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (isPausedNotifier.value) {
+      return KeyEventResult.ignored;
+    }
+
+    // 1. Q Key (Left Screen Tap Equivalent)
+    if (event.logicalKey == LogicalKeyboardKey.keyQ) {
+      if (event is KeyDownEvent) {
+        handleLeftInputDown();
+      } else if (event is KeyUpEvent) {
+        handleLeftInputUp();
+      }
+      return KeyEventResult.handled;
+    }
+
+    // 2. E Key (Right Screen Tap Equivalent)
+    if (event.logicalKey == LogicalKeyboardKey.keyE) {
+      if (event is KeyDownEvent) {
+        handleRightInputDown();
+      } else if (event is KeyUpEvent) {
+        handleRightInputUp();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (gameStateNotifier.value == KendoGameState.matchOver) {
+      if (event is KeyDownEvent &&
+          (event.logicalKey == LogicalKeyboardKey.keyR ||
+           event.logicalKey == LogicalKeyboardKey.space ||
+           event.logicalKey == LogicalKeyboardKey.enter)) {
+        resetMatch();
+        return KeyEventResult.handled;
+      }
+    }
+
+    // 3. Guard Key (K)
+    final isKPressed = keysPressed.contains(LogicalKeyboardKey.keyK);
+    if (isKPressed) {
+      guardP1Start();
+    } else {
+      guardP1Stop();
+    }
+
+    // 4. Attack Key (J or Space)
+    if (event is KeyDownEvent &&
+        (event.logicalKey == LogicalKeyboardKey.keyJ ||
+         event.logicalKey == LogicalKeyboardKey.space)) {
+      attackP1();
+    }
+
+    // 5. Disengage Key (S or ArrowDown)
+    if (event is KeyDownEvent &&
+        (event.logicalKey == LogicalKeyboardKey.keyS ||
+         event.logicalKey == LogicalKeyboardKey.arrowDown)) {
+      disengageP1();
+      return KeyEventResult.handled;
+    }
+
+    // 6. Movement Keys (A / D / ArrowLeft / ArrowRight)
+    final isLeftPressed = keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
+        keysPressed.contains(LogicalKeyboardKey.keyA);
+    final isRightPressed = keysPressed.contains(LogicalKeyboardKey.arrowRight) ||
+        keysPressed.contains(LogicalKeyboardKey.keyD);
+
+    if (isLeftPressed && !isRightPressed) {
+      moveP1Left();
+      return KeyEventResult.handled;
+    } else if (isRightPressed && !isLeftPressed) {
+      moveP1Right();
+      return KeyEventResult.handled;
+    } else {
+      stopP1();
+      return KeyEventResult.ignored;
+    }
+  }
+}
+</file>
+
+<file path="lib/widgets/fighting_hud.dart">
+import 'package:flutter/material.dart';
+
+import '../game/kendo_game.dart';
+
+class FightingHudOverlay extends StatefulWidget {
+  const FightingHudOverlay({
+    super.key,
+    required this.game,
+  });
+
+  final KendoGame game;
+
+  @override
+  State<FightingHudOverlay> createState() => _FightingHudOverlayState();
+}
+
+class _FightingHudOverlayState extends State<FightingHudOverlay> {
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Stack(
+        children: [
+          // 0. Full-Screen Left/Right Tap Control Gesture Area (スマホ向け画面左右タップ操作)
+          Positioned.fill(
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (event) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                if (event.position.dx < screenWidth / 2) {
+                  widget.game.handleLeftInputDown();
+                } else {
+                  widget.game.handleRightInputDown();
+                }
+              },
+              onPointerUp: (event) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                if (event.position.dx < screenWidth / 2) {
+                  widget.game.handleLeftInputUp();
+                } else {
+                  widget.game.handleRightInputUp();
+                }
+              },
+              onPointerCancel: (_) {
+                widget.game.guardP1Stop();
+              },
+              child: const SizedBox.expand(),
+            ),
+          ),
+
+          // 1. Street Fighter II Style Top HUD
+          Positioned(
+            top: 12,
+            left: 12,
+            right: 12,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // P1 Health Bar, Win Count & Name
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '1P 剣士1',
+                            style: TextStyle(
+                              color: Colors.yellowAccent,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                            ),
+                          ),
+                          ValueListenableBuilder<int>(
+                            valueListenable: widget.game.p1WinsNotifier,
+                            builder: (context, wins, _) => _buildWinIndicators(wins),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ValueListenableBuilder<double>(
+                        valueListenable: widget.game.p1HealthNotifier,
+                        builder: (context, health, _) => _buildHealthBar(
+                          healthRatio: health / 100.0,
+                          isFlipped: false,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Center Timer / VS Emblem (30-second countdown)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade900,
+                    border: Border.all(color: Colors.amber, width: 2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: widget.game.roundTimerNotifier,
+                    builder: (context, seconds, _) {
+                      return Text(
+                        seconds.toString().padLeft(2, '0'),
+                        style: const TextStyle(
+                          color: Colors.amberAccent,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'monospace',
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // P2 Health Bar, Win Count & Name
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ValueListenableBuilder<int>(
+                            valueListenable: widget.game.p2WinsNotifier,
+                            builder: (context, wins, _) => _buildWinIndicators(wins),
+                          ),
+                          const Text(
+                            '2P 剣士2 (CPU)',
+                            style: TextStyle(
+                              color: Colors.cyanAccent,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ValueListenableBuilder<double>(
+                        valueListenable: widget.game.p2HealthNotifier,
+                        builder: (context, health, _) => _buildHealthBar(
+                          healthRatio: health / 100.0,
+                          isFlipped: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 2. Center Banner Overlay (Match Over Victory/Loss Result Text)
+          Center(
+            child: ValueListenableBuilder<KendoGameState>(
+              valueListenable: widget.game.gameStateNotifier,
+              builder: (context, gameState, _) {
+                if (gameState != KendoGameState.matchOver) {
+                  return const SizedBox.shrink();
+                }
+
+                return ValueListenableBuilder<String>(
+                  valueListenable: widget.game.overlayTextNotifier,
+                  builder: (context, overlayText, _) {
+                    if (overlayText.isEmpty) return const SizedBox.shrink();
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.85),
+                            border: Border.all(color: Colors.amberAccent, width: 3),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black87,
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              )
+                            ],
+                          ),
+                          child: Text(
+                            overlayText,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                              shadows: [
+                                Shadow(color: Colors.red, blurRadius: 8),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade900,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            side: const BorderSide(color: Colors.amber, width: 2),
+                          ),
+                          onPressed: widget.game.resetMatch,
+                          icon: const Icon(Icons.replay),
+                          label: const Text(
+                            '再戦 (R)',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+
+          // 3. Pause Overlay Modal
+          ValueListenableBuilder<bool>(
+            valueListenable: widget.game.isPausedNotifier,
+            builder: (context, isPaused, _) {
+              if (!isPaused) return const SizedBox.shrink();
+
+              return Positioned.fill(
+                child: Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.9),
+                        border: Border.all(color: Colors.amber, width: 2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            '一時停止中 (PAUSE)',
+                            style: TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.amber.shade800,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                            onPressed: widget.game.togglePause,
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text(
+                              '再開する (P)',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // 4. Bottom Touch Control (Disengage Action Button)
+          Positioned(
+            bottom: 20,
+            right: 16,
+            child: _buildTouchButton(
+              icon: Icons.undo,
+              label: '離脱 (S)',
+              borderColor: Colors.tealAccent,
+              iconColor: Colors.tealAccent,
+              onPressStart: widget.game.disengageP1,
+              onPressEnd: () {},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWinIndicators(int wins) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(2, (index) {
+        final isWon = index < wins;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isWon ? Colors.amberAccent : Colors.grey.shade900,
+            border: Border.all(color: Colors.amber, width: 1.5),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildHealthBar({
+    required double healthRatio,
+    required bool isFlipped,
+  }) {
+    final clampedRatio = healthRatio.clamp(0.0, 1.0);
+    const remainingHealthColor = Color(0xFFFFD54F); // 残り体力（黄色）
+    const damageColor = Color(0xFFD32F2F); // 受けたダメージ（赤色）
+
+    // 減少アライメント:
+    // 画面端側から画面中央側（タイマー側）に向けて体力が残り、端側から赤色が露出する。
+    // 1P（画面左側 / isFlipped: false）: 黄色は右揃え（Alignment.centerRight）にし、左端側から削れる。
+    // 2P（画面右側 / isFlipped: true） : 黄色は左揃え（Alignment.centerLeft）にし、右端側から削れる。
+    final healthAlignment = isFlipped ? Alignment.centerLeft : Alignment.centerRight;
+
+    return Container(
+      height: 18,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white, width: 2), // 固定サイズの白枠
+        borderRadius: BorderRadius.circular(3),
+      ),
+      clipBehavior: Clip.hardEdge, // 枠外への描画はみ出しを防止
+      child: Stack(
+        children: [
+          // 1. 背景層：受けたダメージを示す赤色ベタ塗り（常時全面に敷く）
+          Positioned.fill(
+            child: Container(
+              color: damageColor,
+            ),
+          ),
+          // 2. 前面層：残り体力を示す黄色バー（割合に応じて伸縮）
+          FractionallySizedBox(
+            alignment: healthAlignment,
+            widthFactor: clampedRatio,
+            child: Container(
+              color: remainingHealthColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTouchButton({
+    required IconData icon,
+    required String label,
+    required Color borderColor,
+    Color iconColor = Colors.amberAccent,
+    required VoidCallback onPressStart,
+    required VoidCallback onPressEnd,
+  }) {
+    return Listener(
+      onPointerDown: (_) => onPressStart(),
+      onPointerUp: (_) => onPressEnd(),
+      onPointerCancel: (_) => onPressEnd(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.8),
+          border: Border.all(color: borderColor, width: 2),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 4,
+              offset: Offset(2, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: iconColor, size: 24),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/main.dart">
+import 'package:flame/game.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'game/kendo_game.dart';
+import 'widgets/fighting_hud.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Fix orientation to landscape for fighting game feel
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
+  runApp(const KewpieCupApp());
+}
+
+class KewpieCupApp extends StatelessWidget {
+  const KewpieCupApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Kewpie_cup',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Colors.black,
+      ),
+      home: const GamePage(),
+    );
+  }
+}
+
+class GamePage extends StatefulWidget {
+  const GamePage({super.key});
+
+  @override
+  State<GamePage> createState() => _GamePageState();
+}
+
+class _GamePageState extends State<GamePage> {
+  late final KendoGame game;
+
+  @override
+  void initState() {
+    super.initState();
+    game = KendoGame();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: GameWidget<KendoGame>(
+        game: game,
+        overlayBuilderMap: {
+          'HudOverlay': (context, game) => FightingHudOverlay(game: game),
+        },
+        initialActiveOverlays: const ['HudOverlay'],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="test/widget_test.dart">
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kewpie_cup/game/audio/sound_manager.dart';
+import 'package:kewpie_cup/game/components/dojo_stage.dart';
+import 'package:kewpie_cup/game/components/kendo_fighter.dart';
+import 'package:kewpie_cup/game/kendo_game.dart';
+import 'package:kewpie_cup/main.dart';
+
+void main() {
+  setUpAll(() {
+    // Disable sound playback for headless unit testing environment
+    SoundManager.isEnabled = false;
+  });
+
+  testWidgets('Kewpie_cup app loads successfully with extended HUD controls',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const KewpieCupApp());
+    await tester.pump();
+
+    // Verify HUD text and action buttons are rendered
+    expect(find.text('1P 剣士1'), findsOneWidget);
+    expect(find.text('2P 剣士2 (CPU)'), findsOneWidget);
+    expect(find.text('離脱 (S)'), findsOneWidget);
+    expect(find.text('30'), findsOneWidget);
+  });
+
+  group('KendoFighter logic and 2-phase attack tests', () {
+    test('startGuard reduces movement speed and sets isGuarding flag', () {
+      final fighter = KendoFighter(
+        name: 'TestFighter',
+        isPlayer: true,
+        startX: -100.0,
+        groundY: 0.0,
+        keikogiColor: Colors.white,
+        ribbonColor: Colors.red,
+      );
+
+      fighter.move(1.0);
+      expect(fighter.velocityX, equals(fighter.walkSpeed));
+
+      fighter.startGuard();
+      expect(fighter.isGuarding, isTrue);
+      expect(
+          fighter.velocityX, equals(fighter.walkSpeed * fighter.guardSpeedMultiplier));
+
+      fighter.stopGuard();
+      expect(fighter.isGuarding, isFalse);
+    });
+
+    test('startGuard active duration (0.4s) auto-expires and enters 0.2s cooldown', () {
+      final fighter = KendoFighter(
+        name: 'TestFighter',
+        isPlayer: true,
+        startX: -100.0,
+        groundY: 0.0,
+        keikogiColor: Colors.white,
+        ribbonColor: Colors.red,
+      );
+
+      fighter.startGuard();
+      expect(fighter.isGuarding, isTrue);
+
+      // Active guard duration (0.2s elapsed out of 0.4s)
+      fighter.update(0.20);
+      expect(fighter.isGuarding, isTrue);
+
+      // Total 0.45s elapsed -> Guard automatically expires!
+      fighter.update(0.25);
+      expect(fighter.isGuarding, isFalse);
+      expect(fighter.guardCooldownTimer, greaterThan(0.0));
+
+      // Attempting to guard during cooldown fails
+      fighter.startGuard();
+      expect(fighter.isGuarding, isFalse);
+
+      // Cooldown expires (0.25s)
+      fighter.update(0.25);
+      expect(fighter.guardCooldownTimer, equals(0.0));
+
+      // Guard can be triggered again after cooldown
+      fighter.startGuard();
+      expect(fighter.isGuarding, isTrue);
+    });
+
+    test('2-phase lunge attack provides forward velocity and clears guard', () {
+      final fighter = KendoFighter(
+        name: 'TestFighter',
+        isPlayer: true,
+        startX: -100.0,
+        groundY: 0.0,
+        keikogiColor: Colors.white,
+        ribbonColor: Colors.red,
+      );
+
+      fighter.startGuard();
+      fighter.attack();
+      expect(fighter.isAttacking, isTrue);
+      expect(fighter.isGuarding, isFalse);
+
+      // Phase 1 (0.00s - 0.18s): Forward windup lunge
+      fighter.update(0.10);
+      expect(fighter.velocityX, greaterThan(0));
+
+      // Phase 2 (0.18s - 0.38s): Forward strike lunge
+      fighter.update(0.10); // total 0.20s
+      expect(fighter.velocityX, greaterThan(0));
+    });
+
+    test('disengage triggers rapid backward backstep velocity', () {
+      final fighter = KendoFighter(
+        name: 'TestFighter',
+        isPlayer: true,
+        startX: -100.0,
+        groundY: 0.0,
+        keikogiColor: Colors.white,
+        ribbonColor: Colors.red,
+      );
+
+      fighter.disengage();
+      expect(fighter.isDisengaging, isTrue);
+
+      // Facing right -> backward direction is left (-velocityX)
+      fighter.update(0.10);
+      expect(fighter.velocityX, equals(-KendoFighter.disengageSpeed));
+
+      // Complete disengage duration (0.25s)
+      fighter.update(0.20);
+      expect(fighter.isDisengaging, isFalse);
+    });
+  });
+
+  group('Unified input handlers and Q/E hotkey tests', () {
+    test('Enemy on right: Left input (Q) guards, Right input (E) attacks', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      game.p1.position.x = -260.0;
+      game.p2.position.x = 260.0;
+
+      // Left input -> Guard start
+      game.handleLeftInputDown();
+      expect(game.p1.isGuarding, isTrue);
+
+      // Left input up -> Guard stop
+      game.handleLeftInputUp();
+      expect(game.p1.isGuarding, isFalse);
+
+      // Right input -> Attack
+      game.handleRightInputDown();
+      expect(game.p1.isAttacking, isTrue);
+    });
+
+    test('Enemy on left: Left input (Q) attacks, Right input (E) guards', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      game.p1.position.x = 260.0;
+      game.p2.position.x = -260.0;
+
+      // Left input -> Attack
+      game.handleLeftInputDown();
+      expect(game.p1.isAttacking, isTrue);
+
+      game.p1.isAttacking = false;
+
+      // Right input -> Guard start
+      game.handleRightInputDown();
+      expect(game.p1.isGuarding, isTrue);
+
+      // Right input up -> Guard stop
+      game.handleRightInputUp();
+      expect(game.p1.isGuarding, isFalse);
+    });
+  });
+
+  group('CPU 2-phase attack and Sen-no-sen (先守後攻) combat tests', () {
+    test('CPU 3-tier attack windup durations (0.3s Short, 0.5s Medium, 0.8s Long) hit after 0.5s hold time', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      // Short (0.3s flash + 0.5s hold = 0.8s total windup)
+      game.p2.attack(blinkDuration: 0.3);
+      expect(game.p2.currentBlinkDuration, equals(0.3));
+      game.p2.update(0.79);
+      expect(game.p2.attackTimer, lessThan(0.80));
+      game.p2.update(0.02); // total 0.81s
+      expect(game.p2.attackTimer, greaterThanOrEqualTo(0.80));
+
+      // Reset P2 attack
+      game.p2.isAttacking = false;
+      game.p2.attackTimer = 0.0;
+
+      // Long (0.8s flash + 0.5s hold = 1.3s total windup)
+      game.p2.attack(blinkDuration: 0.8);
+      expect(game.p2.currentBlinkDuration, equals(0.8));
+      game.p2.update(1.29);
+      expect(game.p2.attackTimer, lessThan(1.30));
+      game.p2.update(0.02); // total 1.31s
+      expect(game.p2.attackTimer, greaterThanOrEqualTo(1.30));
+    });
+
+    test('CPU attack has 1.0s windup phase followed by Men strike phase', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      game.p2.attack(blinkDuration: 0.5);
+      expect(game.p2.isAttacking, isTrue);
+
+      // Phase 1 Windup (0.0s - 1.0s)
+      game.p2.update(0.50);
+      expect(game.p2.attackTimer, equals(0.50));
+      expect(game.p2.attackTimer, lessThan(1.0));
+
+      // Phase 2 Men Strike (1.0s - 1.3s)
+      game.p2.update(0.55); // total 1.05s
+      expect(game.p2.attackTimer, greaterThanOrEqualTo(1.0));
+    });
+
+    test('Normal state: Player attack is automatically blocked by CPU (0 damage)', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p2.cpuVulnerableTimer = 0.0; // Normal state
+
+      game.p1.attack();
+      game.p1.update(0.20); // Strike window
+
+      game.update(0.01);
+
+      expect(game.p2.health, equals(100.0)); // Auto-blocked by CPU!
+      expect(game.p1.winCount, equals(0));
+    });
+
+    test('Guarded defender blocks incoming 2-phase lunge attack and triggers Counter Opportunity', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+
+      game.p1.startGuard(); // Player guards
+      game.p2.attack(blinkDuration: 0.5);
+      game.p2.update(1.05); // Advance to Men strike phase (1.0s+)
+
+      game.update(0.01);
+
+      expect(game.p1.health, equals(100.0)); // Player blocked CPU strike!
+      expect(game.p2.cpuVulnerableTimer, greaterThan(0.0)); // CPU enters Counter Opportunity!
+    });
+
+    test('Counter Opportunity: Player attack deals damage and scores Ippon when CPU health is 0', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p2.cpuVulnerableTimer = 1.5; // Player has Counter Opportunity!
+      game.p2.health = 25.0;
+
+      game.p1.attack();
+      game.p1.update(0.20);
+
+      game.update(0.01);
+
+      expect(game.p2.health, equals(0.0)); // Counter hit connects!
+      expect(game.p1.winCount, equals(1));
+      expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
+    });
+  });
+
+  group('KendoGame pause function tests', () {
+    test('togglePause toggles isPausedNotifier and suppresses movement', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      expect(game.isPausedNotifier.value, isFalse);
+
+      // Pause
+      game.togglePause();
+      expect(game.isPausedNotifier.value, isTrue);
+
+      // Movement should be ignored during pause
+      game.moveP1Right();
+      expect(game.p1.velocityX, equals(0.0));
+
+      // Resume
+      game.togglePause();
+      expect(game.isPausedNotifier.value, isFalse);
+
+      game.moveP1Right();
+      expect(game.p1.velocityX, equals(game.p1.walkSpeed));
+    });
+  });
+
+  group('KendoGame combat, Tsubazeriai and match rules tests', () {
+    test('30-second time-out awards Ippon to CPU', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      expect(game.roundTimerNotifier.value, equals(30));
+
+      // Advance time by 30.1 seconds
+      game.update(30.1);
+
+      // CPU (p2) receives win from time-out
+      expect(game.p2.winCount, equals(1));
+      expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
+    });
+
+    test('Close contact distance triggers Tsubazeriai state', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      // Position fighters within Tsubazeriai distance (<= 114.0px)
+      game.p1.position.x = -40.0;
+      game.p2.position.x = 40.0; // distance 80.0px
+
+      game.update(0.01);
+
+      expect(game.p1.isTsubazeriai, isTrue);
+      expect(game.p2.isTsubazeriai, isTrue);
+    });
+
+    test('2 wins leads to matchOver with result text', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      // P1 (Player) wins 2nd round -> matchOver with "あなたの勝ち"
+      game.p1.winCount = 1;
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p2.health = 0.0;
+      game.p2.cpuVulnerableTimer = 1.5;
+
+      game.p1.attack();
+      game.p1.update(0.20);
+
+      game.update(0.01);
+
+      expect(game.p1.winCount, equals(2));
+      expect(game.gameStateNotifier.value, equals(KendoGameState.matchOver));
+      expect(game.overlayTextNotifier.value, equals('あなたの勝ち'));
+
+      // P2 (CPU) wins -> matchOver with "あなたの負け"
+      final game2 = KendoGame();
+      await game2.onLoad();
+
+      game2.p2.winCount = 1;
+      game2.p1.position.x = -80.0;
+      game2.p2.position.x = 80.0;
+      game2.p1.health = 0.0;
+
+      game2.p2.attack();
+      game2.p2.update(1.05); // Men strike
+
+      game2.update(0.01);
+
+      expect(game2.p2.winCount, equals(2));
+      expect(game2.gameStateNotifier.value, equals(KendoGameState.matchOver));
+      expect(game2.overlayTextNotifier.value, equals('あなたの負け'));
+    });
+  });
+
+  group('Pass-Through and Turnaround action tests', () {
+    test('Attack triggers pass-through when defender has sufficient backSpace', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 0.0;
+      game.p2.cpuVulnerableTimer = 1.5;
+
+      game.p1.attack();
+      game.p1.update(0.20); // Strike window
+      game.update(0.01);
+
+      expect(game.p1.isPassingThrough, isTrue);
+
+      // P1 moves past P2 to target X (270.0)
+      game.update(0.70);
+      game.update(0.70);
+
+      // P1 reaches target, triggering turnaround on both fighters
+      expect(game.p1.isPassingThrough, isFalse);
+      expect(game.p1.isTurningAround, isTrue);
+      expect(game.p2.isTurningAround, isTrue);
+    });
+  });
+
+  group('DojoStage and Fighter positioning tests', () {
+    test('DojoStage stageGroundY (0.0) and KendoFighter fighterGroundY (250.0) positioning', () async {
+      expect(KendoGame.stageGroundY, equals(0.0));
+      expect(KendoGame.fighterGroundY, equals(250.0));
+
+      final game = KendoGame();
+      await game.onLoad();
+      game.update(0.01);
+
+      expect(game.p1.position.y, equals(250.0));
+      expect(game.p2.position.y, equals(250.0));
+      expect(game.camera.viewfinder.position.x, equals(0.0));
+      expect(game.camera.viewfinder.position.y, equals(0.0));
+      expect(game.camera.viewfinder.zoom, equals(1.0));
+
+      final stage = DojoStage(stageWidth: KendoGame.stageWidth, groundY: KendoGame.stageGroundY);
+      expect(stage.size.x, equals(1280.0));
+      expect(stage.size.y, equals(720.0));
+      expect(stage.position.x, equals(0.0));
+      expect(stage.position.y, equals(0.0));
+    });
+  });
+
+  group('Fighter customization tests', () {
+    test('P1 and P2 have distinct Hakama and Do Band colors', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      // P1: Navy Hakama, Red Do Band
+      expect(game.p1.hakamaColor, equals(const Color(0xFF1A237E)));
+      expect(game.p1.doBandColor, equals(const Color(0xFFD32F2F)));
+
+      // P2: Black Hakama, White Do Band
+      expect(game.p2.hakamaColor, equals(const Color(0xFF212121)));
+      expect(game.p2.doBandColor, equals(const Color(0xFFFAFAFA)));
+    });
+  });
+}
+</file>
+
+<file path="web/index.html">
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="kewpie_cup">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>kewpie_cup</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
+</file>
+
+<file path="web/manifest.json">
+{
+    "name": "kewpie_cup",
+    "short_name": "kewpie_cup",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
+</file>
+
+<file path="windows/flutter/CMakeLists.txt">
+# This file controls Flutter-level build steps. It should not be edited.
+cmake_minimum_required(VERSION 3.14)
+
+set(EPHEMERAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ephemeral")
+
+# Configuration provided via flutter tool.
+include(${EPHEMERAL_DIR}/generated_config.cmake)
+
+# TODO: Move the rest of this into files in ephemeral. See
+# https://github.com/flutter/flutter/issues/57146.
+set(WRAPPER_ROOT "${EPHEMERAL_DIR}/cpp_client_wrapper")
+
+# Set fallback configurations for older versions of the flutter tool.
+if (NOT DEFINED FLUTTER_TARGET_PLATFORM)
+  set(FLUTTER_TARGET_PLATFORM "windows-x64")
+endif()
+
+# === Flutter Library ===
+set(FLUTTER_LIBRARY "${EPHEMERAL_DIR}/flutter_windows.dll")
+
+# Published to parent scope for install step.
+set(FLUTTER_LIBRARY ${FLUTTER_LIBRARY} PARENT_SCOPE)
+set(FLUTTER_ICU_DATA_FILE "${EPHEMERAL_DIR}/icudtl.dat" PARENT_SCOPE)
+set(PROJECT_BUILD_DIR "${PROJECT_DIR}/build/" PARENT_SCOPE)
+set(AOT_LIBRARY "${PROJECT_DIR}/build/windows/app.so" PARENT_SCOPE)
+
+list(APPEND FLUTTER_LIBRARY_HEADERS
+  "flutter_export.h"
+  "flutter_windows.h"
+  "flutter_messenger.h"
+  "flutter_plugin_registrar.h"
+  "flutter_texture_registrar.h"
+)
+list(TRANSFORM FLUTTER_LIBRARY_HEADERS PREPEND "${EPHEMERAL_DIR}/")
+add_library(flutter INTERFACE)
+target_include_directories(flutter INTERFACE
+  "${EPHEMERAL_DIR}"
+)
+target_link_libraries(flutter INTERFACE "${FLUTTER_LIBRARY}.lib")
+add_dependencies(flutter flutter_assemble)
+
+# === Wrapper ===
+list(APPEND CPP_WRAPPER_SOURCES_CORE
+  "core_implementations.cc"
+  "standard_codec.cc"
+)
+list(TRANSFORM CPP_WRAPPER_SOURCES_CORE PREPEND "${WRAPPER_ROOT}/")
+list(APPEND CPP_WRAPPER_SOURCES_PLUGIN
+  "plugin_registrar.cc"
+)
+list(TRANSFORM CPP_WRAPPER_SOURCES_PLUGIN PREPEND "${WRAPPER_ROOT}/")
+list(APPEND CPP_WRAPPER_SOURCES_APP
+  "flutter_engine.cc"
+  "flutter_view_controller.cc"
+)
+list(TRANSFORM CPP_WRAPPER_SOURCES_APP PREPEND "${WRAPPER_ROOT}/")
+
+# Wrapper sources needed for a plugin.
+add_library(flutter_wrapper_plugin STATIC
+  ${CPP_WRAPPER_SOURCES_CORE}
+  ${CPP_WRAPPER_SOURCES_PLUGIN}
+)
+apply_standard_settings(flutter_wrapper_plugin)
+set_target_properties(flutter_wrapper_plugin PROPERTIES
+  POSITION_INDEPENDENT_CODE ON)
+set_target_properties(flutter_wrapper_plugin PROPERTIES
+  CXX_VISIBILITY_PRESET hidden)
+target_link_libraries(flutter_wrapper_plugin PUBLIC flutter)
+target_include_directories(flutter_wrapper_plugin PUBLIC
+  "${WRAPPER_ROOT}/include"
+)
+add_dependencies(flutter_wrapper_plugin flutter_assemble)
+
+# Wrapper sources needed for the runner.
+add_library(flutter_wrapper_app STATIC
+  ${CPP_WRAPPER_SOURCES_CORE}
+  ${CPP_WRAPPER_SOURCES_APP}
+)
+apply_standard_settings(flutter_wrapper_app)
+target_link_libraries(flutter_wrapper_app PUBLIC flutter)
+target_include_directories(flutter_wrapper_app PUBLIC
+  "${WRAPPER_ROOT}/include"
+)
+add_dependencies(flutter_wrapper_app flutter_assemble)
+
+# === Flutter tool backend ===
+# _phony_ is a non-existent file to force this command to run every time,
+# since currently there's no way to get a full input/output list from the
+# flutter tool.
+set(PHONY_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/_phony_")
+set_source_files_properties("${PHONY_OUTPUT}" PROPERTIES SYMBOLIC TRUE)
+add_custom_command(
+  OUTPUT ${FLUTTER_LIBRARY} ${FLUTTER_LIBRARY_HEADERS}
+    ${CPP_WRAPPER_SOURCES_CORE} ${CPP_WRAPPER_SOURCES_PLUGIN}
+    ${CPP_WRAPPER_SOURCES_APP}
+    ${PHONY_OUTPUT}
+  COMMAND ${CMAKE_COMMAND} -E env
+    ${FLUTTER_TOOL_ENVIRONMENT}
+    "${FLUTTER_ROOT}/packages/flutter_tools/bin/tool_backend.bat"
+      ${FLUTTER_TARGET_PLATFORM} $<CONFIG>
+  VERBATIM
+)
+add_custom_target(flutter_assemble DEPENDS
+  "${FLUTTER_LIBRARY}"
+  ${FLUTTER_LIBRARY_HEADERS}
+  ${CPP_WRAPPER_SOURCES_CORE}
+  ${CPP_WRAPPER_SOURCES_PLUGIN}
+  ${CPP_WRAPPER_SOURCES_APP}
+)
+</file>
+
+<file path="windows/flutter/generated_plugin_registrant.cc">
+//
+//  Generated file. Do not edit.
+//
+
+// clang-format off
+
+#include "generated_plugin_registrant.h"
+
+#include <audioplayers_windows/audioplayers_windows_plugin.h>
+
+void RegisterPlugins(flutter::PluginRegistry* registry) {
+  AudioplayersWindowsPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("AudioplayersWindowsPlugin"));
+}
+</file>
+
+<file path="windows/flutter/generated_plugin_registrant.h">
+//
+//  Generated file. Do not edit.
+//
+
+// clang-format off
+
+#ifndef GENERATED_PLUGIN_REGISTRANT_
+#define GENERATED_PLUGIN_REGISTRANT_
+
+#include <flutter/plugin_registry.h>
+
+// Registers Flutter plugins.
+void RegisterPlugins(flutter::PluginRegistry* registry);
+
+#endif  // GENERATED_PLUGIN_REGISTRANT_
+</file>
+
+<file path="windows/flutter/generated_plugins.cmake">
+#
+# Generated file, do not edit.
+#
+
+list(APPEND FLUTTER_PLUGIN_LIST
+  audioplayers_windows
+)
+
+list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  jni
+)
+
+set(PLUGIN_BUNDLED_LIBRARIES)
+
+foreach(plugin ${FLUTTER_PLUGIN_LIST})
+  add_subdirectory(flutter/ephemeral/.plugin_symlinks/${plugin}/windows plugins/${plugin})
+  target_link_libraries(${BINARY_NAME} PRIVATE ${plugin}_plugin)
+  list(APPEND PLUGIN_BUNDLED_LIBRARIES $<TARGET_FILE:${plugin}_plugin>)
+  list(APPEND PLUGIN_BUNDLED_LIBRARIES ${${plugin}_bundled_libraries})
+endforeach(plugin)
+
+foreach(ffi_plugin ${FLUTTER_FFI_PLUGIN_LIST})
+  add_subdirectory(flutter/ephemeral/.plugin_symlinks/${ffi_plugin}/windows plugins/${ffi_plugin})
+  list(APPEND PLUGIN_BUNDLED_LIBRARIES ${${ffi_plugin}_bundled_libraries})
+endforeach(ffi_plugin)
+</file>
+
+<file path="windows/runner/CMakeLists.txt">
+cmake_minimum_required(VERSION 3.14)
+project(runner LANGUAGES CXX)
+
+# Define the application target. To change its name, change BINARY_NAME in the
+# top-level CMakeLists.txt, not the value here, or `flutter run` will no longer
+# work.
+#
+# Any new source files that you add to the application should be added here.
+add_executable(${BINARY_NAME} WIN32
+  "flutter_window.cpp"
+  "main.cpp"
+  "utils.cpp"
+  "win32_window.cpp"
+  "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
+  "Runner.rc"
+  "runner.exe.manifest"
+)
+
+# Apply the standard set of build settings. This can be removed for applications
+# that need different build settings.
+apply_standard_settings(${BINARY_NAME})
+
+# Add preprocessor definitions for the build version.
+target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION=\"${FLUTTER_VERSION}\"")
+target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_MAJOR=${FLUTTER_VERSION_MAJOR}")
+target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_MINOR=${FLUTTER_VERSION_MINOR}")
+target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_PATCH=${FLUTTER_VERSION_PATCH}")
+target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_BUILD=${FLUTTER_VERSION_BUILD}")
+
+# Disable Windows macros that collide with C++ standard library functions.
+target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
+
+# Add dependency libraries and include directories. Add any application-specific
+# dependencies here.
+target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
+target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+
+# Run the Flutter tool portions of the build. This must not be removed.
+add_dependencies(${BINARY_NAME} flutter_assemble)
+</file>
+
+<file path="windows/runner/flutter_window.cpp">
+#include "flutter_window.h"
+
+#include <optional>
+
+#include "flutter/generated_plugin_registrant.h"
+
+FlutterWindow::FlutterWindow(const flutter::DartProject& project)
+    : project_(project) {}
+
+FlutterWindow::~FlutterWindow() {}
+
+bool FlutterWindow::OnCreate() {
+  if (!Win32Window::OnCreate()) {
+    return false;
+  }
+
+  RECT frame = GetClientArea();
+
+  // The size here must match the window dimensions to avoid unnecessary surface
+  // creation / destruction in the startup path.
+  flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
+      frame.right - frame.left, frame.bottom - frame.top, project_);
+  // Ensure that basic setup of the controller was successful.
+  if (!flutter_controller_->engine() || !flutter_controller_->view()) {
+    return false;
+  }
+  RegisterPlugins(flutter_controller_->engine());
+  SetChildContent(flutter_controller_->view()->GetNativeWindow());
+
+  flutter_controller_->engine()->SetNextFrameCallback([&]() {
+    this->Show();
+  });
+
+  // Flutter can complete the first frame before the "show window" callback is
+  // registered. The following call ensures a frame is pending to ensure the
+  // window is shown. It is a no-op if the first frame hasn't completed yet.
+  flutter_controller_->ForceRedraw();
+
+  return true;
+}
+
+void FlutterWindow::OnDestroy() {
+  if (flutter_controller_) {
+    flutter_controller_ = nullptr;
+  }
+
+  Win32Window::OnDestroy();
+}
+
+LRESULT
+FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
+                              WPARAM const wparam,
+                              LPARAM const lparam) noexcept {
+  // Give Flutter, including plugins, an opportunity to handle window messages.
+  if (flutter_controller_) {
+    std::optional<LRESULT> result =
+        flutter_controller_->HandleTopLevelWindowProc(hwnd, message, wparam,
+                                                      lparam);
+    if (result) {
+      return *result;
+    }
+  }
+
+  switch (message) {
+    case WM_FONTCHANGE:
+      flutter_controller_->engine()->ReloadSystemFonts();
+      break;
+  }
+
+  return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+}
+</file>
+
+<file path="windows/runner/flutter_window.h">
+#ifndef RUNNER_FLUTTER_WINDOW_H_
+#define RUNNER_FLUTTER_WINDOW_H_
+
+#include <flutter/dart_project.h>
+#include <flutter/flutter_view_controller.h>
+
+#include <memory>
+
+#include "win32_window.h"
+
+// A window that does nothing but host a Flutter view.
+class FlutterWindow : public Win32Window {
+ public:
+  // Creates a new FlutterWindow hosting a Flutter view running |project|.
+  explicit FlutterWindow(const flutter::DartProject& project);
+  virtual ~FlutterWindow();
+
+ protected:
+  // Win32Window:
+  bool OnCreate() override;
+  void OnDestroy() override;
+  LRESULT MessageHandler(HWND window, UINT const message, WPARAM const wparam,
+                         LPARAM const lparam) noexcept override;
+
+ private:
+  // The project to run.
+  flutter::DartProject project_;
+
+  // The Flutter instance hosted by this window.
+  std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+};
+
+#endif  // RUNNER_FLUTTER_WINDOW_H_
+</file>
+
+<file path="windows/runner/main.cpp">
+#include <flutter/dart_project.h>
+#include <flutter/flutter_view_controller.h>
+#include <windows.h>
+
+#include "flutter_window.h"
+#include "utils.h"
+
+int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
+                      _In_ wchar_t *command_line, _In_ int show_command) {
+  // Attach to console when present (e.g., 'flutter run') or create a
+  // new console when running with a debugger.
+  if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
+    CreateAndAttachConsole();
+  }
+
+  // Initialize COM, so that it is available for use in the library and/or
+  // plugins.
+  ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+  flutter::DartProject project(L"data");
+
+  std::vector<std::string> command_line_arguments =
+      GetCommandLineArguments();
+
+  project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
+
+  FlutterWindow window(project);
+  Win32Window::Point origin(10, 10);
+  Win32Window::Size size(1280, 720);
+  if (!window.Create(L"kewpie_cup", origin, size)) {
+    return EXIT_FAILURE;
+  }
+  window.SetQuitOnClose(true);
+
+  ::MSG msg;
+  while (::GetMessage(&msg, nullptr, 0, 0)) {
+    ::TranslateMessage(&msg);
+    ::DispatchMessage(&msg);
+  }
+
+  ::CoUninitialize();
+  return EXIT_SUCCESS;
+}
+</file>
+
+<file path="windows/runner/resource.h">
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by Runner.rc
+//
+#define IDI_APP_ICON                    101
+
+// Next default values for new objects
+//
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE        102
+#define _APS_NEXT_COMMAND_VALUE         40001
+#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_SYMED_VALUE           101
+#endif
+#endif
+</file>
+
+<file path="windows/runner/runner.exe.manifest">
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+    </windowsSettings>
+  </application>
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 and Windows 11 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+    </application>
+  </compatibility>
+</assembly>
+</file>
+
+<file path="windows/runner/Runner.rc">
+// Microsoft Visual C++ generated resource script.
+//
+#pragma code_page(65001)
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_APP_ICON            ICON                    "resources\\app_icon.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#if defined(FLUTTER_VERSION_MAJOR) && defined(FLUTTER_VERSION_MINOR) && defined(FLUTTER_VERSION_PATCH) && defined(FLUTTER_VERSION_BUILD)
+#define VERSION_AS_NUMBER FLUTTER_VERSION_MAJOR,FLUTTER_VERSION_MINOR,FLUTTER_VERSION_PATCH,FLUTTER_VERSION_BUILD
+#else
+#define VERSION_AS_NUMBER 1,0,0,0
+#endif
+
+#if defined(FLUTTER_VERSION)
+#define VERSION_AS_STRING FLUTTER_VERSION
+#else
+#define VERSION_AS_STRING "1.0.0"
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VERSION_AS_NUMBER
+ PRODUCTVERSION VERSION_AS_NUMBER
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "com.example" "\0"
+            VALUE "FileDescription", "kewpie_cup" "\0"
+            VALUE "FileVersion", VERSION_AS_STRING "\0"
+            VALUE "InternalName", "kewpie_cup" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "OriginalFilename", "kewpie_cup.exe" "\0"
+            VALUE "ProductName", "kewpie_cup" "\0"
+            VALUE "ProductVersion", VERSION_AS_STRING "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+</file>
+
+<file path="windows/runner/utils.cpp">
+#include "utils.h"
+
+#include <flutter_windows.h>
+#include <io.h>
+#include <stdio.h>
+#include <windows.h>
+
+#include <iostream>
+
+void CreateAndAttachConsole() {
+  if (::AllocConsole()) {
+    FILE *unused;
+    if (freopen_s(&unused, "CONOUT$", "w", stdout)) {
+      _dup2(_fileno(stdout), 1);
+    }
+    if (freopen_s(&unused, "CONOUT$", "w", stderr)) {
+      _dup2(_fileno(stdout), 2);
+    }
+    std::ios::sync_with_stdio();
+    FlutterDesktopResyncOutputStreams();
+  }
+}
+
+std::vector<std::string> GetCommandLineArguments() {
+  // Convert the UTF-16 command line arguments to UTF-8 for the Engine to use.
+  int argc;
+  wchar_t** argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+  if (argv == nullptr) {
+    return std::vector<std::string>();
+  }
+
+  std::vector<std::string> command_line_arguments;
+
+  // Skip the first argument as it's the binary name.
+  for (int i = 1; i < argc; i++) {
+    command_line_arguments.push_back(Utf8FromUtf16(argv[i]));
+  }
+
+  ::LocalFree(argv);
+
+  return command_line_arguments;
+}
+
+std::string Utf8FromUtf16(const wchar_t* utf16_string) {
+  if (utf16_string == nullptr) {
+    return std::string();
+  }
+  // First, find the length of the string with a safe upper bound (CWE-126).
+  // UNICODE_STRING_MAX_CHARS (32767) is the maximum length of a UNICODE_STRING.
+  int input_length = static_cast<int>(wcsnlen(utf16_string, UNICODE_STRING_MAX_CHARS));
+  // Now use that bounded length to determine the required buffer size.
+  // When an explicit length is passed, WideCharToMultiByte does not include
+  // the null terminator in its returned size.
+  int target_length = ::WideCharToMultiByte(
+      CP_UTF8, WC_ERR_INVALID_CHARS, utf16_string,
+      input_length, nullptr, 0, nullptr, nullptr);
+  std::string utf8_string;
+  if (target_length == 0 || static_cast<size_t>(target_length) > utf8_string.max_size()) {
+    return utf8_string;
+  }
+  utf8_string.resize(target_length);
+  int converted_length = ::WideCharToMultiByte(
+      CP_UTF8, WC_ERR_INVALID_CHARS, utf16_string,
+      input_length, utf8_string.data(), target_length, nullptr, nullptr);
+  if (converted_length == 0) {
+    return std::string();
+  }
+  return utf8_string;
+}
+</file>
+
+<file path="windows/runner/utils.h">
+#ifndef RUNNER_UTILS_H_
+#define RUNNER_UTILS_H_
+
+#include <string>
+#include <vector>
+
+// Creates a console for the process, and redirects stdout and stderr to
+// it for both the runner and the Flutter library.
+void CreateAndAttachConsole();
+
+// Takes a null-terminated wchar_t* encoded in UTF-16 and returns a std::string
+// encoded in UTF-8. Returns an empty std::string on failure.
+std::string Utf8FromUtf16(const wchar_t* utf16_string);
+
+// Gets the command line arguments passed in as a std::vector<std::string>,
+// encoded in UTF-8. Returns an empty std::vector<std::string> on failure.
+std::vector<std::string> GetCommandLineArguments();
+
+#endif  // RUNNER_UTILS_H_
+</file>
+
+<file path="windows/runner/win32_window.cpp">
+#include "win32_window.h"
+
+#include <dwmapi.h>
+#include <flutter_windows.h>
+
+#include "resource.h"
+
+namespace {
+
+/// Window attribute that enables dark mode window decorations.
+///
+/// Redefined in case the developer's machine has a Windows SDK older than
+/// version 10.0.22000.0.
+/// See: https://docs.microsoft.com/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+
+constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
+
+/// Registry key for app theme preference.
+///
+/// A value of 0 indicates apps should use dark mode. A non-zero or missing
+/// value indicates apps should use light mode.
+constexpr const wchar_t kGetPreferredBrightnessRegKey[] =
+  L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+constexpr const wchar_t kGetPreferredBrightnessRegValue[] = L"AppsUseLightTheme";
+
+// The number of Win32Window objects that currently exist.
+static int g_active_window_count = 0;
+
+using EnableNonClientDpiScaling = BOOL __stdcall(HWND hwnd);
+
+// Scale helper to convert logical scaler values to physical using passed in
+// scale factor
+int Scale(int source, double scale_factor) {
+  return static_cast<int>(source * scale_factor);
+}
+
+// Dynamically loads the |EnableNonClientDpiScaling| from the User32 module.
+// This API is only needed for PerMonitor V1 awareness mode.
+void EnableFullDpiSupportIfAvailable(HWND hwnd) {
+  HMODULE user32_module = LoadLibraryA("User32.dll");
+  if (!user32_module) {
+    return;
+  }
+  auto enable_non_client_dpi_scaling =
+      reinterpret_cast<EnableNonClientDpiScaling*>(
+          GetProcAddress(user32_module, "EnableNonClientDpiScaling"));
+  if (enable_non_client_dpi_scaling != nullptr) {
+    enable_non_client_dpi_scaling(hwnd);
+  }
+  FreeLibrary(user32_module);
+}
+
+}  // namespace
+
+// Manages the Win32Window's window class registration.
+class WindowClassRegistrar {
+ public:
+  ~WindowClassRegistrar() = default;
+
+  // Returns the singleton registrar instance.
+  static WindowClassRegistrar* GetInstance() {
+    if (!instance_) {
+      instance_ = new WindowClassRegistrar();
+    }
+    return instance_;
+  }
+
+  // Returns the name of the window class, registering the class if it hasn't
+  // previously been registered.
+  const wchar_t* GetWindowClass();
+
+  // Unregisters the window class. Should only be called if there are no
+  // instances of the window.
+  void UnregisterWindowClass();
+
+ private:
+  WindowClassRegistrar() = default;
+
+  static WindowClassRegistrar* instance_;
+
+  bool class_registered_ = false;
+};
+
+WindowClassRegistrar* WindowClassRegistrar::instance_ = nullptr;
+
+const wchar_t* WindowClassRegistrar::GetWindowClass() {
+  if (!class_registered_) {
+    WNDCLASS window_class{};
+    window_class.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    window_class.lpszClassName = kWindowClassName;
+    window_class.style = CS_HREDRAW | CS_VREDRAW;
+    window_class.cbClsExtra = 0;
+    window_class.cbWndExtra = 0;
+    window_class.hInstance = GetModuleHandle(nullptr);
+    window_class.hIcon =
+        LoadIcon(window_class.hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
+    window_class.hbrBackground = 0;
+    window_class.lpszMenuName = nullptr;
+    window_class.lpfnWndProc = Win32Window::WndProc;
+    RegisterClass(&window_class);
+    class_registered_ = true;
+  }
+  return kWindowClassName;
+}
+
+void WindowClassRegistrar::UnregisterWindowClass() {
+  UnregisterClass(kWindowClassName, nullptr);
+  class_registered_ = false;
+}
+
+Win32Window::Win32Window() {
+  ++g_active_window_count;
+}
+
+Win32Window::~Win32Window() {
+  --g_active_window_count;
+  Destroy();
+}
+
+bool Win32Window::Create(const std::wstring& title,
+                         const Point& origin,
+                         const Size& size) {
+  Destroy();
+
+  const wchar_t* window_class =
+      WindowClassRegistrar::GetInstance()->GetWindowClass();
+
+  const POINT target_point = {static_cast<LONG>(origin.x),
+                              static_cast<LONG>(origin.y)};
+  HMONITOR monitor = MonitorFromPoint(target_point, MONITOR_DEFAULTTONEAREST);
+  UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
+  double scale_factor = dpi / 96.0;
+
+  HWND window = CreateWindow(
+      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
+      Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
+      Scale(size.width, scale_factor), Scale(size.height, scale_factor),
+      nullptr, nullptr, GetModuleHandle(nullptr), this);
+
+  if (!window) {
+    return false;
+  }
+
+  UpdateTheme(window);
+
+  return OnCreate();
+}
+
+bool Win32Window::Show() {
+  return ShowWindow(window_handle_, SW_SHOWNORMAL);
+}
+
+// static
+LRESULT CALLBACK Win32Window::WndProc(HWND const window,
+                                      UINT const message,
+                                      WPARAM const wparam,
+                                      LPARAM const lparam) noexcept {
+  if (message == WM_NCCREATE) {
+    auto window_struct = reinterpret_cast<CREATESTRUCT*>(lparam);
+    SetWindowLongPtr(window, GWLP_USERDATA,
+                     reinterpret_cast<LONG_PTR>(window_struct->lpCreateParams));
+
+    auto that = static_cast<Win32Window*>(window_struct->lpCreateParams);
+    EnableFullDpiSupportIfAvailable(window);
+    that->window_handle_ = window;
+  } else if (Win32Window* that = GetThisFromHandle(window)) {
+    return that->MessageHandler(window, message, wparam, lparam);
+  }
+
+  return DefWindowProc(window, message, wparam, lparam);
+}
+
+LRESULT
+Win32Window::MessageHandler(HWND hwnd,
+                            UINT const message,
+                            WPARAM const wparam,
+                            LPARAM const lparam) noexcept {
+  switch (message) {
+    case WM_DESTROY:
+      window_handle_ = nullptr;
+      Destroy();
+      if (quit_on_close_) {
+        PostQuitMessage(0);
+      }
+      return 0;
+
+    case WM_DPICHANGED: {
+      auto newRectSize = reinterpret_cast<RECT*>(lparam);
+      LONG newWidth = newRectSize->right - newRectSize->left;
+      LONG newHeight = newRectSize->bottom - newRectSize->top;
+
+      SetWindowPos(hwnd, nullptr, newRectSize->left, newRectSize->top, newWidth,
+                   newHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+
+      return 0;
+    }
+    case WM_SIZE: {
+      RECT rect = GetClientArea();
+      if (child_content_ != nullptr) {
+        // Size and position the child window.
+        MoveWindow(child_content_, rect.left, rect.top, rect.right - rect.left,
+                   rect.bottom - rect.top, TRUE);
+      }
+      return 0;
+    }
+
+    case WM_ACTIVATE:
+      if (child_content_ != nullptr) {
+        SetFocus(child_content_);
+      }
+      return 0;
+
+    case WM_DWMCOLORIZATIONCOLORCHANGED:
+      UpdateTheme(hwnd);
+      return 0;
+  }
+
+  return DefWindowProc(window_handle_, message, wparam, lparam);
+}
+
+void Win32Window::Destroy() {
+  OnDestroy();
+
+  if (window_handle_) {
+    DestroyWindow(window_handle_);
+    window_handle_ = nullptr;
+  }
+  if (g_active_window_count == 0) {
+    WindowClassRegistrar::GetInstance()->UnregisterWindowClass();
+  }
+}
+
+Win32Window* Win32Window::GetThisFromHandle(HWND const window) noexcept {
+  return reinterpret_cast<Win32Window*>(
+      GetWindowLongPtr(window, GWLP_USERDATA));
+}
+
+void Win32Window::SetChildContent(HWND content) {
+  child_content_ = content;
+  SetParent(content, window_handle_);
+  RECT frame = GetClientArea();
+
+  MoveWindow(content, frame.left, frame.top, frame.right - frame.left,
+             frame.bottom - frame.top, true);
+
+  SetFocus(child_content_);
+}
+
+RECT Win32Window::GetClientArea() {
+  RECT frame;
+  GetClientRect(window_handle_, &frame);
+  return frame;
+}
+
+HWND Win32Window::GetHandle() {
+  return window_handle_;
+}
+
+void Win32Window::SetQuitOnClose(bool quit_on_close) {
+  quit_on_close_ = quit_on_close;
+}
+
+bool Win32Window::OnCreate() {
+  // No-op; provided for subclasses.
+  return true;
+}
+
+void Win32Window::OnDestroy() {
+  // No-op; provided for subclasses.
+}
+
+void Win32Window::UpdateTheme(HWND const window) {
+  DWORD light_mode;
+  DWORD light_mode_size = sizeof(light_mode);
+  LSTATUS result = RegGetValue(HKEY_CURRENT_USER, kGetPreferredBrightnessRegKey,
+                               kGetPreferredBrightnessRegValue,
+                               RRF_RT_REG_DWORD, nullptr, &light_mode,
+                               &light_mode_size);
+
+  if (result == ERROR_SUCCESS) {
+    BOOL enable_dark_mode = light_mode == 0;
+    DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                          &enable_dark_mode, sizeof(enable_dark_mode));
+  }
+}
+</file>
+
+<file path="windows/runner/win32_window.h">
+#ifndef RUNNER_WIN32_WINDOW_H_
+#define RUNNER_WIN32_WINDOW_H_
+
+#include <windows.h>
+
+#include <functional>
+#include <memory>
+#include <string>
+
+// A class abstraction for a high DPI-aware Win32 Window. Intended to be
+// inherited from by classes that wish to specialize with custom
+// rendering and input handling
+class Win32Window {
+ public:
+  struct Point {
+    unsigned int x;
+    unsigned int y;
+    Point(unsigned int x, unsigned int y) : x(x), y(y) {}
+  };
+
+  struct Size {
+    unsigned int width;
+    unsigned int height;
+    Size(unsigned int width, unsigned int height)
+        : width(width), height(height) {}
+  };
+
+  Win32Window();
+  virtual ~Win32Window();
+
+  // Creates a win32 window with |title| that is positioned and sized using
+  // |origin| and |size|. New windows are created on the default monitor. Window
+  // sizes are specified to the OS in physical pixels, hence to ensure a
+  // consistent size this function will scale the inputted width and height as
+  // as appropriate for the default monitor. The window is invisible until
+  // |Show| is called. Returns true if the window was created successfully.
+  bool Create(const std::wstring& title, const Point& origin, const Size& size);
+
+  // Show the current window. Returns true if the window was successfully shown.
+  bool Show();
+
+  // Release OS resources associated with window.
+  void Destroy();
+
+  // Inserts |content| into the window tree.
+  void SetChildContent(HWND content);
+
+  // Returns the backing Window handle to enable clients to set icon and other
+  // window properties. Returns nullptr if the window has been destroyed.
+  HWND GetHandle();
+
+  // If true, closing this window will quit the application.
+  void SetQuitOnClose(bool quit_on_close);
+
+  // Return a RECT representing the bounds of the current client area.
+  RECT GetClientArea();
+
+ protected:
+  // Processes and route salient window messages for mouse handling,
+  // size change and DPI. Delegates handling of these to member overloads that
+  // inheriting classes can handle.
+  virtual LRESULT MessageHandler(HWND window,
+                                 UINT const message,
+                                 WPARAM const wparam,
+                                 LPARAM const lparam) noexcept;
+
+  // Called when CreateAndShow is called, allowing subclass window-related
+  // setup. Subclasses should return false if setup fails.
+  virtual bool OnCreate();
+
+  // Called when Destroy is called.
+  virtual void OnDestroy();
+
+ private:
+  friend class WindowClassRegistrar;
+
+  // OS callback called by message pump. Handles the WM_NCCREATE message which
+  // is passed when the non-client area is being created and enables automatic
+  // non-client DPI scaling so that the non-client area automatically
+  // responds to changes in DPI. All other messages are handled by
+  // MessageHandler.
+  static LRESULT CALLBACK WndProc(HWND const window,
+                                  UINT const message,
+                                  WPARAM const wparam,
+                                  LPARAM const lparam) noexcept;
+
+  // Retrieves a class instance pointer for |window|
+  static Win32Window* GetThisFromHandle(HWND const window) noexcept;
+
+  // Update the window frame's theme to match the system theme.
+  static void UpdateTheme(HWND const window);
+
+  bool quit_on_close_ = false;
+
+  // window handle for top level window.
+  HWND window_handle_ = nullptr;
+
+  // window handle for hosted content.
+  HWND child_content_ = nullptr;
+};
+
+#endif  // RUNNER_WIN32_WINDOW_H_
+</file>
+
+<file path="windows/.gitignore">
+flutter/ephemeral/
+
+# Visual Studio user-specific files.
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio build-related files.
+x64/
+x86/
+
+# Visual Studio cache files
+# files ending in .cache can be ignored
+*.[Cc]ache
+# but keep track of directories ending in .cache
+!*.[Cc]ache/
+</file>
+
+<file path="windows/CMakeLists.txt">
+# Project-level configuration.
+cmake_minimum_required(VERSION 3.14)
+project(kewpie_cup LANGUAGES CXX)
+
+# The name of the executable created for the application. Change this to change
+# the on-disk name of your application.
+set(BINARY_NAME "kewpie_cup")
+
+# Explicitly opt in to modern CMake behaviors to avoid warnings with recent
+# versions of CMake.
+cmake_policy(VERSION 3.14...3.25)
+
+# Define build configuration option.
+get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(IS_MULTICONFIG)
+  set(CMAKE_CONFIGURATION_TYPES "Debug;Profile;Release"
+    CACHE STRING "" FORCE)
+else()
+  if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE
+      STRING "Flutter build mode" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+      "Debug" "Profile" "Release")
+  endif()
+endif()
+# Define settings for the Profile build mode.
+set(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+set(CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
+
+# Use Unicode for all projects.
+add_definitions(-DUNICODE -D_UNICODE)
+
+# Compilation settings that should be applied to most targets.
+#
+# Be cautious about adding new options here, as plugins use this function by
+# default. In most cases, you should add new options to specific targets instead
+# of modifying this function.
+function(APPLY_STANDARD_SETTINGS TARGET)
+  target_compile_features(${TARGET} PUBLIC cxx_std_17)
+  target_compile_options(${TARGET} PRIVATE /W4 /WX /wd"4100")
+  target_compile_options(${TARGET} PRIVATE /EHsc)
+  target_compile_definitions(${TARGET} PRIVATE "_HAS_EXCEPTIONS=0")
+  target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
+endfunction()
+
+# Flutter library and tool build rules.
+set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
+add_subdirectory(${FLUTTER_MANAGED_DIR})
+
+# Application build; see runner/CMakeLists.txt.
+add_subdirectory("runner")
+
+
+# Generated plugin build rules, which manage building the plugins and adding
+# them to the application.
+include(flutter/generated_plugins.cmake)
+
+
+# === Installation ===
+# Support files are copied into place next to the executable, so that it can
+# run in place. This is done instead of making a separate bundle (as on Linux)
+# so that building and running from within Visual Studio will work.
+set(BUILD_BUNDLE_DIR "$<TARGET_FILE_DIR:${BINARY_NAME}>")
+# Make the "install" step default, as it's required to run.
+set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD 1)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "${BUILD_BUNDLE_DIR}" CACHE PATH "..." FORCE)
+endif()
+
+set(INSTALL_BUNDLE_DATA_DIR "${CMAKE_INSTALL_PREFIX}/data")
+set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}")
+
+install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
+  COMPONENT Runtime)
+
+install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
+  COMPONENT Runtime)
+
+install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+
+if(PLUGIN_BUNDLED_LIBRARIES)
+  install(FILES "${PLUGIN_BUNDLED_LIBRARIES}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
+
+# Copy the native assets provided by the build.dart from all packages.
+set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/windows/")
+install(DIRECTORY "${NATIVE_ASSETS_DIR}"
+   DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+   COMPONENT Runtime)
+
+# Fully re-copy the assets directory on each build to avoid having stale files
+# from a previous install.
+set(FLUTTER_ASSET_DIR_NAME "flutter_assets")
+install(CODE "
+  file(REMOVE_RECURSE \"${INSTALL_BUNDLE_DATA_DIR}/${FLUTTER_ASSET_DIR_NAME}\")
+  " COMPONENT Runtime)
+install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
+  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" COMPONENT Runtime)
+
+# Install the AOT library on non-Debug builds only.
+install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
+  CONFIGURATIONS Profile;Release
+  COMPONENT Runtime)
+</file>
+
+<file path=".gitignore">
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Widget Preview related
+.widget_preview/
+</file>
+
+<file path=".metadata">
+# This file tracks properties of this Flutter project.
+# Used by Flutter tool to assess capabilities and perform upgrades etc.
+#
+# This file should be version controlled and should not be manually edited.
+
+version:
+  revision: "4cf24164269a5ebf0c16a028a00727d0e77bbb05"
+  channel: "stable"
+
+project_type: app
+
+# Tracks metadata for the flutter migrate command
+migration:
+  platforms:
+    - platform: root
+      create_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+      base_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+    - platform: android
+      create_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+      base_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+    - platform: web
+      create_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+      base_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+    - platform: windows
+      create_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+      base_revision: 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+
+  # User provided section
+
+  # List of Local paths (relative to this file) that should be
+  # ignored by the migrate tool.
+  #
+  # Files that are not part of the templates will be ignored by default.
+  unmanaged_files:
+    - 'lib/main.dart'
+    - 'ios/Runner.xcodeproj/project.pbxproj'
+</file>
+
+<file path=".repomixignore">
+# ==========================================
+# Repomix Ignore Setting (Kewpie_cup Project)
+# ==========================================
+
+# Repomix 出力ファイル自体
+repomix-output.*
+
+# Flutter & Dart ビルド生成物・キャッシュ
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# Android プラットフォーム生成物・Gradleキャッシュ
+android/.gradle/
+android/app/build/
+android/build/
+**/gradle-wrapper.jar
+**/problems-report.html
+
+# Windows デスクトップビルド生成物
+windows/flutter/ephemeral/
+
+# 依存関係ロックファイル（AI解析には pubspec.yaml だけで十分）
+pubspec.lock
+
+# ゲーム用メディア・アセット（バイナリ・大容量ファイル）
+# ※コード解析に不要な音源・グラフィック素材
+assets/audio/**/*.mp3
+assets/audio/**/*.ogg
+assets/audio/**/*.wav
+assets/images/**/*.png
+assets/images/**/*.jpg
+*.aseprite
+*.psd
+
+# IDE・エディタ固有ファイル
+.idea/
+.vscode/
+*.iml
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+</file>
+
+<file path="analysis_options.yaml">
+# This file configures the analyzer, which statically analyzes Dart code to
+# check for errors, warnings, and lints.
+#
+# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
+# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
+# invoked from the command line by running `flutter analyze`.
+
+# The following line activates a set of recommended lints for Flutter apps,
+# packages, and plugins designed to encourage good coding practices.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  # The lint rules applied to this project can be customized in the
+  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
+  # included above or to enable additional rules. A list of all available lints
+  # and their documentation is published at https://dart.dev/lints.
+  #
+  # Instead of disabling a lint rule for the entire project in the
+  # section below, it can also be suppressed for a single line of code
+  # or a specific dart file by using the `// ignore: name_of_lint` and
+  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
+  # producing the lint.
+  rules:
+    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
+    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options
+</file>
+
+<file path="CURRENT_CONTEXT.md">
+# CURRENT_CONTEXT.md (プロジェクト開発コンテキスト - Kewpie_cup)
+
+## 0. プロジェクト前提条件
+- **プロジェクト名**: `Kewpie_cup` (対CPU 剣道2D格闘バトルゲーム)
+- **フレームワーク**: Flutter (Stable) + Flame 2D Game Engine (v1.x)
+- **対象プラットフォーム**: Windows, Android, Web (横画面・ランドスケープ対戦操作を主軸とする)
+- **コード品質管理**: `flutter_lints` 準拠、`flutter analyze` エラー・警告0件、`flutter test` 全件通過をコミット基準とする。
+- **外部支援体制**: Android Studio内蔵エージェントによる実装を基本とし、複雑な課題・全体設計は外部サポート（アンちゃん）が客観的事実に基づき俯瞰して指示を行う。
+
+---
+
+## 1. 蓄積された設計方針・ルール
+
+### A. グラフィックおよびスプライト管理規約
+1. **フォールバック設計の厳守**:
+   - 画像アセット（PNG）が存在しない場合やロード失敗時でもクラッシュさせず、Canvas API によるプロシージャル描画（2Dドット絵風ベクターレンダリング）へ安全にフォールバックする構造を維持する。
+2. **キャラクター・ステージの規格統一**:
+   - 剣士キャラサイズ: **60×100 ピクセル** (`Anchor.bottomCenter`)。
+   - 道場ステージ幅: **600 ピクセル** (`stageMinX = -270`, `stageMaxX = 270`, 地面 `groundY = 0`)。
+   - アセット格納先: `assets/images/fighters/`, `assets/images/stage/`
+3. **アセットのバンドル定義**:
+   - Flutterのバンドラ仕様上、サブディレクトリは自動再帰されないため、`pubspec.yaml` にディレクトリを明示登録すること。
+4. **アニメーション制御**:
+   - すり足移動アニメーション（膝揺れ、竹刀の角度微動）を Flame `update(dt)` 内で時間計算制御する。
+
+### B. UI / HUD レイアウト規約（ストリートファイター2風対戦レイアウト）
+1. **画面方向**:
+   - `main.dart` にて `SystemChrome.setPreferredOrientations` を設定し、ランドスケープ（横画面）に固定。
+2. **上部対戦HUD**:
+   - 左側: 1Pヘルスバー（黄色/赤） & 名前「1P 剣士1」
+   - 中央: 制限時間タイマー「99」 / KOエンブレム枠
+   - 右側: 2Pヘルスバー（黄色/赤） & 名前「2P 剣士2 (CPU)」
+3. **下部操作オーバーレイ**:
+   - 左下/右下: 左右移動タッチボタン（「左移動 (A)」「右移動 (D)」）。
+
+### C. 格闘ゲームロジックおよび衝突・間合い判定
+1. **移動とステージ壁制限**:
+   - 左右移動（速度: 160 px/秒）。`-270 <= X <= 270` のステージ画面外飛び出しを制限。
+2. **身体押し合い判定 (Body Push Collision)**:
+   - 1Pと2Pの距離が `minFighterDistance = 36.0px` 未満になった場合、互いに押し合って体を通過させない。
+3. **自動向き反転 (Auto-Facing)**:
+   - 1Pと2Pの X 座標の位置関係（`p1.x < p2.x` か否か）に基づき、互いに正面を向き合うよう `facingDirection`（`scaleX`）を動的に制御する。
+
+---
+
+## 2. プロジェクト構造の概要
+
+```text
+kewpie_cup/
+  lib/
+    game/
+      components/
+        dojo_stage.dart      # 道場背景ステージ(板張り床、掛け軸、障子、境界線)
+        kendo_fighter.dart   # 剣道着・面・胴・垂・竹刀装備の剣士キャラ描画・移動
+      enums/
+        facing_direction.dart # キャラクター向き(left, right)とスケール定義
+      kendo_game.dart        # FlameGame本体(カメラ追従、押し合い判定、向き制御)
+    widgets/
+      fighting_hud.dart      # スト2風対戦HUD(1P/2Pヘルスバー、タイマー、タッチ操作ボタン)
+    main.dart                # エントリポイント(横画面固定設定)
+  test/
+    widget_test.dart         # 初期起動およびHUD描画検証ユニットテスト
+  .repomixignore             # Repomixパッキング除外設定
+  CURRENT_CONTEXT.md         # プロジェクト開発コンテキスト
+  REPORT.md                  # 開発進捗・作業報告ドキュメント
+```
+
+---
+
+## 3. これまでの開発履歴（要約）
+
+### [2026-10-21]
+- **Done**:
+  - `C:/Home/private/android-sdk-projects/kewpie_cup` に新規Flutter + Flameプロジェクトを立ち上げ。
+  - ストリートファイター2風の道場ステージ（`DojoStage`）と、竹刀を構えた2人の剣士（`KendoFighter`: 1P白稽古着、2P紺稽古着）を実装。
+  - 左右移動、キーボード（A/D・矢印キー）＆タッチ操作、ステージ壁制限、押し合い判定、入れ替わり時の自動向き反転を完成。
+  - 横画面（ランドスケープ）固定およびスト2風上部HUD（ヘルスバー・タイマー）を構成。
+  - `.repomixignore` および `CURRENT_CONTEXT.md` の初期化・最適化作成。
+- **Decisions**:
+  - 外部画像素材未配置でもすぐに遊べるよう、Canvasによる2Dドット絵風プロシージャル描画（面・胴・垂・竹刀等）を採用。
+  - 対戦格闘ゲームの可操作性を確保するため、横画面固定（ランドスケープ）と広めのステージ間合いをベースに採用。
+- **Issues/Blockers**:
+  - 現状のエラー・警告は0件 (`flutter analyze` 通過)。
+- **Next**:
+  - 竹刀による攻撃（「面」「胴」など）およびヒット判定の実装。
+
+---
+
+## 4. 残存課題および直近の推奨タスク
+
+### 現在の未解決・拡張課題
+1. **攻撃（打突）判定の実装**:
+   - 竹刀による「面」「胴」「小手」の打突攻撃とヒット判定（ヒットストップ、ダメージ処理）。
+2. **ガード（防御）および間合い管理**:
+   - 後退キーによる上段/中段ガード、間合い（一対一の隙）の概念。
+3. **CPU AIの拡張**:
+   - 単なる間合い保持から、間合い詰め・打突試行を行うCPU行動思考エンジン。
+4. **音響・演出の導入**:
+   - 竹刀が打ち合う「パシッ」音、面を叩く「メン！」の掛け声、勝負あり（一本）エフェクト。
+
+### 直近の最優先推奨タスク
+- **「面（Men）」および「胴（Do）」の攻撃ボタン追加と打突判定の実装**
+
+### [2026-10-21]
+- **Done**:
+    - 道場ステージ床面中央へ「｜   ×   ｜」の白線センターマークを追加・大型化し、旧境界線（赤い点2箇所）を削除。
+    - 剣道対戦ルール（防御による無効化・打突による一本・2勝先取ルール・HUD拡張・キーボード/タッチ操作）の実装。
+    - 2段階の踏み込み攻撃（振りかぶり前進→振り下ろし打突）および間合い管理（剣先の間合い／つばぜり合い）と離脱アクションの導入。
+    - 攻撃後のすれ違い・駆け抜けアクションおよび追い越し後の同時振り返り・構え復帰ロジックの導入。
+    - CPUキャラクターの視認性向上のため、胴の横帯を白、袴を黒へカラー変更。
+- **Decisions**:
+    - キャラクター描画は外部画像アセットに依存せず、Canvas API によるプロシージャル描画（ベクター描画）をベースとして維持。
+    - 攻撃時に相手背後に十分なスペースがある場合は、身体押し合いをバイパスして駆け抜けを発生させ、つばぜり合いへ移行させない仕様を採用。
+    - 1Pと2P（CPU）の外見識別のため、袴（紺／黒）および胴帯（赤／白）のプロパティを分離・適用。
+- **Issues/Blockers**:
+    - 剣士キャラクターの縦位置（接地Y座標）の不整合が継続中。`DojoStage` の床面ライン・センターマークのワールド座標と `KendoFighter` の足元・影の描画基準点が連動またはカメラ画角との兼ね合いでずれており、依然として床から浮いて見える状態が未解決。
+- **Next**:
+    - `DojoStage` の床面描画ライン、センターマーク位置、および `KendoFighter`（`Anchor.bottomCenter`）の足元描画オフセットの座標計算を再精査し、キャラクターの確実な床面接地を実現する。
+</file>
+
+<file path="pubspec.yaml">
+name: kewpie_cup
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.0
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.20.0
+  flame_audio: ^2.1.6
+  audioplayers: ^6.0.0
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  assets:
+    - assets/images/stage/
+    - assets/audio/sfx/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package
+</file>
+
+<file path="README.md">
+# kewpie_cup
+
+A new Flutter project.
+
+## Getting Started
+
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
+- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
+</file>
+
+<file path="repomix.config.json">
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "input": {
+    "maxFileSize": 52428800
+  },
+  "output": {
+    "filePath": "repomix-output.xml",
+    "style": "xml",
+    "filePathStyle": "target-relative",
+    "parsableStyle": false,
+    "fileSummary": true,
+    "directoryStructure": true,
+    "files": true,
+    "removeComments": false,
+    "removeEmptyLines": false,
+    "compress": false,
+    "topFilesLength": 5,
+    "showLineNumbers": false,
+    "truncateBase64": false,
+    "copyToClipboard": false,
+    "includeFullDirectoryStructure": false,
+    "tokenCountTree": false,
+    "git": {
+      "sortByChanges": true,
+      "sortByChangesMaxCommits": 100,
+      "includeDiffs": false,
+      "includeLogs": false,
+      "includeLogsCount": 50
+    }
+  },
+  "include": [],
+  "ignore": {
+    "useGitignore": true,
+    "useDotIgnore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": []
+  },
+  "security": {
+    "enableSecurityCheck": true
+  },
+  "tokenCount": {
+    "encoding": "o200k_base"
+  }
+}
+</file>
+
+<file path="REPORT.md">
+# 開発報告書: チャージ音再生の一時停止およびガード音・打撃音限定運用への修正
+
+## 1. 概要
+- チャージ音の正常発音不具合に伴い、チャージ音（`charge.mp3`）の再生処理を一時的に停止（取りやめ）し、効果音再生を「ガード音（`guard.mp3`）」および「打撃音（`hit.mp3`）」の2種類に限定しました。
+
+---
+
+## 2. 実施内容
+- `lib/game/audio/sound_manager.dart`:
+  - `init()` 内での `_chargePlayer` 初期化および読み込みの取りやめ。
+  - `playCharge()` および `stopCharge()` メソッドを安全な no-op（ノーオペレーション / 即時リターン）に変更。
+  - `_guardPool`（ガード音）および `_hitPool`（打撃音）による AudioPool 多重再生処理のみを有効化・維持。
+- `test/widget_test.dart`:
+  - 変更後も全19件のユニットテストが通過することを確認。
+
+---
+
+## 3. 修正ファイル一覧
+1. `lib/game/audio/sound_manager.dart`
+
+---
+
+## 4. 検証結果
+
+### `flutter analyze` の実行結果
+```bash
+Analyzing kewpie_cup...
+No issues found! (ran in 1.5s)
+```
+
+### `flutter test` の実行結果
+```bash
+00:02 +19: All tests passed!
+```
+</file>
+
+</files>
