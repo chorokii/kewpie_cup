@@ -1,3 +1,6 @@
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 # =====================================================================
 # Kewpie Cup (kewpie_cup) - GitHub Pages Deploy Script
 # =====================================================================
@@ -8,7 +11,26 @@ Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host " Starting Web Build for $RepoName... " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
-# 1. Flutter Web Release Build with base-href /kewpie_cup/
+# 1. Check Git Repository Initialization
+if (-not (Test-Path ".git")) {
+    Write-Host "[GIT] Initializing Git repository..." -ForegroundColor Yellow
+    git init
+    git branch -M main
+}
+
+# 2. Check Remote Origin URL
+$remoteUrl = & git remote get-url origin 2>$null
+if (-not $remoteUrl) {
+    Write-Host "==========================================" -ForegroundColor Red
+    Write-Host " [ERROR] GitHub remote (origin) URL is NOT configured!" -ForegroundColor Red
+    Write-Host " Please run this command ONCE in Terminal to link your GitHub repo:" -ForegroundColor Yellow
+    Write-Host "   git remote add origin https://github.com/<Your-GitHub-Username>/$RepoName.git" -ForegroundColor Cyan
+    Write-Host "==========================================" -ForegroundColor Red
+    exit 1
+}
+
+# 3. Flutter Web Release Build with base-href /kewpie_cup/
+Write-Host "[BUILD] Running Flutter Web Release Build..." -ForegroundColor Cyan
 flutter build web --release --base-href "/$RepoName/"
 
 if ($LASTEXITCODE -ne 0) {
@@ -18,19 +40,12 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "[SUCCESS] Web build completed in build\web" -ForegroundColor Green
 
-# 2. Initialize Git if not initialized
-if (-not (Test-Path ".git")) {
-    Write-Host "[GIT] Initializing Git repository..." -ForegroundColor Yellow
-    git init
-    git branch -M main
-}
-
-# 3. Add and Commit changes
+# 4. Add and Commit changes
 Write-Host "[GIT] Staging and committing files..." -ForegroundColor Cyan
 git add .
-git commit -m "Deploy $RepoName web release"
+git commit -m "Deploy $RepoName web release" 2>$null
 
-# 4. Deploy build\web to GitHub Pages via gh-pages
+# 5. Deploy build\web to GitHub Pages via gh-pages
 Write-Host "[DEPLOY] Deploying build\web to GitHub Pages..." -ForegroundColor Green
 npx --yes gh-pages -d build/web
 
@@ -39,8 +54,4 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host " DEPLOYMENT COMPLETE! " -ForegroundColor Green
     Write-Host " Your app will be live at: https://[Your-GitHub-Username].github.io/$RepoName/" -ForegroundColor Yellow
     Write-Host "==========================================" -ForegroundColor Green
-} else {
-    Write-Host "[NOTICE] If gh-pages push failed, please make sure you have added your GitHub remote:" -ForegroundColor Yellow
-    Write-Host "  git remote add origin https://github.com/[Your-GitHub-Username]/$RepoName.git" -ForegroundColor Yellow
-    Write-Host "  git push -u origin main" -ForegroundColor Yellow
 }
