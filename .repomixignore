@@ -1,0 +1,44 @@
+# ==========================================
+# Repomix Ignore Setting (Kewpie_cup Project)
+# ==========================================
+
+# Repomix 出力ファイル自体
+repomix-output.*
+
+# Flutter & Dart ビルド生成物・キャッシュ
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# Android プラットフォーム生成物・Gradleキャッシュ
+android/.gradle/
+android/app/build/
+android/build/
+**/gradle-wrapper.jar
+**/problems-report.html
+
+# Windows デスクトップビルド生成物
+windows/flutter/ephemeral/
+
+# 依存関係ロックファイル（AI解析には pubspec.yaml だけで十分）
+pubspec.lock
+
+# ゲーム用メディア・アセット（バイナリ・大容量ファイル）
+# ※コード解析に不要な音源・グラフィック素材
+assets/audio/**/*.mp3
+assets/audio/**/*.ogg
+assets/audio/**/*.wav
+assets/images/**/*.png
+assets/images/**/*.jpg
+*.aseprite
+*.psd
+
+# IDE・エディタ固有ファイル
+.idea/
+.vscode/
+*.iml
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
