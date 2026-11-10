@@ -1,11 +1,11 @@
 {
-    "name": "kewpie_cup",
-    "short_name": "kewpie_cup",
-    "start_url": ".",
+    "name": "キューピーカップ 剣道対戦",
+    "short_name": "剣道対戦",
+    "start_url": "./",
     "display": "standalone",
     "background_color": "#0D0D11",
     "theme_color": "#0D0D11",
-    "description": "Kewpie Cup Kendo Game",
+    "description": "キューピーカップ 剣道対戦Webアプリ",
     "orientation": "landscape",
     "prefer_related_applications": false,
     "icons": [
