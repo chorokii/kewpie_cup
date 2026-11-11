@@ -76,7 +76,7 @@ class _TitleScreenState extends State<TitleScreen> {
                   // const SizedBox(height: 10),
                   _buildSectionHeader('【勝つためのルール（先守後攻）】'),
                   const Text(
-                    '・画面が赤く光ったら防御する\n'
+                    '・画面全体が赤く光ったら防御する\n'
                     '・防御成功時、攻撃のチャンス\n'
                     '・防御成功していないと、攻撃は効かない\n'
                     '・３回攻撃を決めると、１本取れる\n'
