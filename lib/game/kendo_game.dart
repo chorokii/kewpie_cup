@@ -34,6 +34,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final double stageMinX = -520.0;
   final double stageMaxX = 520.0;
 
+  // Attack double-tap detection for Tsubazeriai push-away
+  int _lastAttackTapTimeMs = 0;
+  static const int attackDoubleTapThresholdMs = 300;
+
   // Game lifecycle, HUD & Settings ValueNotifiers
   final gameStateNotifier = ValueNotifier<KendoGameState>(KendoGameState.playing);
   final p1HealthNotifier = ValueNotifier<double>(100.0);
@@ -239,10 +243,37 @@ class KendoGame extends FlameGame with KeyboardEvents {
     p1.stopGuard();
   }
 
-  void attackP1() {
+  void attackP1({bool? forceDoubleTap}) {
     if (isPausedNotifier.value || isRoundStarting) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final isDoubleTap = forceDoubleTap ??
+        ((now - _lastAttackTapTimeMs) <= attackDoubleTapThresholdMs);
+    _lastAttackTapTimeMs = now;
+
     if (p1.isTsubazeriai) {
-      // 鍔迫り合い（ゴゴゴ･･）時の押し合い判定：攻撃入力で相手を押し込む
+      // 鍔迫り合い（ゴゴゴ･･）時のルール:
+      // [1] 自分が敵の左位置 (p1.x < p2.x) かつ 中央より左側 (p1.x < 0.0) でダブルタップ -> 相手を右端 (stageMaxX) まで突き飛ばす
+      if (isDoubleTap && p1.position.x < p2.position.x && p1.position.x < 0.0) {
+        p2.position.x = stageMaxX;
+        p2.velocityX = 0.0;
+        p1.isTsubazeriai = false;
+        p2.isTsubazeriai = false;
+        cpuTsubazeriaiTimer = 0.0;
+        return;
+      }
+
+      // [2] 自分が敵の右位置 (p1.x > p2.x) かつ 中央より右側 (p1.x > 0.0) でダブルタップ -> 相手を左端 (stageMinX) まで突き飛ばす
+      if (isDoubleTap && p1.position.x > p2.position.x && p1.position.x > 0.0) {
+        p2.position.x = stageMinX;
+        p2.velocityX = 0.0;
+        p1.isTsubazeriai = false;
+        p2.isTsubazeriai = false;
+        cpuTsubazeriaiTimer = 0.0;
+        return;
+      }
+
+      // 通常の鍔迫り合い押し合い判定：単発攻撃入力で相手を20.0px押し込む
       final pushDir = p1.position.x < p2.position.x ? 1.0 : -1.0;
       p2.position.x = (p2.position.x + pushDir * 20.0).clamp(stageMinX, stageMaxX);
       return;
@@ -275,6 +306,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     SoundManager.stopCharge();
     hitStopTimer = 0.0;
     screenShakeTimer = 0.0;
+    _lastAttackTapTimeMs = 0;
     isMatchOverResultPending = false;
     matchOverResultTimer = 0.0;
     pendingMatchResultText = '';
@@ -301,7 +333,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
     final currentGameState = gameStateNotifier.value;
 
-    // 1. Handle Round Over timer (2.0s display of "〇あり" before starting next round)
+    // 1. Handle Round Over timer (2.0s display of "〇あり" or "時間切れ" before starting next round)
     if (currentGameState == KendoGameState.roundOver) {
       roundOverTimer += dt;
       if (roundOverTimer >= roundOverDelay) {
@@ -317,7 +349,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       }
     }
 
-    // 1-B. Handle Match Over transition (2.0s display of "〇あり" -> "あなたの勝ち" / "あなたの負け")
+    // 1-B. Handle Match Over transition (2.0s display of "〇あり" or "時間切れ" -> "あなたの勝ち" / "あなたの負け")
     if (currentGameState == KendoGameState.matchOver && isMatchOverResultPending) {
       matchOverResultTimer += dt;
       if (matchOverResultTimer >= matchOverAnnouncementDelay) {
@@ -352,10 +384,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
       roundTimerNotifier.value = displaySeconds;
 
       if (roundTimer <= 0.0) {
-        // Time-Out! CPU (p2) scores Ippon on time expiration
+        // Time-Out! CPU (p2) scores Ippon on time expiration with "時間切れ" display
         roundTimer = 0.0;
         roundTimerNotifier.value = 0;
-        _scoreIppon(attacker: p2, defender: p1);
+        _scoreIppon(attacker: p2, defender: p1, customCallText: '時間切れ');
       }
     }
 
@@ -616,9 +648,13 @@ class KendoGame extends FlameGame with KeyboardEvents {
     }
   }
 
-  void _scoreIppon({required KendoFighter attacker, required KendoFighter defender}) {
+  void _scoreIppon({
+    required KendoFighter attacker,
+    required KendoFighter defender,
+    String? customCallText,
+  }) {
     attacker.winCount++;
-    final ipponCall = rollIpponCallText();
+    final ipponCall = customCallText ?? rollIpponCallText();
 
     if (attacker.winCount >= 2) {
       gameStateNotifier.value = KendoGameState.matchOver;
