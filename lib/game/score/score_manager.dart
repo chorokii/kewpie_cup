@@ -19,17 +19,19 @@ class ScoreManager {
       winsNotifier.value = prefs.getInt(_keyWins) ?? 0;
       lossesNotifier.value = prefs.getInt(_keyLosses) ?? 0;
       streakNotifier.value = prefs.getInt(_keyStreak) ?? 0;
-      KendoFighter.guardActiveDuration = prefs.getDouble(_keyGuardDuration) ?? 0.4;
+      final savedDuration = prefs.getDouble(_keyGuardDuration) ?? 0.4;
+      KendoFighter.guardActiveDuration = savedDuration.clamp(0.2, 1.0);
     } catch (e) {
       debugPrint('ScoreManager load warning: $e');
     }
   }
 
   static Future<void> setGuardDuration(double duration) async {
-    KendoFighter.guardActiveDuration = duration;
+    final clamped = duration.clamp(0.2, 1.0);
+    KendoFighter.guardActiveDuration = clamped;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble(_keyGuardDuration, duration);
+      await prefs.setDouble(_keyGuardDuration, clamped);
     } catch (e) {
       debugPrint('ScoreManager setGuardDuration warning: $e');
     }

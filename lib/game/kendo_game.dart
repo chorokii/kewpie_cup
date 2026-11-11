@@ -41,7 +41,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final overlayTextNotifier = ValueNotifier<String>('');
   final isPausedNotifier = ValueNotifier<bool>(false);
   final isDebugVisibleNotifier = ValueNotifier<bool>(false); // デバッグ座標表示（入/切）
-  final isSoundEnabledNotifier = ValueNotifier<bool>(true); // 効果音（入/切）
+  final isSoundEnabledNotifier = ValueNotifier<bool>(false); // 効果音（入/切、初期値: 切）
   final bgFlashNotifier = ValueNotifier<double>(0.0); // 全画面打撃直前200ms背景フラッシュ警告
   final isEnemyOnRightNotifier = ValueNotifier<bool>(true); // 敵が右側にいるか（左右動的判定・ボタン色反転用）
 

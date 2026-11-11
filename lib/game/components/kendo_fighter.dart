@@ -49,7 +49,7 @@ class KendoFighter extends PositionComponent {
 
   // Action states
   bool isGuarding = false;
-  static double guardActiveDuration = 0.4; // 防御アクティブウィンドウ持続時間（デフォルト0.4秒、設定画面で0.4s～3.0s可変）
+  static double guardActiveDuration = 0.4; // 防御アクティブウィンドウ持続時間（デフォルト0.4秒、設定画面で0.2s～1.0s可変）
   static const double guardCooldownDuration = 0.2; // 防御クールダウン時間（0.2秒）
   double guardTimer = 0.0;
   double guardCooldownTimer = 0.0;

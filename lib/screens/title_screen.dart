@@ -13,7 +13,7 @@ class TitleScreen extends StatefulWidget {
 }
 
 class _TitleScreenState extends State<TitleScreen> {
-  static bool _soundEnabled = true;
+  static bool _soundEnabled = false;
   static bool _debugEnabled = false;
 
   @override
@@ -78,7 +78,7 @@ class _TitleScreenState extends State<TitleScreen> {
                     '・敵の面打ち（赤エフェクト）に合わせて防御すると「ジャスト防御成功」！\n'
                     '・成功時、敵が1.5秒間「体勢崩れ（反撃チャンス）」になります。\n'
                     '・反撃チャンス中のみプレイヤーの攻撃がヒットし一本となります（平常時の攻撃は自動防がれます）。\n'
-                    '・防御有効時間は設定画面で0.4秒〜3.0秒まで自由に調整可能です。\n'
+                    '・防御有効時間は設定画面で0.2秒〜1.0秒まで自由に調整可能です。\n'
                     '・制限時間30秒、2本先取で勝利！',
                     style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                   ),
@@ -211,7 +211,7 @@ class _TitleScreenState extends State<TitleScreen> {
                         ],
                       ),
                       const Divider(color: Colors.white24, height: 18),
-                      // 3. Guard Active Duration Slider (400ms ～ 3000ms / 0.4s ～ 3.0s)
+                      // 3. Guard Active Duration Slider (200ms ～ 1000ms / 0.2s ～ 1.0s)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -223,16 +223,16 @@ class _TitleScreenState extends State<TitleScreen> {
                                 style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                '${KendoFighter.guardActiveDuration.toStringAsFixed(1)}秒 (${(KendoFighter.guardActiveDuration * 1000).toInt()}ms)',
+                                '${KendoFighter.guardActiveDuration.toStringAsFixed(1)}秒 (${(KendoFighter.guardActiveDuration * 1000).round()}ms)',
                                 style: const TextStyle(color: Colors.amberAccent, fontSize: 14, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
                           Slider(
-                            value: KendoFighter.guardActiveDuration.clamp(0.4, 3.0),
-                            min: 0.4,
-                            max: 3.0,
-                            divisions: 26, // 0.1s刻み (0.4s, 0.5s, ..., 3.0s)
+                            value: KendoFighter.guardActiveDuration.clamp(0.2, 1.0),
+                            min: 0.2,
+                            max: 1.0,
+                            divisions: 8, // 0.1s刻み (0.2s, 0.3s, 0.4s, ..., 1.0s)
                             activeColor: Colors.amberAccent,
                             inactiveColor: Colors.grey.shade700,
                             label: '${KendoFighter.guardActiveDuration.toStringAsFixed(1)}秒',
@@ -345,12 +345,14 @@ class _TitleScreenState extends State<TitleScreen> {
                   final isLandscape = constraints.maxWidth > constraints.maxHeight;
                   final isCompactHeight = constraints.maxHeight < 420;
                   final buttonWidth = isLandscape ? 180.0 : 240.0;
-                  final buttonHeight = isCompactHeight ? 42.0 : 48.0;
+                  final buttonHeight = isCompactHeight ? 44.0 : 48.0;
 
                   return Center(
                     child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: isCompactHeight ? 12 : 20,
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -358,7 +360,7 @@ class _TitleScreenState extends State<TitleScreen> {
                           // Title Logo / Header
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: isCompactHeight ? 20 : 28,
+                              horizontal: 28,
                               vertical: isCompactHeight ? 8 : 12,
                             ),
                             decoration: BoxDecoration(
@@ -373,17 +375,18 @@ class _TitleScreenState extends State<TitleScreen> {
                               ],
                             ),
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   'キューピーカップ',
                                   style: TextStyle(
                                     color: Colors.amberAccent,
-                                    fontSize: isCompactHeight ? 14 : 18,
+                                    fontSize: isCompactHeight ? 15 : 18,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 3,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 4),
                                 Text(
                                   '剣道対戦',
                                   style: TextStyle(
@@ -399,7 +402,7 @@ class _TitleScreenState extends State<TitleScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(height: isCompactHeight ? 10 : 18),
+                          SizedBox(height: isCompactHeight ? 12 : 20),
 
                           // Persistent Score & Win Streak Badge
                           ValueListenableBuilder<int>(
@@ -413,7 +416,7 @@ class _TitleScreenState extends State<TitleScreen> {
                                     builder: (context, streak, _) {
                                       final streakText = streak > 0 ? ' ($streak連勝中！)' : '';
                                       return Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: Colors.black.withValues(alpha: 0.8),
                                           border: Border.all(color: Colors.amber, width: 1.5),
@@ -421,11 +424,11 @@ class _TitleScreenState extends State<TitleScreen> {
                                         ),
                                         child: Text(
                                           '通算成績: $wins勝 $losses敗$streakText',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.amberAccent,
-                                            fontSize: isCompactHeight ? 12 : 14,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.bold,
-                                            letterSpacing: 1.2,
+                                            letterSpacing: 1.5,
                                           ),
                                         ),
                                       );
@@ -435,14 +438,14 @@ class _TitleScreenState extends State<TitleScreen> {
                               );
                             },
                           ),
-                          SizedBox(height: isCompactHeight ? 12 : 20),
+                          SizedBox(height: isCompactHeight ? 14 : 20),
 
-                          // 3 Menu Choice Buttons: 試合開始, 心得, 設定
+                          // 3 Menu Choice Buttons: 横画面時は横並び、縦画面時は縦並び
                           if (isLandscape)
                             Wrap(
+                              spacing: 16,
+                              runSpacing: 12,
                               alignment: WrapAlignment.center,
-                              spacing: 12,
-                              runSpacing: 10,
                               children: [
                                 _buildMenuButton(
                                   icon: Icons.play_arrow,
@@ -480,6 +483,7 @@ class _TitleScreenState extends State<TitleScreen> {
                             )
                           else
                             Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 _buildMenuButton(
                                   icon: Icons.play_arrow,
@@ -497,7 +501,7 @@ class _TitleScreenState extends State<TitleScreen> {
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 14),
                                 _buildMenuButton(
                                   icon: Icons.auto_stories,
                                   label: '心得',
@@ -506,7 +510,7 @@ class _TitleScreenState extends State<TitleScreen> {
                                   height: buttonHeight,
                                   onPressed: _openGuideDialog,
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 14),
                                 _buildMenuButton(
                                   icon: Icons.settings,
                                   label: '設定',
@@ -545,6 +549,7 @@ class _TitleScreenState extends State<TitleScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: const BorderSide(color: Colors.amber, width: 1.5),
@@ -552,13 +557,13 @@ class _TitleScreenState extends State<TitleScreen> {
           elevation: 6,
         ),
         onPressed: onPressed,
-        icon: Icon(icon, color: Colors.amberAccent, size: height > 44 ? 24 : 20),
+        icon: Icon(icon, color: Colors.amberAccent, size: 22),
         label: Text(
           label,
-          style: TextStyle(
-            fontSize: height > 44 ? 17 : 15,
+          style: const TextStyle(
+            fontSize: 17,
             fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
+            letterSpacing: 2,
           ),
         ),
       ),

@@ -39,9 +39,9 @@ void main() {
   });
 
   group('ScoreManager persistent score tracking and clear tests', () {
-    test('setGuardDuration updates KendoFighter.guardActiveDuration and persists setting', () async {
-      await ScoreManager.setGuardDuration(1.5);
-      expect(KendoFighter.guardActiveDuration, equals(1.5));
+    test('setGuardDuration updates KendoFighter.guardActiveDuration within 0.2..1.0 and persists setting', () async {
+      await ScoreManager.setGuardDuration(0.8);
+      expect(KendoFighter.guardActiveDuration, equals(0.8));
 
       final fighter = KendoFighter(
         name: 'TestFighter',
@@ -55,12 +55,12 @@ void main() {
       fighter.startGuard();
       expect(fighter.isGuarding, isTrue);
 
-      // Advance 1.0s (out of 1.5s active duration) -> still guarding!
-      fighter.update(1.00);
+      // Advance 0.6s (out of 0.8s active duration) -> still guarding!
+      fighter.update(0.60);
       expect(fighter.isGuarding, isTrue);
 
-      // Advance another 0.6s (total 1.6s) -> guard expires
-      fighter.update(0.60);
+      // Advance another 0.3s (total 0.9s) -> guard expires
+      fighter.update(0.30);
       expect(fighter.isGuarding, isFalse);
 
       // Reset back to default 0.4s
