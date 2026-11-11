@@ -76,12 +76,16 @@ class KendoFighter extends PositionComponent {
   double justGuardEffectTimer = 0.0;
   double hitImpactEffectTimer = 0.0;
 
-  // Tsubazeriai & Disengage
+  // Tsubazeriai, Disengage & PushBack (突き飛ばし)
   bool isTsubazeriai = false;
   bool isDisengaging = false;
   double disengageTimer = 0.0;
   static const double disengageDuration = 0.25;
   static const double disengageSpeed = 320.0;
+
+  bool isPushedBack = false;
+  double pushBackTargetX = 0.0;
+  static const double pushBackSpeed = disengageSpeed * 1.5; // 後退速度(320.0)の1.5倍 = 480.0
 
   // Pass-Through (すれ違い・駆け抜け) & Turnaround (振り返り)
   bool isPassingThrough = false;
@@ -93,7 +97,7 @@ class KendoFighter extends PositionComponent {
   double hitStunTimer = 0.0;
 
   void move(double directionInput) {
-    if (isDisengaging || isAttacking || isPassingThrough || isTurningAround) return;
+    if (isDisengaging || isPushedBack || isAttacking || isPassingThrough || isTurningAround) return;
 
     isFarAdvancing = false;
     farAdvanceTimer = 0.0;
@@ -112,7 +116,7 @@ class KendoFighter extends PositionComponent {
   }
 
   void startFarAdvance(double directionInput) {
-    if (isAttacking || hitStunTimer > 0 || isDisengaging || isPassingThrough || isTurningAround) return;
+    if (isAttacking || hitStunTimer > 0 || isDisengaging || isPushedBack || isPassingThrough || isTurningAround) return;
     isFarAdvancing = true;
     farAdvanceTimer = 0.0;
     final speed = isGuarding ? (walkSpeed * guardSpeedMultiplier) : walkSpeed;
@@ -120,7 +124,7 @@ class KendoFighter extends PositionComponent {
   }
 
   void stop() {
-    if (!isDisengaging && !isAttacking && !isPassingThrough && !isTurningAround && !isFarAdvancing) {
+    if (!isDisengaging && !isPushedBack && !isAttacking && !isPassingThrough && !isTurningAround && !isFarAdvancing) {
       velocityX = 0.0;
     }
   }
@@ -130,7 +134,7 @@ class KendoFighter extends PositionComponent {
   }
 
   void startGuard() {
-    if (isGuarding || guardCooldownTimer > 0 || isAttacking || isDisengaging || isPassingThrough || isTurningAround || hitStunTimer > 0) {
+    if (isGuarding || guardCooldownTimer > 0 || isAttacking || isDisengaging || isPushedBack || isPassingThrough || isTurningAround || hitStunTimer > 0) {
       debugPrint('[Guard-Start BLOCKED] $name: isGuarding=$isGuarding, cooldown=${guardCooldownTimer.toStringAsFixed(2)}s, isAttacking=$isAttacking, isDisengaging=$isDisengaging, hitStun=${hitStunTimer.toStringAsFixed(2)}s');
       return;
     }
@@ -156,7 +160,7 @@ class KendoFighter extends PositionComponent {
   }
 
   void attack({double? blinkDuration}) {
-    if (isAttacking || hitStunTimer > 0 || isDisengaging || isPassingThrough || isTurningAround) return;
+    if (isAttacking || hitStunTimer > 0 || isDisengaging || isPushedBack || isPassingThrough || isTurningAround) return;
 
     isFarAdvancing = false;
     farAdvanceTimer = 0.0;
@@ -173,7 +177,7 @@ class KendoFighter extends PositionComponent {
   }
 
   void disengage() {
-    if (isDisengaging || hitStunTimer > 0 || isPassingThrough) return;
+    if (isDisengaging || isPushedBack || hitStunTimer > 0 || isPassingThrough) return;
     isFarAdvancing = false;
     farAdvanceTimer = 0.0;
     isDisengaging = true;
@@ -187,9 +191,29 @@ class KendoFighter extends PositionComponent {
     velocityX = backwardDir * disengageSpeed;
   }
 
+  void startPushBack({required double targetX}) {
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
+    isTsubazeriai = false;
+    isDisengaging = false;
+    disengageTimer = 0.0;
+    isGuarding = false;
+    guardTimer = 0.0;
+    isAttacking = false;
+    attackTimer = 0.0;
+    isPassingThrough = false;
+    isTurningAround = false;
+
+    isPushedBack = true;
+    pushBackTargetX = targetX;
+    final dir = targetX >= position.x ? 1.0 : -1.0;
+    velocityX = dir * pushBackSpeed;
+  }
+
   void startPassThrough({required double targetX}) {
     isFarAdvancing = false;
     farAdvanceTimer = 0.0;
+    isPushedBack = false;
     isPassingThrough = true;
     passThroughTargetX = targetX;
     isTsubazeriai = false;
@@ -201,6 +225,7 @@ class KendoFighter extends PositionComponent {
   void startTurnaround({required FacingDirection newFacing}) {
     isFarAdvancing = false;
     farAdvanceTimer = 0.0;
+    isPushedBack = false;
     isPassingThrough = false;
     isTurningAround = true;
     turnaroundTimer = 0.0;
@@ -223,6 +248,7 @@ class KendoFighter extends PositionComponent {
     isTsubazeriai = false;
     isAttacking = false;
     isDisengaging = false;
+    isPushedBack = false;
     isPassingThrough = false;
     isTurningAround = false;
     isGuarding = false;
@@ -241,6 +267,8 @@ class KendoFighter extends PositionComponent {
     isAttacking = false;
     isTsubazeriai = false;
     isDisengaging = false;
+    isPushedBack = false;
+    pushBackTargetX = 0.0;
     isPassingThrough = false;
     isTurningAround = false;
     isFarAdvancing = false;
@@ -281,6 +309,22 @@ class KendoFighter extends PositionComponent {
     if (hitImpactEffectTimer > 0) {
       hitImpactEffectTimer -= dt;
       if (hitImpactEffectTimer < 0) hitImpactEffectTimer = 0;
+    }
+
+    // Handle Push-Back movement (鍔迫り合い突き飛ばし時の連続移動: 後退速度の1.5倍 = 480.0px/s)
+    if (isPushedBack) {
+      final diff = pushBackTargetX - position.x;
+      final step = pushBackSpeed * dt;
+      if (diff.abs() <= step) {
+        position.x = pushBackTargetX;
+        velocityX = 0.0;
+        isPushedBack = false;
+        isMoving = false;
+        walkAnimationTimer = 0.0;
+      } else {
+        final dir = diff > 0 ? 1.0 : -1.0;
+        velocityX = dir * pushBackSpeed;
+      }
     }
 
     // Handle 1-step Far Advance (間合い外攻撃タップ時の1踏み込み前進と自動停止)

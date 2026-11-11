@@ -487,7 +487,7 @@ void main() {
       expect(game.rollIpponCallText(0.99), equals('胴あり'));
     });
 
-    test('30-second time-out awards Ippon to CPU', () async {
+    test('30-second time-out awards Ippon to CPU and displays 時間切れ', () async {
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -497,9 +497,26 @@ void main() {
       // Advance time by 30.1 seconds
       game.update(30.1);
 
-      // CPU (p2) receives win from time-out
+      // CPU (p2) receives win from time-out with "時間切れ"
       expect(game.p2.winCount, equals(1));
       expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
+      expect(game.overlayTextNotifier.value, equals('時間切れ'));
+
+      // 2nd time-out leads to matchOver displaying "時間切れ" for 2.0s then "あなたの負け"
+      final game2 = KendoGame();
+      await game2.onLoad();
+      game2.isRoundStarting = false;
+      game2.p2.winCount = 1;
+
+      game2.update(30.1);
+      expect(game2.p2.winCount, equals(2));
+      expect(game2.gameStateNotifier.value, equals(KendoGameState.matchOver));
+      expect(game2.isMatchOverResultPending, isTrue);
+      expect(game2.overlayTextNotifier.value, equals('時間切れ'));
+
+      game2.update(2.1);
+      expect(game2.isMatchOverResultPending, isFalse);
+      expect(game2.overlayTextNotifier.value, equals('あなたの負け'));
     });
 
     test('Close contact distance triggers Tsubazeriai state', () async {
@@ -515,6 +532,68 @@ void main() {
 
       expect(game.p1.isTsubazeriai, isTrue);
       expect(game.p2.isTsubazeriai, isTrue);
+    });
+
+    test('Tsubazeriai Rule [1]: P1 on left of P2 and left of center (< 0), double-tap attack smoothly pushes P2 to right edge at 1.5x disengage speed', () async {
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // P1 is left of P2 (-200 < -100) and left of center (-200 < 0)
+      game.p1.position.x = -200.0;
+      game.p2.position.x = -100.0;
+      game.p1.isTsubazeriai = true;
+      game.p2.isTsubazeriai = true;
+
+      // Double-tap attack starts continuous push-back at 1.5x disengage speed (480.0 px/s)
+      game.attackP1(forceDoubleTap: true);
+
+      expect(game.p1.isTsubazeriai, isFalse);
+      expect(game.p2.isTsubazeriai, isFalse);
+      expect(game.p2.isPushedBack, isTrue);
+      expect(game.p2.velocityX, equals(KendoFighter.disengageSpeed * 1.5));
+      expect(game.p2.position.x, equals(-100.0)); // Does NOT warp immediately
+
+      // Advance 0.5s -> P2 moves halfway (+240px to 140.0) while still visible & moving
+      game.update(0.50);
+      expect(game.p2.isPushedBack, isTrue);
+      expect(game.p2.position.x, closeTo(140.0, 1.0));
+
+      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches right edge (stageMaxX = 520.0) and stops
+      game.update(0.80);
+      expect(game.p2.isPushedBack, isFalse);
+      expect(game.p2.position.x, equals(game.stageMaxX));
+    });
+
+    test('Tsubazeriai Rule [2]: P1 on right of P2 and right of center (> 0), double-tap attack smoothly pushes P2 to left edge at 1.5x disengage speed', () async {
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // P1 is right of P2 (200 > 100) and right of center (200 > 0)
+      game.p1.position.x = 200.0;
+      game.p2.position.x = 100.0;
+      game.p1.isTsubazeriai = true;
+      game.p2.isTsubazeriai = true;
+
+      // Double-tap attack starts continuous push-back at -1.5x disengage speed (-480.0 px/s)
+      game.attackP1(forceDoubleTap: true);
+
+      expect(game.p1.isTsubazeriai, isFalse);
+      expect(game.p2.isTsubazeriai, isFalse);
+      expect(game.p2.isPushedBack, isTrue);
+      expect(game.p2.velocityX, equals(-KendoFighter.disengageSpeed * 1.5));
+      expect(game.p2.position.x, equals(100.0)); // Does NOT warp immediately
+
+      // Advance 0.5s -> P2 moves halfway (-240px to -140.0) while still visible & moving
+      game.update(0.50);
+      expect(game.p2.isPushedBack, isTrue);
+      expect(game.p2.position.x, closeTo(-140.0, 1.0));
+
+      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches left edge (stageMinX = -520.0) and stops
+      game.update(0.80);
+      expect(game.p2.isPushedBack, isFalse);
+      expect(game.p2.position.x, equals(game.stageMinX));
     });
 
     test('2 wins displays Ippon call for 2.0s then transitions to あなたの勝ち or あなたの負け', () async {

@@ -253,22 +253,18 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
     if (p1.isTsubazeriai) {
       // 鍔迫り合い（ゴゴゴ･･）時のルール:
-      // [1] 自分が敵の左位置 (p1.x < p2.x) かつ 中央より左側 (p1.x < 0.0) でダブルタップ -> 相手を右端 (stageMaxX) まで突き飛ばす
+      // [1] 自分が敵の左位置 (p1.x < p2.x) かつ 中央より左側 (p1.x < 0.0) でダブルタップ -> 相手を右端 (stageMaxX) まで後退の1.5倍速度で突き飛ばす
       if (isDoubleTap && p1.position.x < p2.position.x && p1.position.x < 0.0) {
-        p2.position.x = stageMaxX;
-        p2.velocityX = 0.0;
         p1.isTsubazeriai = false;
-        p2.isTsubazeriai = false;
+        p2.startPushBack(targetX: stageMaxX);
         cpuTsubazeriaiTimer = 0.0;
         return;
       }
 
-      // [2] 自分が敵の右位置 (p1.x > p2.x) かつ 中央より右側 (p1.x > 0.0) でダブルタップ -> 相手を左端 (stageMinX) まで突き飛ばす
+      // [2] 自分が敵の右位置 (p1.x > p2.x) かつ 中央より右側 (p1.x > 0.0) でダブルタップ -> 相手を左端 (stageMinX) まで後退の1.5倍速度で突き飛ばす
       if (isDoubleTap && p1.position.x > p2.position.x && p1.position.x > 0.0) {
-        p2.position.x = stageMinX;
-        p2.velocityX = 0.0;
         p1.isTsubazeriai = false;
-        p2.isTsubazeriai = false;
+        p2.startPushBack(targetX: stageMinX);
         cpuTsubazeriaiTimer = 0.0;
         return;
       }
@@ -431,7 +427,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
     // 6. Body Pushing & Collision (Bypassed during Pass-Through or Turnaround)
     final isPassingOrTurning = p1.isPassingThrough || p2.isPassingThrough ||
-        p1.isTurningAround || p2.isTurningAround;
+        p1.isTurningAround || p2.isTurningAround ||
+        p1.isPushedBack || p2.isPushedBack;
 
     if (!isPassingOrTurning) {
       final diffX = p1.position.x - p2.position.x;
@@ -533,7 +530,9 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void _updateTsubazeriai(double dt) {
-    if (p1.isPassingThrough || p2.isPassingThrough || p1.isTurningAround || p2.isTurningAround) {
+    if (p1.isPassingThrough || p2.isPassingThrough ||
+        p1.isTurningAround || p2.isTurningAround ||
+        p1.isPushedBack || p2.isPushedBack) {
       p1.isTsubazeriai = false;
       p2.isTsubazeriai = false;
       cpuTsubazeriaiTimer = 0.0;
@@ -678,6 +677,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
   void _updateCpu(double dt) {
     if (p2.isPlayer) return;
+    if (p2.isPushedBack) return;
 
     final dist = (p1.position.x - p2.position.x).abs();
 
