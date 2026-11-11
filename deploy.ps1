@@ -29,6 +29,16 @@ if (-not $remoteUrl) {
     exit 1
 }
 
+# 2.5. Generate Launcher Icons if source icon exists
+if (Test-Path "assets/images/icon/app_icon.png") {
+    Write-Host "[ICON] Generating launcher icons from assets/images/icon/app_icon.png..." -ForegroundColor Cyan
+    dart run flutter_launcher_icons
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] flutter_launcher_icons failed!" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+}
+
 # 3. Flutter Web Release Build with base-href /kewpie_cup/
 Write-Host "[BUILD] Running Flutter Web Release Build..." -ForegroundColor Cyan
 flutter build web --release --base-href "/$RepoName/"
