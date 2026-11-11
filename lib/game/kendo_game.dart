@@ -23,6 +23,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   static const double stageWidth = 1280.0; // 1280x720 16:9 full background resolution
   static const double stageGroundY = 0.0; // Stage floor world Y coordinate
   static const double fighterGroundY = 250.0; // Target position Y = 250.0
+  static const double strikeDamage = 34.0; // 3回ヒットで1本 (100.0 -> 66.0 -> 32.0 -> 0.0)
 
   late final DojoStage stage;
   late final KendoFighter p1;
@@ -607,7 +608,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
           triggerHitStop(0.06); // 0.06s Hit-Stop!
           triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
           final wasZeroHealth = defender.health <= 0;
-          defender.takeDamage(25.0);
+          defender.takeDamage(strikeDamage);
 
           if (wasZeroHealth || defender.health <= 0) {
             _scoreIppon(attacker: attacker, defender: defender);
@@ -652,7 +653,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
           triggerHitStop(0.06); // 0.06s Hit-Stop!
           triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
           final wasZeroHealth = defender.health <= 0;
-          defender.takeDamage(25.0);
+          defender.takeDamage(strikeDamage);
 
           if (wasZeroHealth || defender.health <= 0) {
             _scoreIppon(attacker: attacker, defender: defender);
