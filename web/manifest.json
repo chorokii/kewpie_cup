@@ -2,11 +2,12 @@
     "name": "キューピーカップ 剣道対戦",
     "short_name": "剣道対戦",
     "start_url": "./",
+    "scope": "./",
     "display": "standalone",
     "background_color": "#0D0D11",
     "theme_color": "#0D0D11",
     "description": "キューピーカップ 剣道対戦Webアプリ",
-    "orientation": "landscape",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

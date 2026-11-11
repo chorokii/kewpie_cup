@@ -95,7 +95,11 @@ lib/
       kendo_fighter.dart
     enums/
       facing_direction.dart
+    score/
+      score_manager.dart
     kendo_game.dart
+  screens/
+    title_screen.dart
   widgets/
     fighting_hud.dart
   main.dart
@@ -137,6 +141,8 @@ windows/
 .repomixignore
 analysis_options.yaml
 CURRENT_CONTEXT.md
+deploy.ps1
+package.json
 pubspec.yaml
 README.md
 repomix.config.json
@@ -437,94 +443,35 @@ include(":app")
 </file>
 
 <file path="lib/game/audio/sound_manager.dart">
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/widgets.dart';
-
 class SoundManager {
   static bool isEnabled = true;
 
-  // 短いSE用の AudioPool（ガード音・ヒット音のみ）
-  static AudioPool? _guardPool;
-  static AudioPool? _hitPool;
-
-  static bool get _isBindingReady {
-    try {
-      return isEnabled;
-    } catch (_) {
-      return false;
-    }
-  }
-
   static Future<void> init() async {
-    if (!isEnabled || !_isBindingReady) return;
-    try {
-      // Android等の音声フォーカス喪失・連続再生時ミュートを防止
-      await AudioPlayer.global.setAudioContext(
-        AudioContext(
-          android: AudioContextAndroid(
-            isSpeakerphoneOn: false,
-            stayAwake: false,
-            contentType: AndroidContentType.sonification,
-            usageType: AndroidUsageType.game,
-            audioFocus: AndroidAudioFocus.none,
-          ),
-        ),
-      );
-
-      // 短音用プールの初期化（ガード音・ヒット音のみ）
-      _guardPool = await AudioPool.create(
-        source: AssetSource('audio/sfx/guard.mp3'),
-        maxPlayers: 2,
-      );
-
-      _hitPool = await AudioPool.create(
-        source: AssetSource('audio/sfx/hit.mp3'),
-        maxPlayers: 2,
-      );
-    } catch (e, st) {
-      debugPrint('SoundManager init warning: $e\n$st');
-    }
-  }
-
-  /// チャージ音の再生（一時停止要請のため無効化）
-  static Future<void> playCharge() async {
-    // チャージ音の再生を停止し、ガード音・打撃音のみに限定
     return;
   }
 
-  /// チャージ音の即時停止（一時停止要請のため無効化）
+  /// チャージ音（無効化）
+  static Future<void> playCharge() async {
+    return;
+  }
+
   static Future<void> stopCharge() async {
     return;
   }
 
-  /// 防御音（ガード成功時）
-  static Future<void> playGuard() async {
-    if (!isEnabled || !_isBindingReady) return;
-    try {
-      await _guardPool?.start();
-    } catch (e) {
-      debugPrint('SoundManager playGuard error: $e');
-    }
+  /// 防御音（一時停止）
+  static void playGuard() {
+    return;
   }
 
-  /// 打撃音（命中・一本時）
-  static Future<void> playHit() async {
-    if (!isEnabled || !_isBindingReady) return;
-    try {
-      await _hitPool?.start();
-    } catch (e) {
-      debugPrint('SoundManager playHit error: $e');
-    }
+  /// 打撃音（一時停止）
+  static void playHit() {
+    return;
   }
 
   /// リソース解放
   static void dispose() {
-    try {
-      _guardPool?.dispose();
-      _hitPool?.dispose();
-    } catch (e) {
-      debugPrint('SoundManager dispose error: $e');
-    }
+    return;
   }
 }
 </file>
@@ -534,12 +481,16 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 class DebugGrid extends PositionComponent {
-  DebugGrid() {
+  DebugGrid({required this.isDebugVisible}) {
     priority = 100; // 最前面に表示
   }
 
+  final ValueNotifier<bool> isDebugVisible;
+
   @override
   void render(Canvas canvas) {
+    if (!isDebugVisible.value) return;
+
     super.render(canvas);
 
     // ==========================================
@@ -649,6 +600,7 @@ class DojoStage extends PositionComponent {
   final double groundY;
 
   Sprite? _bgSprite;
+  double flashAlpha = 0.0; // 打撃直前200ms背景フラッシュ警告の不透明度 (0.0 ～ 1.0)
 
   @override
   Future<void> onLoad() async {
@@ -675,6 +627,21 @@ class DojoStage extends PositionComponent {
       _bgSprite!.render(canvas, size: size);
     } else {
       _renderFallback(canvas);
+    }
+
+    // 打撃直前200ms背景フラッシュ警告オーバーレイ（全画面・ステージ全体の背景警告フラッシュ）
+    if (flashAlpha > 0.0) {
+      final warningPaint = Paint()
+        ..color = const Color(0xFFFF3D00).withValues(alpha: (flashAlpha * 0.60).clamp(0.0, 0.60))
+        ..style = PaintingStyle.fill;
+
+      if (_bgSprite != null) {
+        // Spriteローカル領域 [0, 0] ～ [size.x, size.y]
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.x, size.y), warningPaint);
+      } else {
+        // キャンバス描画フォールバック領域 [-size.x / 2, -size.y / 2] ～ [size.x / 2, size.y / 2]
+        canvas.drawRect(Rect.fromLTWH(-size.x / 2, -size.y / 2, size.x, size.y), warningPaint);
+      }
     }
   }
 
@@ -848,7 +815,7 @@ class KendoFighter extends PositionComponent {
 
   // Action states
   bool isGuarding = false;
-  static const double guardActiveDuration = 0.4; // 防御アクティブウィンドウ持続時間（0.4秒）
+  static double guardActiveDuration = 0.4; // 防御アクティブウィンドウ持続時間（デフォルト0.4秒、設定画面で0.4s～3.0s可変）
   static const double guardCooldownDuration = 0.2; // 防御クールダウン時間（0.2秒）
   double guardTimer = 0.0;
   double guardCooldownTimer = 0.0;
@@ -858,6 +825,11 @@ class KendoFighter extends PositionComponent {
   static const double attackDuration = 0.45;
   bool hasDealtDamageThisAttack = false;
 
+  // 1-step Far Advance (間合い外タップ時の1踏み込み前進)
+  bool isFarAdvancing = false;
+  double farAdvanceTimer = 0.0;
+  static const double farAdvanceDuration = 0.35; // 1踏み込み前進の持続時間 (0.35秒)
+
   // CPU 3-Tier Attack Windup Flash Durations (短: 0.3s / 中: 0.5s / 長: 0.8s) & Fixed Hold Duration (0.5s)
   static const List<double> cpuBlinkDurations = [0.3, 0.5, 0.8];
   static const double postBlinkHoldDuration = 0.5; // 点滅終了後の固定タメ時間（0.5秒）
@@ -865,6 +837,10 @@ class KendoFighter extends PositionComponent {
 
   // CPU Vulnerable Window / Guard-Break Timer (1.5s 反撃チャンス)
   double cpuVulnerableTimer = 0.0;
+
+  // Visual Effect Timers (Just Guard Spark & Hit Impact Shockwave)
+  double justGuardEffectTimer = 0.0;
+  double hitImpactEffectTimer = 0.0;
 
   // Tsubazeriai & Disengage
   bool isTsubazeriai = false;
@@ -885,6 +861,9 @@ class KendoFighter extends PositionComponent {
   void move(double directionInput) {
     if (isDisengaging || isAttacking || isPassingThrough || isTurningAround) return;
 
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
+
     // If in Tsubazeriai and moving backward, trigger disengage backstep
     final forwardDir = facingDirection == FacingDirection.right ? 1.0 : -1.0;
     final isMovingBackward = (directionInput * forwardDir) < 0;
@@ -898,19 +877,35 @@ class KendoFighter extends PositionComponent {
     velocityX = directionInput * speed;
   }
 
+  void startFarAdvance(double directionInput) {
+    if (isAttacking || hitStunTimer > 0 || isDisengaging || isPassingThrough || isTurningAround) return;
+    isFarAdvancing = true;
+    farAdvanceTimer = 0.0;
+    final speed = isGuarding ? (walkSpeed * guardSpeedMultiplier) : walkSpeed;
+    velocityX = directionInput * speed;
+  }
+
   void stop() {
-    if (!isDisengaging && !isAttacking && !isPassingThrough && !isTurningAround) {
+    if (!isDisengaging && !isAttacking && !isPassingThrough && !isTurningAround && !isFarAdvancing) {
       velocityX = 0.0;
     }
   }
 
+  void triggerJustGuardEffect() {
+    justGuardEffectTimer = 0.25;
+  }
+
   void startGuard() {
     if (isGuarding || guardCooldownTimer > 0 || isAttacking || isDisengaging || isPassingThrough || isTurningAround || hitStunTimer > 0) {
+      debugPrint('[Guard-Start BLOCKED] $name: isGuarding=$isGuarding, cooldown=${guardCooldownTimer.toStringAsFixed(2)}s, isAttacking=$isAttacking, isDisengaging=$isDisengaging, hitStun=${hitStunTimer.toStringAsFixed(2)}s');
       return;
     }
 
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
     isGuarding = true;
     guardTimer = guardActiveDuration;
+    debugPrint('[Guard-Start SUCCESS] $name: Guard started for ${guardActiveDuration.toStringAsFixed(2)}s');
     if (velocityX != 0.0) {
       final dir = velocityX > 0 ? 1.0 : -1.0;
       velocityX = dir * walkSpeed * guardSpeedMultiplier;
@@ -919,6 +914,7 @@ class KendoFighter extends PositionComponent {
 
   void stopGuard() {
     if (isGuarding) {
+      debugPrint('[Guard-Stop RELEASED] $name: Guard cancelled on finger release. Active elapsed: ${(guardActiveDuration - guardTimer).toStringAsFixed(2)}s, Cooldown 0.2s started.');
       isGuarding = false;
       guardTimer = 0.0;
       guardCooldownTimer = guardCooldownDuration;
@@ -928,10 +924,8 @@ class KendoFighter extends PositionComponent {
   void attack({double? blinkDuration}) {
     if (isAttacking || hitStunTimer > 0 || isDisengaging || isPassingThrough || isTurningAround) return;
 
-    if (isTsubazeriai) {
-      disengage();
-      return;
-    }
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
 
     if (!isPlayer && blinkDuration != null) {
       currentBlinkDuration = blinkDuration;
@@ -946,6 +940,8 @@ class KendoFighter extends PositionComponent {
 
   void disengage() {
     if (isDisengaging || hitStunTimer > 0 || isPassingThrough) return;
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
     isDisengaging = true;
     isTsubazeriai = false;
     isGuarding = false;
@@ -958,6 +954,8 @@ class KendoFighter extends PositionComponent {
   }
 
   void startPassThrough({required double targetX}) {
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
     isPassingThrough = true;
     passThroughTargetX = targetX;
     isTsubazeriai = false;
@@ -967,6 +965,8 @@ class KendoFighter extends PositionComponent {
   }
 
   void startTurnaround({required FacingDirection newFacing}) {
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
     isPassingThrough = false;
     isTurningAround = true;
     turnaroundTimer = 0.0;
@@ -983,6 +983,9 @@ class KendoFighter extends PositionComponent {
   void takeDamage(double amount) {
     health = (health - amount).clamp(0.0, maxHealth);
     hitStunTimer = 0.2;
+    hitImpactEffectTimer = 0.25;
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
     isTsubazeriai = false;
     isAttacking = false;
     isDisengaging = false;
@@ -1000,16 +1003,20 @@ class KendoFighter extends PositionComponent {
     isMoving = false;
     isGuarding = false;
     guardTimer = 0.0;
-    guardCooldownTimer = 0.0;
+    guardCooldownTimer = guardCooldownDuration;
     isAttacking = false;
     isTsubazeriai = false;
     isDisengaging = false;
     isPassingThrough = false;
     isTurningAround = false;
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
     attackTimer = 0.0;
     hasDealtDamageThisAttack = false;
     hitStunTimer = 0.0;
     cpuVulnerableTimer = 0.0;
+    justGuardEffectTimer = 0.0;
+    hitImpactEffectTimer = 0.0;
     currentBlinkDuration = 0.5;
   }
 
@@ -1032,10 +1039,31 @@ class KendoFighter extends PositionComponent {
       if (cpuVulnerableTimer < 0) cpuVulnerableTimer = 0;
     }
 
+    if (justGuardEffectTimer > 0) {
+      justGuardEffectTimer -= dt;
+      if (justGuardEffectTimer < 0) justGuardEffectTimer = 0;
+    }
+
+    if (hitImpactEffectTimer > 0) {
+      hitImpactEffectTimer -= dt;
+      if (hitImpactEffectTimer < 0) hitImpactEffectTimer = 0;
+    }
+
+    // Handle 1-step Far Advance (間合い外攻撃タップ時の1踏み込み前進と自動停止)
+    if (isFarAdvancing) {
+      farAdvanceTimer += dt;
+      if (farAdvanceTimer >= farAdvanceDuration) {
+        isFarAdvancing = false;
+        farAdvanceTimer = 0.0;
+        velocityX = 0.0;
+      }
+    }
+
     // Handle Guard Active Duration and Cooldown Timers
     if (isGuarding) {
       guardTimer -= dt;
       if (guardTimer <= 0.0) {
+        debugPrint('[Guard-EXPIRED] $name: Guard active window (${guardActiveDuration.toStringAsFixed(2)}s) expired. Cooldown 0.2s started.');
         isGuarding = false;
         guardTimer = 0.0;
         guardCooldownTimer = guardCooldownDuration;
@@ -1141,6 +1169,28 @@ class KendoFighter extends PositionComponent {
     canvas.restore();
   }
 
+  void _drawUnflippedText(
+    Canvas canvas, {
+    required String text,
+    required TextStyle style,
+    required Offset position,
+  }) {
+    canvas.save();
+    canvas.translate(position.dx, position.dy);
+    if (facingDirection == FacingDirection.left) {
+      canvas.scale(-1.0, 1.0);
+    }
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: style,
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    textPainter.paint(canvas, Offset(-textPainter.width / 2, 0));
+    canvas.restore();
+  }
+
   void _drawKendoFighter(Canvas canvas) {
     // Stepping bounce: feet step upward (-2px max) during sliding walk, planted at Y = 0
     final stepBounce = isMoving ? -(math.sin(walkAnimationTimer).abs() * 2.0) : 0.0;
@@ -1202,22 +1252,20 @@ class KendoFighter extends PositionComponent {
         ..strokeWidth = 2.0;
       canvas.drawCircle(Offset(22, -60 + stepBounce), 12, tsubaSparkPaint);
 
-      final textPainter = TextPainter(
-        text: const TextSpan(
-          text: '鍔迫り合い',
-          style: TextStyle(
-            color: Colors.amberAccent,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            shadows: [Shadow(color: Colors.black, blurRadius: 3)],
-          ),
+      _drawUnflippedText(
+        canvas,
+        text: 'ゴゴゴ･･',
+        style: const TextStyle(
+          color: Colors.amberAccent,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          shadows: [Shadow(color: Colors.black, blurRadius: 3)],
         ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      textPainter.paint(canvas, Offset(-textPainter.width / 2, -112 + stepBounce));
+        position: Offset(0, -112 + stepBounce),
+      );
     }
 
-    // Guard Aura
+    // Guard Aura & Just Guard Spark Effect (青い閃光・火花)
     if (isGuarding) {
       final guardArcPaint = Paint()
         ..color = const Color(0xAA64B5F6)
@@ -1230,6 +1278,55 @@ class KendoFighter extends PositionComponent {
         false,
         guardArcPaint,
       );
+    }
+
+    if (justGuardEffectTimer > 0) {
+      final progress = (1.0 - (justGuardEffectTimer / 0.25)).clamp(0.0, 1.0);
+      final burstRadius = 14.0 + (progress * 32.0);
+
+      final sparkPaint = Paint()
+        ..color = const Color(0xFF448AFF).withValues(alpha: (1.0 - progress) * 0.9)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5;
+      canvas.drawCircle(Offset(14, -55 + stepBounce), burstRadius, sparkPaint);
+
+      final corePaint = Paint()
+        ..color = Colors.white.withValues(alpha: (1.0 - progress) * 0.95)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(14, -55 + stepBounce), 8.0 * (1.0 - progress), corePaint);
+
+      final rayPaint = Paint()
+        ..color = const Color(0xFF82B1FF).withValues(alpha: 1.0 - progress)
+        ..strokeWidth = 2.0;
+      final center = Offset(14, -55 + stepBounce);
+      for (int i = 0; i < 6; i++) {
+        final angle = i * math.pi / 3.0;
+        final startDist = burstRadius * 0.4;
+        final endDist = burstRadius * 1.1;
+        canvas.drawLine(
+          center + Offset(math.cos(angle) * startDist, math.sin(angle) * startDist),
+          center + Offset(math.cos(angle) * endDist, math.sin(angle) * endDist),
+          rayPaint,
+        );
+      }
+    }
+
+    // Hit Impact Shockwave Ring Effect (金の衝撃波・打撃エフェクト)
+    if (hitImpactEffectTimer > 0) {
+      final progress = (1.0 - (hitImpactEffectTimer / 0.25)).clamp(0.0, 1.0);
+      final ringRadius = 12.0 + (progress * 40.0);
+
+      final shockPaint = Paint()
+        ..color = const Color(0xFFFFD54F).withValues(alpha: (1.0 - progress) * 0.95)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4.0;
+      canvas.drawCircle(Offset(0, -70 + stepBounce), ringRadius, shockPaint);
+
+      final innerShockPaint = Paint()
+        ..color = const Color(0xFFFF1744).withValues(alpha: (1.0 - progress) * 0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5;
+      canvas.drawCircle(Offset(0, -70 + stepBounce), ringRadius * 0.6, innerShockPaint);
     }
 
     // Attack Effects (Player vs CPU 2-phase attack)
@@ -1300,19 +1397,17 @@ class KendoFighter extends PositionComponent {
         ..strokeWidth = 3.0;
       canvas.drawCircle(Offset(0, -60 + stepBounce), 36, vulnCirclePaint);
 
-      final textPainter = TextPainter(
-        text: const TextSpan(
-          text: '体勢崩れ！',
-          style: TextStyle(
-            color: Colors.amberAccent,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-          ),
+      _drawUnflippedText(
+        canvas,
+        text: 'スキあり',
+        style: const TextStyle(
+          color: Colors.amberAccent,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          shadows: [Shadow(color: Colors.black, blurRadius: 4)],
         ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      textPainter.paint(canvas, Offset(-textPainter.width / 2, -114 + stepBounce));
+        position: Offset(0, -114 + stepBounce),
+      );
     }
 
     // Hit Stun
@@ -1480,6 +1575,83 @@ enum FacingDirection {
 }
 </file>
 
+<file path="lib/game/score/score_manager.dart">
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../components/kendo_fighter.dart';
+
+class ScoreManager {
+  static final ValueNotifier<int> winsNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<int> lossesNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<int> streakNotifier = ValueNotifier<int>(0);
+
+  static const String _keyWins = 'kewpie_wins';
+  static const String _keyLosses = 'kewpie_losses';
+  static const String _keyStreak = 'kewpie_streak';
+  static const String _keyGuardDuration = 'kewpie_guard_duration';
+
+  static Future<void> loadScore() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      winsNotifier.value = prefs.getInt(_keyWins) ?? 0;
+      lossesNotifier.value = prefs.getInt(_keyLosses) ?? 0;
+      streakNotifier.value = prefs.getInt(_keyStreak) ?? 0;
+      KendoFighter.guardActiveDuration = prefs.getDouble(_keyGuardDuration) ?? 0.4;
+    } catch (e) {
+      debugPrint('ScoreManager load warning: $e');
+    }
+  }
+
+  static Future<void> setGuardDuration(double duration) async {
+    KendoFighter.guardActiveDuration = duration;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_keyGuardDuration, duration);
+    } catch (e) {
+      debugPrint('ScoreManager setGuardDuration warning: $e');
+    }
+  }
+
+  static Future<void> recordWin() async {
+    winsNotifier.value += 1;
+    streakNotifier.value += 1;
+    await _save();
+  }
+
+  static Future<void> recordLoss() async {
+    lossesNotifier.value += 1;
+    streakNotifier.value = 0;
+    await _save();
+  }
+
+  static Future<void> clearScore() async {
+    winsNotifier.value = 0;
+    lossesNotifier.value = 0;
+    streakNotifier.value = 0;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_keyWins);
+      await prefs.remove(_keyLosses);
+      await prefs.remove(_keyStreak);
+    } catch (e) {
+      debugPrint('ScoreManager clear warning: $e');
+    }
+  }
+
+  static Future<void> _save() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_keyWins, winsNotifier.value);
+      await prefs.setInt(_keyLosses, lossesNotifier.value);
+      await prefs.setInt(_keyStreak, streakNotifier.value);
+    } catch (e) {
+      debugPrint('ScoreManager save warning: $e');
+    }
+  }
+}
+</file>
+
 <file path="lib/game/kendo_game.dart">
 import 'dart:math' as math;
 
@@ -1494,6 +1666,7 @@ import 'components/debug_grid.dart';
 import 'components/dojo_stage.dart';
 import 'components/kendo_fighter.dart';
 import 'enums/facing_direction.dart';
+import 'score/score_manager.dart';
 
 enum KendoGameState {
   playing,
@@ -1514,7 +1687,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final double stageMinX = -520.0;
   final double stageMaxX = 520.0;
 
-  // Game lifecycle & HUD ValueNotifiers
+  // Game lifecycle, HUD & Settings ValueNotifiers
   final gameStateNotifier = ValueNotifier<KendoGameState>(KendoGameState.playing);
   final p1HealthNotifier = ValueNotifier<double>(100.0);
   final p2HealthNotifier = ValueNotifier<double>(100.0);
@@ -1522,6 +1695,22 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final p2WinsNotifier = ValueNotifier<int>(0);
   final overlayTextNotifier = ValueNotifier<String>('');
   final isPausedNotifier = ValueNotifier<bool>(false);
+  final isDebugVisibleNotifier = ValueNotifier<bool>(false); // デバッグ座標表示（入/切）
+  final isSoundEnabledNotifier = ValueNotifier<bool>(true); // 効果音（入/切）
+  final bgFlashNotifier = ValueNotifier<double>(0.0); // 全画面打撃直前200ms背景フラッシュ警告
+  final isEnemyOnRightNotifier = ValueNotifier<bool>(true); // 敵が右側にいるか（左右動的判定・ボタン色反転用）
+
+  // Pre-Round Start Banner Sequence ("一本目"/"二本目"/"三本目" 2.0s -> "はじめ！" 0.8s)
+  bool isRoundStarting = false;
+  double roundStartTimer = 0.0;
+  static const double roundStartTitleDelay = 2.0; // 一本目・二本目・三本目 表示時間 (2.0秒)
+  static const double roundStartHajimeDelay = 0.8; // はじめ！ 表示時間 (0.8秒)
+  static const double totalRoundStartDelay = 2.8; // 合計開始アナウンス時間 (2.8秒)
+
+  // Hit-Stop & Screen Shake Effect Timers
+  double hitStopTimer = 0.0;
+  double screenShakeTimer = 0.0;
+  double screenShakeIntensity = 0.0;
 
   // Round Timer (30-second countdown)
   static const double roundDuration = 30.0;
@@ -1536,6 +1725,34 @@ class KendoGame extends FlameGame with KeyboardEvents {
   double cpuGuardTimer = 0.0;
   double cpuTsubazeriaiTimer = 0.0;
   bool _hasStoppedChargeSound = false;
+
+  String get currentRoundTitleText {
+    final totalWins = p1.winCount + p2.winCount;
+    if (totalWins == 0) {
+      return '一本目';
+    } else if (totalWins == 1) {
+      return '二本目';
+    } else {
+      return '三本目';
+    }
+  }
+
+  void triggerHitStop(double duration) {
+    hitStopTimer = duration;
+  }
+
+  void triggerScreenShake({double duration = 0.15, double intensity = 12.0}) {
+    screenShakeTimer = duration;
+    screenShakeIntensity = intensity;
+  }
+
+  void startRoundSequence() {
+    isRoundStarting = true;
+    roundStartTimer = 0.0;
+    overlayTextNotifier.value = currentRoundTitleText;
+    p1.stop();
+    p2.stop();
+  }
 
   @override
   Future<void> onLoad() async {
@@ -1573,7 +1790,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     p2 = KendoFighter(
       name: '剣士2',
       isPlayer: false,
-      startX: 260.0,
+      startX: 440.0,
       groundY: fighterGroundY,
       keikogiColor: const Color(0xFF1A237E),
       ribbonColor: const Color(0xFFFFFFFF),
@@ -1582,8 +1799,17 @@ class KendoGame extends FlameGame with KeyboardEvents {
     );
     world.add(p2);
 
-    // 5. Debug Grid Component
-    world.add(DebugGrid());
+    // 5. Debug Grid Component (with isDebugVisibleNotifier)
+    world.add(DebugGrid(isDebugVisible: isDebugVisibleNotifier));
+
+    // 6. Start Pre-Round Sequence ("一本目" -> "はじめ！")
+    startRoundSequence();
+  }
+
+  @override
+  void onRemove() {
+    SoundManager.dispose();
+    super.onRemove();
   }
 
   void togglePause() {
@@ -1600,7 +1826,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
   // Unified Screen Tap / Hotkey Input Handlers (左右入力・画面タップ・Q/Eキー共通ハンドラ)
   void handleLeftInputDown() {
-    if (isPausedNotifier.value) return;
+    if (isPausedNotifier.value || isRoundStarting) return;
     if (p1.position.x < p2.position.x) {
       guardP1Start();
     } else {
@@ -1609,14 +1835,11 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void handleLeftInputUp() {
-    if (isPausedNotifier.value) return;
-    if (p1.position.x < p2.position.x) {
-      guardP1Stop();
-    }
+    if (isPausedNotifier.value || isRoundStarting) return;
   }
 
   void handleRightInputDown() {
-    if (isPausedNotifier.value) return;
+    if (isPausedNotifier.value || isRoundStarting) return;
     if (p1.position.x < p2.position.x) {
       attackP1();
     } else {
@@ -1625,19 +1848,16 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void handleRightInputUp() {
-    if (isPausedNotifier.value) return;
-    if (p1.position.x >= p2.position.x) {
-      guardP1Stop();
-    }
+    if (isPausedNotifier.value || isRoundStarting) return;
   }
 
   void moveP1Left() {
-    if (isPausedNotifier.value) return;
+    if (isPausedNotifier.value || isRoundStarting) return;
     p1.move(-1.0);
   }
 
   void moveP1Right() {
-    if (isPausedNotifier.value) return;
+    if (isPausedNotifier.value || isRoundStarting) return;
     p1.move(1.0);
   }
 
@@ -1646,7 +1866,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void guardP1Start() {
-    if (isPausedNotifier.value) return;
+    if (isPausedNotifier.value || isRoundStarting) return;
     p1.startGuard();
   }
 
@@ -1655,12 +1875,29 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void attackP1() {
-    if (isPausedNotifier.value) return;
+    if (isPausedNotifier.value || isRoundStarting) return;
+    if (p1.isTsubazeriai) {
+      // 鍔迫り合い（ゴゴゴ･･）時の押し合い判定：攻撃入力で相手を押し込む
+      final pushDir = p1.position.x < p2.position.x ? 1.0 : -1.0;
+      p2.position.x = (p2.position.x + pushDir * 20.0).clamp(stageMinX, stageMaxX);
+      return;
+    }
+
+    final dist = (p1.position.x - p2.position.x).abs();
+    const double attackRange = 255.0; // 一足一刀の間合い
+
+    if (dist > attackRange) {
+      // 敵から離れている状態（間合い外）で攻撃タップ：1攻撃ステップ分（0.35秒）だけ前進して自動停止
+      final forwardDir = p1.position.x < p2.position.x ? 1.0 : -1.0;
+      p1.startFarAdvance(forwardDir);
+      return;
+    }
+
     p1.attack();
   }
 
   void disengageP1() {
-    if (isPausedNotifier.value) return;
+    if (isPausedNotifier.value || isRoundStarting) return;
     p1.disengage();
   }
 
@@ -1671,19 +1908,28 @@ class KendoGame extends FlameGame with KeyboardEvents {
     }
     _hasStoppedChargeSound = true;
     SoundManager.stopCharge();
+    hitStopTimer = 0.0;
+    screenShakeTimer = 0.0;
     p1.resetMatch(startX: -260.0);
-    p2.resetMatch(startX: 260.0);
+    p2.resetMatch(startX: 440.0);
     gameStateNotifier.value = KendoGameState.playing;
-    overlayTextNotifier.value = '';
     roundTimer = roundDuration;
     roundTimerNotifier.value = 30;
     roundOverTimer = 0.0;
     cpuTsubazeriaiTimer = 0.0;
+    startRoundSequence();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+
+    // 0. Handle Hit-Stop Effect (ヒットストップ時の一時停止処理)
+    if (hitStopTimer > 0) {
+      hitStopTimer -= dt;
+      if (hitStopTimer < 0) hitStopTimer = 0;
+      return;
+    }
 
     final currentGameState = gameStateNotifier.value;
 
@@ -1694,16 +1940,34 @@ class KendoGame extends FlameGame with KeyboardEvents {
         _hasStoppedChargeSound = true;
         SoundManager.stopCharge();
         p1.resetRound(startX: -260.0);
-        p2.resetRound(startX: 260.0);
+        p2.resetRound(startX: 440.0);
         roundTimer = roundDuration;
         roundTimerNotifier.value = 30;
         gameStateNotifier.value = KendoGameState.playing;
-        overlayTextNotifier.value = '';
         cpuTsubazeriaiTimer = 0.0;
+        startRoundSequence(); // Start pre-round sequence for next round ("二本目"/"三本目" -> "はじめ！")
       }
     }
 
-    // 2. Active Round Countdown Timer
+    // 2. Handle Pre-Round Start Sequence ("一本目"/"二本目"/"三本目" 2.0s -> "はじめ！" 0.8s)
+    if (currentGameState == KendoGameState.playing && isRoundStarting) {
+      roundStartTimer += dt;
+      p1.stop();
+      p2.stop();
+
+      if (roundStartTimer < roundStartTitleDelay) {
+        overlayTextNotifier.value = currentRoundTitleText;
+      } else if (roundStartTimer < totalRoundStartDelay) {
+        overlayTextNotifier.value = 'はじめ！';
+      } else {
+        isRoundStarting = false;
+        roundStartTimer = 0.0;
+        overlayTextNotifier.value = '';
+      }
+      return;
+    }
+
+    // 3. Active Round Countdown Timer
     if (currentGameState == KendoGameState.playing) {
       roundTimer -= dt;
       final displaySeconds = roundTimer.ceil().clamp(0, 30);
@@ -1723,15 +1987,26 @@ class KendoGame extends FlameGame with KeyboardEvents {
     p1WinsNotifier.value = p1.winCount;
     p2WinsNotifier.value = p2.winCount;
 
-    // 3. Monitor CPU attack windup flash end to stop charge SE
-    if (p2.isAttacking && !_hasStoppedChargeSound) {
-      if (p2.attackTimer >= p2.currentBlinkDuration) {
+    // 4. Monitor CPU attack windup: Flash red at blinking end, attack 0.5s later (点滅終了時に赤フラッシュ、0.5秒後に打撃)
+    if (p2.isAttacking && !p2.isPlayer) {
+      final totalWindup = p2.currentBlinkDuration + KendoFighter.postBlinkHoldDuration;
+      if (p2.attackTimer >= p2.currentBlinkDuration && p2.attackTimer < totalWindup) {
+        final remainingSec = totalWindup - p2.attackTimer; // 0.50s -> 0.00s
+        stage.flashAlpha = (remainingSec / KendoFighter.postBlinkHoldDuration).clamp(0.0, 1.0);
+      } else {
+        stage.flashAlpha = 0.0;
+      }
+
+      if (!_hasStoppedChargeSound && p2.attackTimer >= p2.currentBlinkDuration) {
         _hasStoppedChargeSound = true;
         SoundManager.stopCharge();
       }
+    } else {
+      stage.flashAlpha = 0.0;
     }
+    bgFlashNotifier.value = stage.flashAlpha;
 
-    // 4. Stage Boundary Collisions
+    // 5. Stage Boundary Collisions
     if (p1.position.x < stageMinX) {
       p1.position.x = stageMinX;
     } else if (p1.position.x > stageMaxX) {
@@ -1744,7 +2019,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       p2.position.x = stageMaxX;
     }
 
-    // 5. Body Pushing & Collision (Bypassed during Pass-Through or Turnaround)
+    // 6. Body Pushing & Collision (Bypassed during Pass-Through or Turnaround)
     final isPassingOrTurning = p1.isPassingThrough || p2.isPassingThrough ||
         p1.isTurningAround || p2.isTurningAround;
 
@@ -1764,9 +2039,12 @@ class KendoGame extends FlameGame with KeyboardEvents {
       }
     }
 
-    // 6. Auto-Facing Direction (Bypassed during Pass-Through or Turnaround)
+    // 7. Auto-Facing Direction & Position Notifier
+    final isEnemyRight = p1.position.x < p2.position.x;
+    isEnemyOnRightNotifier.value = isEnemyRight;
+
     if (!isPassingOrTurning) {
-      if (p1.position.x < p2.position.x) {
+      if (isEnemyRight) {
         p1.facingDirection = FacingDirection.right;
         p2.facingDirection = FacingDirection.left;
       } else {
@@ -1775,7 +2053,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       }
     }
 
-    // 7. Active Combat & Pass-Through logic
+    // 8. Active Combat & Pass-Through logic
     if (currentGameState == KendoGameState.playing) {
       _updatePassThroughState();
       _updateTsubazeriai(dt);
@@ -1784,8 +2062,16 @@ class KendoGame extends FlameGame with KeyboardEvents {
       _checkAttack(attacker: p2, defender: p1);
     }
 
-    // 8. Fixed Camera Position at Origin Vector2(0.0, 0.0)
-    camera.viewfinder.position = Vector2(0.0, 0.0);
+    // 9. Camera Position & Screen Shake Effect (画面揺れ演出)
+    if (screenShakeTimer > 0) {
+      screenShakeTimer -= dt;
+      if (screenShakeTimer < 0) screenShakeTimer = 0;
+      final offsetX = (math.Random().nextDouble() * 2.0 - 1.0) * screenShakeIntensity;
+      final offsetY = (math.Random().nextDouble() * 2.0 - 1.0) * screenShakeIntensity;
+      camera.viewfinder.position = Vector2(offsetX, offsetY);
+    } else {
+      camera.viewfinder.position = Vector2(0.0, 0.0);
+    }
   }
 
   void _updatePassThroughState() {
@@ -1825,19 +2111,15 @@ class KendoGame extends FlameGame with KeyboardEvents {
     if (attacker.isTurningAround || defender.isTurningAround) return false;
 
     final forwardDir = attacker.facingDirection == FacingDirection.right ? 1.0 : -1.0;
-    final backSpace = forwardDir > 0
-        ? (stageMaxX - defender.position.x)
-        : (defender.position.x - stageMinX);
 
-    if (backSpace >= 280.0) {
-      final targetX = forwardDir > 0
-          ? (defender.position.x + 270.0).clamp(stageMinX + 10.0, stageMaxX - 10.0)
-          : (defender.position.x - 270.0).clamp(stageMinX + 10.0, stageMaxX - 10.0);
+    // ステージ端（壁際）に追い込まれた場合でも確実にすれ違い（駆け抜け）を発動させ、
+    // お互いの位置を交差させて壁際から脱出・間合いを確保する
+    final targetX = forwardDir > 0
+        ? (attacker.position.x + 380.0).clamp(stageMinX + 30.0, stageMaxX - 30.0)
+        : (attacker.position.x - 380.0).clamp(stageMinX + 30.0, stageMaxX - 30.0);
 
-      attacker.startPassThrough(targetX: targetX);
-      return true;
-    }
-    return false;
+    attacker.startPassThrough(targetX: targetX);
+    return true;
   }
 
   void _updateTsubazeriai(double dt) {
@@ -1858,7 +2140,14 @@ class KendoGame extends FlameGame with KeyboardEvents {
       if (!p2.isPlayer) {
         cpuTsubazeriaiTimer += dt;
         if (cpuTsubazeriaiTimer >= 0.35) {
-          p2.disengage();
+          final rand = math.Random().nextDouble();
+          if (rand < 0.50) {
+            p2.disengage();
+          } else {
+            // CPU pushes Player back during Tsubazeriai (押し合い判定)
+            final pushDir = p2.position.x > p1.position.x ? -1.0 : 1.0;
+            p1.position.x = (p1.position.x + pushDir * 18.0).clamp(stageMinX, stageMaxX);
+          }
           cpuTsubazeriaiTimer = 0.0;
         }
       }
@@ -1891,6 +2180,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
           _hasStoppedChargeSound = true;
           SoundManager.stopCharge();
           SoundManager.playHit();
+          triggerHitStop(0.06); // 0.06s Hit-Stop!
+          triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
           _tryTriggerPassThrough(attacker: attacker, defender: defender);
           final wasZeroHealth = defender.health <= 0;
           defender.takeDamage(25.0);
@@ -1921,6 +2212,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
           _hasStoppedChargeSound = true;
           SoundManager.stopCharge();
           SoundManager.playGuard();
+          defender.triggerJustGuardEffect(); // 青い閃光・火花演出!
+          triggerHitStop(0.06); // 0.06s Hit-Stop!
           attacker.isAttacking = false;
           attacker.attackTimer = 0.0;
           attacker.hitStunTimer = 0.3;
@@ -1931,6 +2224,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
           _hasStoppedChargeSound = true;
           SoundManager.stopCharge();
           SoundManager.playHit();
+          triggerHitStop(0.06); // 0.06s Hit-Stop!
+          triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
           _tryTriggerPassThrough(attacker: attacker, defender: defender);
           final wasZeroHealth = defender.health <= 0;
           defender.takeDamage(25.0);
@@ -1947,7 +2242,13 @@ class KendoGame extends FlameGame with KeyboardEvents {
     attacker.winCount++;
     if (attacker.winCount >= 2) {
       gameStateNotifier.value = KendoGameState.matchOver;
-      overlayTextNotifier.value = attacker.isPlayer ? 'あなたの勝ち' : 'あなたの負け';
+      if (attacker.isPlayer) {
+        overlayTextNotifier.value = 'あなたの勝ち';
+        ScoreManager.recordWin();
+      } else {
+        overlayTextNotifier.value = 'あなたの負け';
+        ScoreManager.recordLoss();
+      }
     } else {
       gameStateNotifier.value = KendoGameState.roundOver;
       roundOverTimer = 0.0;
@@ -2056,11 +2357,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
     }
 
     // 3. Guard Key (K)
-    final isKPressed = keysPressed.contains(LogicalKeyboardKey.keyK);
-    if (isKPressed) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyK) {
       guardP1Start();
-    } else {
-      guardP1Stop();
     }
 
     // 4. Attack Key (J or Space)
@@ -2098,10 +2396,513 @@ class KendoGame extends FlameGame with KeyboardEvents {
 }
 </file>
 
+<file path="lib/screens/title_screen.dart">
+import 'package:flutter/material.dart';
+
+import '../game/audio/sound_manager.dart';
+import '../game/components/kendo_fighter.dart';
+import '../game/score/score_manager.dart';
+import '../main.dart';
+
+class TitleScreen extends StatefulWidget {
+  const TitleScreen({super.key});
+
+  @override
+  State<TitleScreen> createState() => _TitleScreenState();
+}
+
+class _TitleScreenState extends State<TitleScreen> {
+  static bool _soundEnabled = true;
+  static bool _debugEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    SoundManager.isEnabled = _soundEnabled;
+    ScoreManager.loadScore();
+  }
+
+  void _openGuideDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.amber, width: 2),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.auto_stories, color: Colors.amberAccent),
+              SizedBox(width: 8),
+              Text(
+                '心得（ゲームの遊び方）',
+                style: TextStyle(
+                  color: Colors.amberAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 420,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSectionHeader('【基本操作（スマホ）】'),
+                  const Text(
+                    '・画面左右下の円アイコンが操作ガイドです（赤円＝攻撃、青円＝防御）。\n'
+                    '・敵の位置に応じて赤円（攻撃）と青円（防御）が自動で入れ替わります。\n'
+                    '・敵が右側にいる場合: 左エリア（青円）＝防御、左ダブルタップ＝離脱、右エリア（赤円）＝攻撃\n'
+                    '・敵が左側にいる場合: 左エリア（赤円）＝攻撃、右エリア（青円）＝防御、右ダブルタップ＝離脱',
+                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionHeader('【キーボード操作（PC）】'),
+                  const Text(
+                    '・Q キー: 画面左側タップ相当\n'
+                    '・E キー: 画面右側タップ相当\n'
+                    '・S キー: 離脱\n'
+                    '・P キー: ポーズ（一時停止）',
+                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionHeader('【勝負のルール（先守後攻）】'),
+                  const Text(
+                    '・敵の面打ち（赤エフェクト）に合わせて防御すると「ジャスト防御成功」！\n'
+                    '・成功時、敵が1.5秒間「体勢崩れ（反撃チャンス）」になります。\n'
+                    '・反撃チャンス中のみプレイヤーの攻撃がヒットし一本となります（平常時の攻撃は自動防がれます）。\n'
+                    '・防御有効時間は設定画面で0.4秒〜3.0秒まで自由に調整可能です。\n'
+                    '・制限時間30秒、2本先取で勝利！',
+                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                '閉じる',
+                style: TextStyle(color: Colors.amberAccent, fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _openSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.grey.shade900,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.amber, width: 2),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.settings, color: Colors.amberAccent),
+                  SizedBox(width: 8),
+                  Text(
+                    '設定',
+                    style: TextStyle(
+                      color: Colors.amberAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: 380,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 1. Sound Effects Toggle
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '効果音',
+                            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
+                          Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('入', style: TextStyle(fontSize: 13)),
+                                selected: _soundEnabled,
+                                selectedColor: Colors.amber.shade800,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setDialogState(() => _soundEnabled = true);
+                                    setState(() => _soundEnabled = true);
+                                    SoundManager.isEnabled = true;
+                                  }
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                              ChoiceChip(
+                                label: const Text('切', style: TextStyle(fontSize: 13)),
+                                selected: !_soundEnabled,
+                                selectedColor: Colors.red.shade900,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setDialogState(() => _soundEnabled = false);
+                                    setState(() => _soundEnabled = false);
+                                    SoundManager.isEnabled = false;
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Divider(color: Colors.white24, height: 18),
+                      // 2. Debug Grid / Coordinates Toggle
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'デバッグ（座標表示）',
+                            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
+                          Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('入', style: TextStyle(fontSize: 13)),
+                                selected: _debugEnabled,
+                                selectedColor: Colors.amber.shade800,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setDialogState(() => _debugEnabled = true);
+                                    setState(() => _debugEnabled = true);
+                                  }
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                              ChoiceChip(
+                                label: const Text('切', style: TextStyle(fontSize: 13)),
+                                selected: !_debugEnabled,
+                                selectedColor: Colors.red.shade900,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setDialogState(() => _debugEnabled = false);
+                                    setState(() => _debugEnabled = false);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Divider(color: Colors.white24, height: 18),
+                      // 3. Guard Active Duration Slider (400ms ～ 3000ms / 0.4s ～ 3.0s)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                '防御有効時間',
+                                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                '${KendoFighter.guardActiveDuration.toStringAsFixed(1)}秒 (${(KendoFighter.guardActiveDuration * 1000).toInt()}ms)',
+                                style: const TextStyle(color: Colors.amberAccent, fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          Slider(
+                            value: KendoFighter.guardActiveDuration.clamp(0.4, 3.0),
+                            min: 0.4,
+                            max: 3.0,
+                            divisions: 26, // 0.1s刻み (0.4s, 0.5s, ..., 3.0s)
+                            activeColor: Colors.amberAccent,
+                            inactiveColor: Colors.grey.shade700,
+                            label: '${KendoFighter.guardActiveDuration.toStringAsFixed(1)}秒',
+                            onChanged: (val) {
+                              final rounded = (val * 10).round() / 10.0;
+                              setDialogState(() {
+                                ScoreManager.setGuardDuration(rounded);
+                              });
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                      const Divider(color: Colors.white24, height: 18),
+                      // 4. Score Clear Option
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '通算スコア',
+                            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade900,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              side: const BorderSide(color: Colors.amber, width: 1),
+                            ),
+                            onPressed: () async {
+                              await ScoreManager.clearScore();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('スコアをクリアしました'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.delete_forever, size: 18),
+                            label: const Text(
+                              'クリア',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    '完了',
+                    style: TextStyle(color: Colors.amberAccent, fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Colors.amberAccent,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D0D11),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Background Dojo Pattern & Border Overlay
+            Positioned.fill(
+              child: Container(
+                margin: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  border: Border.all(color: Colors.amber.shade700, width: 3),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black87,
+                      blurRadius: 15,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Title Logo / Header
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade900.withValues(alpha: 0.9),
+                        border: Border.all(color: Colors.amber, width: 2),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black87,
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: const Column(
+                        children: [
+                          Text(
+                            'キューピーカップ',
+                            style: TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 3,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            '剣道対戦',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 6,
+                              shadows: [
+                                Shadow(color: Colors.red, blurRadius: 10),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Persistent Score & Win Streak Badge
+                    ValueListenableBuilder<int>(
+                      valueListenable: ScoreManager.winsNotifier,
+                      builder: (context, wins, _) {
+                        return ValueListenableBuilder<int>(
+                          valueListenable: ScoreManager.lossesNotifier,
+                          builder: (context, losses, _) {
+                            return ValueListenableBuilder<int>(
+                              valueListenable: ScoreManager.streakNotifier,
+                              builder: (context, streak, _) {
+                                final streakText = streak > 0 ? ' ($streak連勝中！)' : '';
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.8),
+                                    border: Border.all(color: Colors.amber, width: 1.5),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    '通算成績: $wins勝 $losses敗$streakText',
+                                    style: const TextStyle(
+                                      color: Colors.amberAccent,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 3 Menu Choice Buttons: 試合開始, 心得, 設定
+                    _buildMenuButton(
+                      icon: Icons.play_arrow,
+                      label: '試合開始',
+                      color: Colors.red.shade900,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => GamePage(
+                              isDebugEnabled: _debugEnabled,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildMenuButton(
+                      icon: Icons.auto_stories,
+                      label: '心得',
+                      color: Colors.amber.shade900,
+                      onPressed: _openGuideDialog,
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildMenuButton(
+                      icon: Icons.settings,
+                      label: '設定',
+                      color: Colors.blueGrey.shade900,
+                      onPressed: _openSettingsDialog,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: 240,
+      height: 48,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Colors.amber, width: 1.5),
+          ),
+          elevation: 6,
+        ),
+        onPressed: onPressed,
+        icon: Icon(icon, color: Colors.amberAccent, size: 24),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+</file>
+
 <file path="lib/widgets/fighting_hud.dart">
 import 'package:flutter/material.dart';
 
 import '../game/kendo_game.dart';
+import '../game/score/score_manager.dart';
 
 class FightingHudOverlay extends StatefulWidget {
   const FightingHudOverlay({
@@ -2116,36 +2917,75 @@ class FightingHudOverlay extends StatefulWidget {
 }
 
 class _FightingHudOverlayState extends State<FightingHudOverlay> {
+  int _lastGuardTapTime = 0;
+  static const int _doubleTapThresholdMs = 300;
+
+  void _handleGuardSideInputDown() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final timeDiff = now - _lastGuardTapTime;
+    _lastGuardTapTime = now;
+
+    if (timeDiff <= _doubleTapThresholdMs) {
+      debugPrint('[HUD-Input] Double-tap detected (${timeDiff}ms) -> Triggering Disengage');
+      widget.game.disengageP1();
+    } else {
+      debugPrint('[HUD-Input] Single-tap detected (${timeDiff}ms) -> Triggering Guard Start');
+      widget.game.guardP1Start();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Stack(
         children: [
-          // 0. Full-Screen Left/Right Tap Control Gesture Area (スマホ向け画面左右タップ操作)
+          // 0. Full-Screen Left/Right Tap Control Gesture Area (スマホ向け画面左右タップ＆ダブルタップ離脱操作)
           Positioned.fill(
             child: Listener(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (event) {
                 final screenWidth = MediaQuery.of(context).size.width;
-                if (event.position.dx < screenWidth / 2) {
-                  widget.game.handleLeftInputDown();
+                final isTouchOnLeft = event.position.dx < screenWidth / 2;
+                final isEnemyOnRight = widget.game.p1.position.x < widget.game.p2.position.x;
+
+                if (isEnemyOnRight) {
+                  // 敵が右側にいる場合: 左＝防御（ダブルタップで離脱）、右＝攻撃
+                  if (isTouchOnLeft) {
+                    _handleGuardSideInputDown();
+                  } else {
+                    widget.game.attackP1();
+                  }
                 } else {
-                  widget.game.handleRightInputDown();
+                  // 敵が左側にいる場合: 左＝攻撃、右＝防御（ダブルタップで離脱）
+                  if (isTouchOnLeft) {
+                    widget.game.attackP1();
+                  } else {
+                    _handleGuardSideInputDown();
+                  }
                 }
               },
-              onPointerUp: (event) {
-                final screenWidth = MediaQuery.of(context).size.width;
-                if (event.position.dx < screenWidth / 2) {
-                  widget.game.handleLeftInputUp();
-                } else {
-                  widget.game.handleRightInputUp();
-                }
-              },
-              onPointerCancel: (_) {
-                widget.game.guardP1Stop();
-              },
+              onPointerUp: (_) {},
+              onPointerCancel: (_) {},
               child: const SizedBox.expand(),
             ),
+          ),
+
+          // 0-B. 200ms Pre-Strike Full-Screen Warning Flash Overlay (全画面打撃直前背景フラッシュ警告)
+          ValueListenableBuilder<double>(
+            valueListenable: widget.game.bgFlashNotifier,
+            builder: (context, flashAlpha, _) {
+              if (flashAlpha <= 0.0) return const SizedBox.shrink();
+
+              return Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    color: const Color(0xFFFF3D00).withValues(
+                      alpha: (flashAlpha * 0.45).clamp(0.0, 0.45),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
 
           // 1. Street Fighter II Style Top HUD
@@ -2164,14 +3004,30 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            '1P 剣士1',
-                            style: TextStyle(
-                              color: Colors.yellowAccent,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                            ),
+                          ValueListenableBuilder<int>(
+                            valueListenable: ScoreManager.streakNotifier,
+                            builder: (context, streak, _) {
+                              final streakText = streak > 0 ? ' ($streak連勝中)' : '';
+                              return ValueListenableBuilder<int>(
+                                valueListenable: ScoreManager.winsNotifier,
+                                builder: (context, totalWins, _) {
+                                  return ValueListenableBuilder<int>(
+                                    valueListenable: ScoreManager.lossesNotifier,
+                                    builder: (context, totalLosses, _) {
+                                      return Text(
+                                        '1P 剣士1 [$totalWins勝$totalLosses敗$streakText]',
+                                        style: const TextStyle(
+                                          color: Colors.yellowAccent,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
                           ),
                           ValueListenableBuilder<int>(
                             valueListenable: widget.game.p1WinsNotifier,
@@ -2254,69 +3110,96 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
             ),
           ),
 
-          // 2. Center Banner Overlay (Match Over Victory/Loss Result Text)
+          // 2. Center Banner Overlay (Pre-Round Start Text & Victory/Loss Result Text)
           Center(
-            child: ValueListenableBuilder<KendoGameState>(
-              valueListenable: widget.game.gameStateNotifier,
-              builder: (context, gameState, _) {
-                if (gameState != KendoGameState.matchOver) {
-                  return const SizedBox.shrink();
-                }
+            child: ValueListenableBuilder<String>(
+              valueListenable: widget.game.overlayTextNotifier,
+              builder: (context, overlayText, _) {
+                if (overlayText.isEmpty) return const SizedBox.shrink();
 
-                return ValueListenableBuilder<String>(
-                  valueListenable: widget.game.overlayTextNotifier,
-                  builder: (context, overlayText, _) {
-                    if (overlayText.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.85),
+                        border: Border.all(color: Colors.amberAccent, width: 3),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black87,
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          )
+                        ],
+                      ),
+                      child: Text(
+                        overlayText,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.amberAccent,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 3,
+                          shadows: [
+                            Shadow(color: Colors.red, blurRadius: 8),
+                          ],
+                        ),
+                      ),
+                    ),
+                    ValueListenableBuilder<KendoGameState>(
+                      valueListenable: widget.game.gameStateNotifier,
+                      builder: (context, gameState, _) {
+                        if (gameState != KendoGameState.matchOver) {
+                          return const SizedBox.shrink();
+                        }
 
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.85),
-                            border: Border.all(color: Colors.amberAccent, width: 3),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black87,
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              )
-                            ],
-                          ),
-                          child: Text(
-                            overlayText,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.amberAccent,
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                              shadows: [
-                                Shadow(color: Colors.red, blurRadius: 8),
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red.shade900,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                    side: const BorderSide(color: Colors.amber, width: 2),
+                                  ),
+                                  onPressed: widget.game.resetMatch,
+                                  icon: const Icon(Icons.replay),
+                                  label: const Text(
+                                    '再戦 (R)',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                if (Navigator.of(context).canPop()) ...[
+                                  const SizedBox(width: 12),
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blueGrey.shade900,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                      side: const BorderSide(color: Colors.amber, width: 2),
+                                    ),
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    icon: const Icon(Icons.home),
+                                    label: const Text(
+                                      'タイトルへ',
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade900,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            side: const BorderSide(color: Colors.amber, width: 2),
-                          ),
-                          onPressed: widget.game.resetMatch,
-                          icon: const Icon(Icons.replay),
-                          label: const Text(
-                            '再戦 (R)',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 );
               },
             ),
@@ -2352,18 +3235,43 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber.shade800,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            ),
-                            onPressed: widget.game.togglePause,
-                            icon: const Icon(Icons.play_arrow),
-                            label: const Text(
-                              '再開する (P)',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber.shade800,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                ),
+                                onPressed: widget.game.togglePause,
+                                icon: const Icon(Icons.play_arrow),
+                                label: const Text(
+                                  '再開する (P)',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              if (Navigator.of(context).canPop()) ...[
+                                const SizedBox(width: 12),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueGrey.shade900,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    side: const BorderSide(color: Colors.amber, width: 1.5),
+                                  ),
+                                  onPressed: () {
+                                    widget.game.togglePause();
+                                    Navigator.of(context).pop();
+                                  },
+                                  icon: const Icon(Icons.home),
+                                  label: const Text(
+                                    'タイトルへ',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
@@ -2374,18 +3282,80 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
             },
           ),
 
-          // 4. Bottom Touch Control (Disengage Action Button)
-          Positioned(
-            bottom: 20,
-            right: 16,
-            child: _buildTouchButton(
-              icon: Icons.undo,
-              label: '離脱 (S)',
-              borderColor: Colors.tealAccent,
-              iconColor: Colors.tealAccent,
-              onPressStart: widget.game.disengageP1,
-              onPressEnd: () {},
-            ),
+          // 4. Bottom-Left & Bottom-Right 3x Simple Semi-Transparent Control Area Indicator Circles (文字なし・シンプルな3倍大きい半透明の円)
+          ValueListenableBuilder<KendoGameState>(
+            valueListenable: widget.game.gameStateNotifier,
+            builder: (context, gameState, _) {
+              if (gameState == KendoGameState.matchOver) return const SizedBox.shrink();
+
+              return ValueListenableBuilder<bool>(
+                valueListenable: widget.game.isEnemyOnRightNotifier,
+                builder: (context, isEnemyOnRight, _) {
+                  // 赤＝攻撃、青＝防御
+                  // 敵が右側にいる場合: 左下＝青円（防御）、右下＝赤円（攻撃）
+                  // 敵が左側にいる場合: 左下＝赤円（攻撃）、右下＝青円（防御）
+                  const redColor = Color(0x66FF1744); // 赤半透明（攻撃）
+                  const redBorder = Color(0xAAFF5252);
+
+                  const blueColor = Color(0x660288D1); // 青半透明（防御）
+                  const blueBorder = Color(0xAA40C4FF);
+
+                  final leftColor = isEnemyOnRight ? blueColor : redColor;
+                  final leftBorder = isEnemyOnRight ? blueBorder : redBorder;
+
+                  final rightColor = isEnemyOnRight ? redColor : blueColor;
+                  final rightBorder = isEnemyOnRight ? redBorder : blueBorder;
+
+                  return IgnorePointer(
+                    child: Stack(
+                      children: [
+                        // Bottom-Left 3x Simple Circle (左下操作円)
+                        Positioned(
+                          bottom: -20,
+                          left: -20,
+                          child: _buildSimpleControlCircle(
+                            color: leftColor,
+                            borderColor: leftBorder,
+                          ),
+                        ),
+
+                        // Bottom-Right 3x Simple Circle (右下操作円)
+                        Positioned(
+                          bottom: -20,
+                          right: -20,
+                          child: _buildSimpleControlCircle(
+                            color: rightColor,
+                            borderColor: rightBorder,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSimpleControlCircle({
+    required Color color,
+    required Color borderColor,
+  }) {
+    return Container(
+      width: 190,
+      height: 190,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(color: borderColor, width: 3.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -2452,118 +3422,6 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
       ),
     );
   }
-
-  Widget _buildTouchButton({
-    required IconData icon,
-    required String label,
-    required Color borderColor,
-    Color iconColor = Colors.amberAccent,
-    required VoidCallback onPressStart,
-    required VoidCallback onPressEnd,
-  }) {
-    return Listener(
-      onPointerDown: (_) => onPressStart(),
-      onPointerUp: (_) => onPressEnd(),
-      onPointerCancel: (_) => onPressEnd(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.8),
-          border: Border.all(color: borderColor, width: 2),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black45,
-              blurRadius: 4,
-              offset: Offset(2, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: iconColor, size: 24),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-</file>
-
-<file path="lib/main.dart">
-import 'package:flame/game.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-import 'game/kendo_game.dart';
-import 'widgets/fighting_hud.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Fix orientation to landscape for fighting game feel
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
-
-  runApp(const KewpieCupApp());
-}
-
-class KewpieCupApp extends StatelessWidget {
-  const KewpieCupApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Kewpie_cup',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black,
-      ),
-      home: const GamePage(),
-    );
-  }
-}
-
-class GamePage extends StatefulWidget {
-  const GamePage({super.key});
-
-  @override
-  State<GamePage> createState() => _GamePageState();
-}
-
-class _GamePageState extends State<GamePage> {
-  late final KendoGame game;
-
-  @override
-  void initState() {
-    super.initState();
-    game = KendoGame();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: GameWidget<KendoGame>(
-        game: game,
-        overlayBuilderMap: {
-          'HudOverlay': (context, game) => FightingHudOverlay(game: game),
-        },
-        initialActiveOverlays: const ['HudOverlay'],
-      ),
-    );
-  }
 }
 </file>
 
@@ -2574,24 +3432,135 @@ import 'package:kewpie_cup/game/audio/sound_manager.dart';
 import 'package:kewpie_cup/game/components/dojo_stage.dart';
 import 'package:kewpie_cup/game/components/kendo_fighter.dart';
 import 'package:kewpie_cup/game/kendo_game.dart';
+import 'package:kewpie_cup/game/score/score_manager.dart';
 import 'package:kewpie_cup/main.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
     // Disable sound playback for headless unit testing environment
     SoundManager.isEnabled = false;
   });
 
-  testWidgets('Kewpie_cup app loads successfully with extended HUD controls',
+  testWidgets('Kewpie_cup title screen loads with 3 menu options and starts match',
       (WidgetTester tester) async {
     await tester.pumpWidget(const KewpieCupApp());
     await tester.pump();
 
-    // Verify HUD text and action buttons are rendered
-    expect(find.text('1P 剣士1'), findsOneWidget);
+    // Verify Title Screen menu buttons
+    expect(find.text('試合開始'), findsOneWidget);
+    expect(find.text('心得'), findsOneWidget);
+    expect(find.text('設定'), findsOneWidget);
+
+    // Tap '試合開始' to enter GamePage
+    await tester.tap(find.text('試合開始'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Verify Game HUD text and action buttons are rendered
+    expect(find.textContaining('1P 剣士1'), findsOneWidget);
     expect(find.text('2P 剣士2 (CPU)'), findsOneWidget);
-    expect(find.text('離脱 (S)'), findsOneWidget);
     expect(find.text('30'), findsOneWidget);
+  });
+
+  group('ScoreManager persistent score tracking and clear tests', () {
+    test('setGuardDuration updates KendoFighter.guardActiveDuration and persists setting', () async {
+      await ScoreManager.setGuardDuration(1.5);
+      expect(KendoFighter.guardActiveDuration, equals(1.5));
+
+      final fighter = KendoFighter(
+        name: 'TestFighter',
+        isPlayer: true,
+        startX: -100.0,
+        groundY: 0.0,
+        keikogiColor: Colors.white,
+        ribbonColor: Colors.red,
+      );
+
+      fighter.startGuard();
+      expect(fighter.isGuarding, isTrue);
+
+      // Advance 1.0s (out of 1.5s active duration) -> still guarding!
+      fighter.update(1.00);
+      expect(fighter.isGuarding, isTrue);
+
+      // Advance another 0.6s (total 1.6s) -> guard expires
+      fighter.update(0.60);
+      expect(fighter.isGuarding, isFalse);
+
+      // Reset back to default 0.4s
+      await ScoreManager.setGuardDuration(0.4);
+      expect(KendoFighter.guardActiveDuration, equals(0.4));
+    });
+
+    test('recordWin increments wins and streak, recordLoss increments losses and resets streak', () async {
+      await ScoreManager.clearScore();
+      expect(ScoreManager.winsNotifier.value, equals(0));
+      expect(ScoreManager.lossesNotifier.value, equals(0));
+      expect(ScoreManager.streakNotifier.value, equals(0));
+
+      await ScoreManager.recordWin();
+      expect(ScoreManager.winsNotifier.value, equals(1));
+      expect(ScoreManager.streakNotifier.value, equals(1));
+
+      await ScoreManager.recordWin();
+      expect(ScoreManager.winsNotifier.value, equals(2));
+      expect(ScoreManager.streakNotifier.value, equals(2));
+
+      await ScoreManager.recordLoss();
+      expect(ScoreManager.winsNotifier.value, equals(2));
+      expect(ScoreManager.lossesNotifier.value, equals(1));
+      expect(ScoreManager.streakNotifier.value, equals(0));
+
+      await ScoreManager.clearScore();
+      expect(ScoreManager.winsNotifier.value, equals(0));
+      expect(ScoreManager.lossesNotifier.value, equals(0));
+      expect(ScoreManager.streakNotifier.value, equals(0));
+    });
+  });
+
+  group('Pre-round start sequence tests ("一本目" -> "はじめ！")', () {
+    test('Round 1 displays 一本目 for 2.0s then はじめ！ for 0.8s', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      expect(game.isRoundStarting, isTrue);
+      expect(game.overlayTextNotifier.value, equals('一本目'));
+
+      // Advance 1.5s -> still "一本目"
+      game.update(1.50);
+      expect(game.isRoundStarting, isTrue);
+      expect(game.overlayTextNotifier.value, equals('一本目'));
+
+      // Advance 0.6s (total 2.1s) -> transitions to "はじめ！"
+      game.update(0.60);
+      expect(game.isRoundStarting, isTrue);
+      expect(game.overlayTextNotifier.value, equals('はじめ！'));
+
+      // Advance 0.8s (total 2.9s) -> pre-round sequence finishes, active fight begins!
+      game.update(0.80);
+      expect(game.isRoundStarting, isFalse);
+      expect(game.overlayTextNotifier.value, equals(''));
+    });
+
+    test('Round title text changes to 二本目 for round 2 and 三本目 for round 3', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      // Round 1
+      expect(game.currentRoundTitleText, equals('一本目'));
+
+      // Set P1 winCount = 1 (Round 2)
+      game.p1.winCount = 1;
+      expect(game.currentRoundTitleText, equals('二本目'));
+
+      // Set P2 winCount = 1 (Round 3)
+      game.p2.winCount = 1;
+      expect(game.currentRoundTitleText, equals('三本目'));
+    });
   });
 
   group('KendoFighter logic and 2-phase attack tests', () {
@@ -2700,19 +3669,39 @@ void main() {
   });
 
   group('Unified input handlers and Q/E hotkey tests', () {
+    test('Far range attack input (dist > 255) advances 1 step (0.35s) and automatically stops', () async {
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      game.p1.position.x = -260.0;
+      game.p2.position.x = 440.0; // Distance = 700px > 255px
+
+      game.attackP1();
+      expect(game.p1.isAttacking, isFalse);
+      expect(game.p1.isFarAdvancing, isTrue);
+      expect(game.p1.velocityX, greaterThan(0));
+
+      // Advance 0.36s (past 0.35s 1-step duration) -> Automatically stops!
+      game.p1.update(0.36);
+      expect(game.p1.isFarAdvancing, isFalse);
+      expect(game.p1.velocityX, equals(0.0));
+    });
+
     test('Enemy on right: Left input (Q) guards, Right input (E) attacks', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
-      game.p1.position.x = -260.0;
-      game.p2.position.x = 260.0;
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0; // Close strike range
 
       // Left input -> Guard start
       game.handleLeftInputDown();
       expect(game.p1.isGuarding, isTrue);
 
-      // Left input up -> Guard stop
-      game.handleLeftInputUp();
+      // Guard stays active for guardActiveDuration (0.4s) without premature cancel on release
+      game.p1.update(0.45);
       expect(game.p1.isGuarding, isFalse);
 
       // Right input -> Attack
@@ -2723,9 +3712,10 @@ void main() {
     test('Enemy on left: Left input (Q) attacks, Right input (E) guards', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
-      game.p1.position.x = 260.0;
-      game.p2.position.x = -260.0;
+      game.p1.position.x = 80.0;
+      game.p2.position.x = -80.0; // Close strike range
 
       // Left input -> Attack
       game.handleLeftInputDown();
@@ -2737,16 +3727,41 @@ void main() {
       game.handleRightInputDown();
       expect(game.p1.isGuarding, isTrue);
 
-      // Right input up -> Guard stop
-      game.handleRightInputUp();
+      // Guard stays active for guardActiveDuration (0.4s)
+      game.p1.update(0.45);
       expect(game.p1.isGuarding, isFalse);
     });
   });
 
   group('CPU 2-phase attack and Sen-no-sen (先守後攻) combat tests', () {
+    test('CPU attack flashes red background at blinking end and attacks 0.5s later', () async {
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // Initiate CPU attack with 0.5s blink (total windup = 0.5s blink + 0.5s hold = 1.0s)
+      game.p2.attack(blinkDuration: 0.5);
+
+      // Advance to 0.40s (during white blinking) -> flashAlpha == 0
+      game.p2.update(0.40);
+      game.update(0.01);
+      expect(game.stage.flashAlpha, equals(0.0));
+
+      // Advance to 0.55s (just after blinking ends at 0.50s) -> flashAlpha > 0 (Red flash triggered!)
+      game.p2.update(0.15);
+      game.update(0.01);
+      expect(game.stage.flashAlpha, greaterThan(0.0));
+
+      // Advance to 1.05s (0.5s after blinking ends / strike connected) -> flashAlpha == 0
+      game.p2.update(0.50);
+      game.update(0.01);
+      expect(game.stage.flashAlpha, equals(0.0));
+    });
+
     test('CPU 3-tier attack windup durations (0.3s Short, 0.5s Medium, 0.8s Long) hit after 0.5s hold time', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       // Short (0.3s flash + 0.5s hold = 0.8s total windup)
       game.p2.attack(blinkDuration: 0.3);
@@ -2772,6 +3787,7 @@ void main() {
     test('CPU attack has 1.0s windup phase followed by Men strike phase', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       game.p2.attack(blinkDuration: 0.5);
       expect(game.p2.isAttacking, isTrue);
@@ -2789,6 +3805,7 @@ void main() {
     test('Normal state: Player attack is automatically blocked by CPU (0 damage)', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       game.p1.position.x = -80.0;
       game.p2.position.x = 80.0;
@@ -2806,6 +3823,7 @@ void main() {
     test('Guarded defender blocks incoming 2-phase lunge attack and triggers Counter Opportunity', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       game.p1.position.x = -80.0;
       game.p2.position.x = 80.0;
@@ -2823,6 +3841,7 @@ void main() {
     test('Counter Opportunity: Player attack deals damage and scores Ippon when CPU health is 0', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       game.p1.position.x = -80.0;
       game.p2.position.x = 80.0;
@@ -2844,6 +3863,7 @@ void main() {
     test('togglePause toggles isPausedNotifier and suppresses movement', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       expect(game.isPausedNotifier.value, isFalse);
 
@@ -2868,6 +3888,7 @@ void main() {
     test('30-second time-out awards Ippon to CPU', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       expect(game.roundTimerNotifier.value, equals(30));
 
@@ -2882,6 +3903,7 @@ void main() {
     test('Close contact distance triggers Tsubazeriai state', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       // Position fighters within Tsubazeriai distance (<= 114.0px)
       game.p1.position.x = -40.0;
@@ -2896,6 +3918,7 @@ void main() {
     test('2 wins leads to matchOver with result text', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       // P1 (Player) wins 2nd round -> matchOver with "あなたの勝ち"
       game.p1.winCount = 1;
@@ -2916,6 +3939,7 @@ void main() {
       // P2 (CPU) wins -> matchOver with "あなたの負け"
       final game2 = KendoGame();
       await game2.onLoad();
+      game2.isRoundStarting = false;
 
       game2.p2.winCount = 1;
       game2.p1.position.x = -80.0;
@@ -2934,9 +3958,36 @@ void main() {
   });
 
   group('Pass-Through and Turnaround action tests', () {
+    test('Attack triggers pass-through even when defender is cornered near stage edge', () async {
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // Position defender (P2) near stage edge (X = 480, max is 520)
+      game.p1.position.x = 350.0;
+      game.p2.position.x = 480.0;
+      game.p2.cpuVulnerableTimer = 1.5;
+
+      game.p1.attack();
+      game.p1.update(0.20); // Strike window
+      game.update(0.01);
+
+      // Pass-through triggers successfully even at corner
+      expect(game.p1.isPassingThrough, isTrue);
+
+      game.update(0.90);
+      game.update(0.90);
+
+      // Both turn around cleanly
+      expect(game.p1.isPassingThrough, isFalse);
+      expect(game.p1.isTurningAround, isTrue);
+      expect(game.p2.isTurningAround, isTrue);
+    });
+
     test('Attack triggers pass-through when defender has sufficient backSpace', () async {
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
 
       game.p1.position.x = -80.0;
       game.p2.position.x = 0.0;
@@ -2948,9 +3999,9 @@ void main() {
 
       expect(game.p1.isPassingThrough, isTrue);
 
-      // P1 moves past P2 to target X (270.0)
-      game.update(0.70);
-      game.update(0.70);
+      // P1 moves past P2 to target X (380.0)
+      game.update(0.90);
+      game.update(0.90);
 
       // P1 reaches target, triggering turnaround on both fighters
       expect(game.p1.isPassingThrough, isFalse);
@@ -2966,6 +4017,7 @@ void main() {
 
       final game = KendoGame();
       await game.onLoad();
+      game.isRoundStarting = false;
       game.update(0.01);
 
       expect(game.p1.position.y, equals(250.0));
@@ -2996,93 +4048,6 @@ void main() {
       expect(game.p2.doBandColor, equals(const Color(0xFFFAFAFA)));
     });
   });
-}
-</file>
-
-<file path="web/index.html">
-<!DOCTYPE html>
-<html>
-<head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="kewpie_cup">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>kewpie_cup</title>
-  <link rel="manifest" href="manifest.json">
-</head>
-<body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
-</body>
-</html>
-</file>
-
-<file path="web/manifest.json">
-{
-    "name": "kewpie_cup",
-    "short_name": "kewpie_cup",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "icons": [
-        {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }
-    ]
 }
 </file>
 
@@ -4540,6 +5505,21 @@ kewpie_cup/
     - `DojoStage` の床面描画ライン、センターマーク位置、および `KendoFighter`（`Anchor.bottomCenter`）の足元描画オフセットの座標計算を再精査し、キャラクターの確実な床面接地を実現する。
 </file>
 
+<file path="package.json">
+{
+  "name": "kewpie_cup",
+  "version": "1.0.0",
+  "description": "Kewpie Cup Kendo Game Web App",
+  "private": true,
+  "scripts": {
+    "deploy": "gh-pages -d build/web"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}
+</file>
+
 <file path="pubspec.yaml">
 name: kewpie_cup
 description: "A new Flutter project."
@@ -4576,6 +5556,7 @@ dependencies:
   flame: ^1.20.0
   flame_audio: ^2.1.6
   audioplayers: ^6.0.0
+  shared_preferences: ^2.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -4702,25 +5683,26 @@ samples, guidance on mobile development, and a full API reference.
 </file>
 
 <file path="REPORT.md">
-# 開発報告書: チャージ音再生の一時停止およびガード音・打撃音限定運用への修正
+# 開発報告書: スマホ画面横向き検知改善および「このまま対戦を開始する」ボタンの実装
 
 ## 1. 概要
-- チャージ音の正常発音不具合に伴い、チャージ音（`charge.mp3`）の再生処理を一時的に停止（取りやめ）し、効果音再生を「ガード音（`guard.mp3`）」および「打撃音（`hit.mp3`）」の2種類に限定しました。
+- スマホのコントロールセンター等で「画面の縦向きロック」がオンになっている際、スマホを横に傾けてもブラウザの解像度回転イベントがOSによってブロックされ「画面を横向きにしてください」画面から進めなくなる症状に対応しました。
+- 画面検知ロジックの改善に加え、万が一自動回転が検知されない場合でも回避できる **「このまま対戦を開始する」** ボタンを画面上に追加しました。
 
 ---
 
 ## 2. 実施内容
-- `lib/game/audio/sound_manager.dart`:
-  - `init()` 内での `_chargePlayer` 初期化および読み込みの取りやめ。
-  - `playCharge()` および `stopCharge()` メソッドを安全な no-op（ノーオペレーション / 即時リターン）に変更。
-  - `_guardPool`（ガード音）および `_hitPool`（打撃音）による AudioPool 多重再生処理のみを有効化・維持。
-- `test/widget_test.dart`:
-  - 変更後も全19件のユニットテストが通過することを確認。
+- `lib/main.dart`:
+  - `LandscapeWrapper` を `StatefulWidget` へ更新。
+  - アスペクト比判定ロジック `isLandscape = size.width > size.height` の最適化。
+  - 画面上に **「このまま対戦を開始する」** ボタン（`ElevatedButton`）を追加し、ボタンタップで警告画面をスキップして即座に対戦を開始可能に修正。
+  - 注意書き「※スマホの『画面縦向きロック』がオンの場合は解除してください」のテキスト案内を追加。
+- Webビルドデプロイ (`.\deploy.ps1`) の実行・更新完了。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `lib/game/audio/sound_manager.dart`
+1. `lib/main.dart`
 
 ---
 
@@ -4729,13 +5711,358 @@ samples, guidance on mobile development, and a full API reference.
 ### `flutter analyze` の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 1.5s)
+No issues found! (ran in 1.7s)
 ```
 
 ### `flutter test` の実行結果
 ```bash
-00:02 +19: All tests passed!
+00:03 +26: All tests passed!
 ```
+</file>
+
+<file path="lib/main.dart">
+import 'package:flame/game.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'game/kendo_game.dart';
+import 'screens/title_screen.dart';
+import 'widgets/fighting_hud.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Fix orientation to landscape for fighting game feel
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
+  runApp(const KewpieCupApp());
+}
+
+class KewpieCupApp extends StatelessWidget {
+  const KewpieCupApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Kewpie_cup',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF0D0D11),
+      ),
+      builder: (context, child) {
+        return LandscapeWrapper(child: child ?? const SizedBox.shrink());
+      },
+      home: const TitleScreen(),
+    );
+  }
+}
+
+class LandscapeWrapper extends StatefulWidget {
+  const LandscapeWrapper({
+    super.key,
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  State<LandscapeWrapper> createState() => _LandscapeWrapperState();
+}
+
+class _LandscapeWrapperState extends State<LandscapeWrapper> {
+  bool _isDismissedManually = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLandscape = size.width > size.height;
+
+    // Reset manual dismissal if phone is turned landscape
+    if (isLandscape && _isDismissedManually) {
+      _isDismissedManually = false;
+    }
+
+    final showOverlay = !isLandscape && !_isDismissedManually;
+
+    return Stack(
+      children: [
+        widget.child,
+        if (showOverlay)
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xFF0D0D11),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.red.shade900.withValues(alpha: 0.85),
+                            border: Border.all(color: Colors.amberAccent, width: 2.5),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black87,
+                                blurRadius: 15,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.screen_rotation,
+                            color: Colors.amberAccent,
+                            size: 44,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          '画面を横向きにしてください',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.amberAccent,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'スマホを横向きに傾けると横画面で快適にプレイできます。\n'
+                          '※スマホの「画面縦向きロック」がオンの場合は解除してください。',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.normal,
+                            height: 1.4,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber.shade900,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            side: const BorderSide(color: Colors.amberAccent, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isDismissedManually = true;
+                            });
+                          },
+                          icon: const Icon(Icons.play_arrow, size: 20),
+                          label: const Text(
+                            'このまま対戦を開始する',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class GamePage extends StatefulWidget {
+  const GamePage({
+    super.key,
+    this.isDebugEnabled = false,
+  });
+
+  final bool isDebugEnabled;
+
+  @override
+  State<GamePage> createState() => _GamePageState();
+}
+
+class _GamePageState extends State<GamePage> {
+  late final KendoGame game;
+
+  @override
+  void initState() {
+    super.initState();
+    game = KendoGame();
+    game.isDebugVisibleNotifier.value = widget.isDebugEnabled;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: GameWidget<KendoGame>(
+        game: game,
+        overlayBuilderMap: {
+          'HudOverlay': (context, game) => FightingHudOverlay(game: game),
+        },
+        initialActiveOverlays: const ['HudOverlay'],
+      ),
+    );
+  }
+}
+</file>
+
+<file path="web/index.html">
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="キューピーカップ 剣道対戦Webアプリ">
+
+  <!-- Fullscreen Landscape Mobile Web Viewport meta tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="剣道対戦">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>キューピーカップ 剣道対戦</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    body {
+      background-color: #0D0D11;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
+</file>
+
+<file path="web/manifest.json">
+{
+    "name": "キューピーカップ 剣道対戦",
+    "short_name": "剣道対戦",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#0D0D11",
+    "theme_color": "#0D0D11",
+    "description": "キューピーカップ 剣道対戦Webアプリ",
+    "orientation": "landscape",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
+</file>
+
+<file path="deploy.ps1">
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
+# =====================================================================
+# Kewpie Cup (kewpie_cup) - GitHub Pages Deploy Script
+# =====================================================================
+
+$RepoName = "kewpie_cup"
+
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host " Starting Web Build for $RepoName... " -ForegroundColor Cyan
+Write-Host "==========================================" -ForegroundColor Cyan
+
+# 1. Check Git Repository Initialization
+if (-not (Test-Path ".git")) {
+    Write-Host "[GIT] Initializing Git repository..." -ForegroundColor Yellow
+    git init
+    git branch -M main
+}
+
+# 2. Check Remote Origin URL
+$remoteUrl = & git remote get-url origin 2>$null
+if (-not $remoteUrl) {
+    Write-Host "==========================================" -ForegroundColor Red
+    Write-Host " [ERROR] GitHub remote (origin) URL is NOT configured!" -ForegroundColor Red
+    Write-Host " Please run this command ONCE in Terminal to link your GitHub repo:" -ForegroundColor Yellow
+    Write-Host "   git remote add origin https://github.com/chorokii/$RepoName.git" -ForegroundColor Cyan
+    Write-Host "==========================================" -ForegroundColor Red
+    exit 1
+}
+
+# 3. Flutter Web Release Build with base-href /kewpie_cup/
+Write-Host "[BUILD] Running Flutter Web Release Build..." -ForegroundColor Cyan
+flutter build web --release --base-href "/$RepoName/"
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Flutter build web failed!" -ForegroundColor Red
+    exit $LASTEXITCODE
+}
+
+Write-Host "[SUCCESS] Web build completed in build\web" -ForegroundColor Green
+
+# 4. Add and Commit changes
+Write-Host "[GIT] Staging and committing files..." -ForegroundColor Cyan
+git add .
+git commit -m "Deploy $RepoName web release" 2>$null
+
+# 5. Push source code to GitHub main branch
+Write-Host "[GIT] Pushing source code to GitHub main branch..." -ForegroundColor Cyan
+git push -u origin main 2>$null
+
+# 6. Deploy build\web to GitHub Pages via gh-pages
+Write-Host "[DEPLOY] Deploying build\web to GitHub Pages..." -ForegroundColor Green
+npx --yes gh-pages -d build/web
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "==========================================" -ForegroundColor Green
+    Write-Host " DEPLOYMENT COMPLETE! " -ForegroundColor Green
+    Write-Host " Your app will be live shortly at: https://chorokii.github.io/$RepoName/" -ForegroundColor Yellow
+    Write-Host "==========================================" -ForegroundColor Green
+} else {
+    Write-Host "==========================================" -ForegroundColor Red
+    Write-Host " [NOTICE] GitHub repository '$RepoName' was not found on your GitHub account." -ForegroundColor Red
+    Write-Host " Please open https://github.com/new and create a new Public repository named '$RepoName'." -ForegroundColor Yellow
+    Write-Host "==========================================" -ForegroundColor Red
+}
 </file>
 
 </files>

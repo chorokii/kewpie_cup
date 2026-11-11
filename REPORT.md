@@ -1,35 +1,25 @@
-# 開発報告書: スマホ画面横向き検知改善および「このまま対戦を開始する」ボタンの実装
+# 開発報告書: Androidホーム画面（PWA）起動不良の解消およびマニフェスト修正
 
 ## 1. 概要
-- スマホのコントロールセンター等で「画面の縦向きロック」がオンになっている際、スマホを横に傾けてもブラウザの解像度回転イベントがOSによってブロックされ「画面を横向きにしてください」画面から進めなくなる症状に対応しました。
-- 画面検知ロジックの改善に加え、万が一自動回転が検知されない場合でも回避できる **「このまま対戦を開始する」** ボタンを画面上に追加しました。
-
----
+- Androidスマホのホーム画面（WebAPK/PWA）からアイコンタップ時にアプリが起動しなくなっていた問題を修正。
+- `web/manifest.json` の `orientation` を `any` に戻し、`scope` の明示的追加を行いました。
 
 ## 2. 実施内容
-- `lib/main.dart`:
-  - `LandscapeWrapper` を `StatefulWidget` へ更新。
-  - アスペクト比判定ロジック `isLandscape = size.width > size.height` の最適化。
-  - 画面上に **「このまま対戦を開始する」** ボタン（`ElevatedButton`）を追加し、ボタンタップで警告画面をスキップして即座に対戦を開始可能に修正。
-  - 注意書き「※スマホの『画面縦向きロック』がオンの場合は解除してください」のテキスト案内を追加。
-- Webビルドデプロイ (`.\deploy.ps1`) の実行・更新完了。
-
----
+- `web/manifest.json`:
+  - `"orientation": "landscape"` を `"orientation": "any"` に修正。
+  - `"scope": "./"` を追加。
 
 ## 3. 修正ファイル一覧
-1. `lib/main.dart`
-
----
+1. `web/manifest.json`
 
 ## 4. 検証結果
-
-### `flutter analyze` の実行結果
+### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 1.7s)
+No issues found! (ran in 2.3s)
 ```
 
-### `flutter test` の実行結果
+### flutter test の実行結果
 ```bash
-00:03 +26: All tests passed!
+00:04 +26: All tests passed!
 ```
