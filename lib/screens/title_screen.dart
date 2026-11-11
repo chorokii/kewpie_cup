@@ -404,7 +404,7 @@ class _TitleScreenState extends State<TitleScreen> {
                           ),
                           SizedBox(height: isCompactHeight ? 12 : 20),
 
-                          // Persistent Score & Win Streak Badge
+                          // Persistent Score & Win Streak Badge (2連勝以上から表示)
                           ValueListenableBuilder<int>(
                             valueListenable: ScoreManager.winsNotifier,
                             builder: (context, wins, _) {
@@ -414,7 +414,7 @@ class _TitleScreenState extends State<TitleScreen> {
                                   return ValueListenableBuilder<int>(
                                     valueListenable: ScoreManager.streakNotifier,
                                     builder: (context, streak, _) {
-                                      final streakText = streak > 0 ? ' ($streak連勝中！)' : '';
+                                      final streakText = streak >= 2 ? ' ($streak連勝中！)' : '';
                                       return Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                                         decoration: BoxDecoration(

@@ -19,6 +19,7 @@ void main() {
 
   testWidgets('Kewpie_cup title screen loads with 3 menu options and starts match',
       (WidgetTester tester) async {
+    await ScoreManager.clearScore();
     await tester.pumpWidget(const KewpieCupApp());
     await tester.pump();
 
@@ -26,6 +27,19 @@ void main() {
     expect(find.text('試合開始'), findsOneWidget);
     expect(find.text('心得'), findsOneWidget);
     expect(find.text('設定'), findsOneWidget);
+
+    // 1 win should NOT display "1連勝中"
+    await ScoreManager.recordWin();
+    await tester.pump();
+    expect(find.textContaining('1連勝中'), findsNothing);
+
+    // 2 wins SHOULD display "2連勝中"
+    await ScoreManager.recordWin();
+    await tester.pump();
+    expect(find.textContaining('2連勝中'), findsOneWidget);
+
+    await ScoreManager.clearScore();
+    await tester.pump();
 
     // Tap '試合開始' to enter GamePage
     await tester.tap(find.text('試合開始'));
@@ -410,7 +424,7 @@ void main() {
       expect(game.p2.cpuVulnerableTimer, greaterThan(0.0)); // CPU enters Counter Opportunity!
     });
 
-    test('Counter Opportunity: Player attack deals damage and scores Ippon when CPU health is 0', () async {
+    test('Counter Opportunity: Player attack deals damage and scores Ippon with call text when CPU health is 0', () async {
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -428,6 +442,10 @@ void main() {
       expect(game.p2.health, equals(0.0)); // Counter hit connects!
       expect(game.p1.winCount, equals(1));
       expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
+      expect(
+        ['面あり', '小手あり', '胴あり'].contains(game.overlayTextNotifier.value),
+        isTrue,
+      );
     });
   });
 
@@ -457,6 +475,18 @@ void main() {
   });
 
   group('KendoGame combat, Tsubazeriai and match rules tests', () {
+    test('rollIpponCallText returns 面あり (50%), 小手あり (40%), 胴あり (10%) according to probability', () async {
+      final game = KendoGame();
+      await game.onLoad();
+
+      expect(game.rollIpponCallText(0.00), equals('面あり'));
+      expect(game.rollIpponCallText(0.49), equals('面あり'));
+      expect(game.rollIpponCallText(0.50), equals('小手あり'));
+      expect(game.rollIpponCallText(0.89), equals('小手あり'));
+      expect(game.rollIpponCallText(0.90), equals('胴あり'));
+      expect(game.rollIpponCallText(0.99), equals('胴あり'));
+    });
+
     test('30-second time-out awards Ippon to CPU', () async {
       final game = KendoGame();
       await game.onLoad();
@@ -487,12 +517,12 @@ void main() {
       expect(game.p2.isTsubazeriai, isTrue);
     });
 
-    test('2 wins leads to matchOver with result text', () async {
+    test('2 wins displays Ippon call for 2.0s then transitions to あなたの勝ち or あなたの負け', () async {
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
 
-      // P1 (Player) wins 2nd round -> matchOver with "あなたの勝ち"
+      // P1 (Player) wins 2nd round -> matchOver with Ippon call first, then "あなたの勝ち" after 2.0s
       game.p1.winCount = 1;
       game.p1.position.x = -80.0;
       game.p2.position.x = 80.0;
@@ -502,13 +532,31 @@ void main() {
       game.p1.attack();
       game.p1.update(0.20);
 
-      game.update(0.01);
+      game.update(0.01); // Triggers 0.06s hitStop and Ippon call
 
       expect(game.p1.winCount, equals(2));
       expect(game.gameStateNotifier.value, equals(KendoGameState.matchOver));
+      expect(game.isMatchOverResultPending, isTrue);
+      expect(
+        ['面あり', '小手あり', '胴あり'].contains(game.overlayTextNotifier.value),
+        isTrue,
+      );
+
+      // Clear hitStop (0.06s) + advance 1.5s -> Still displaying Ippon call
+      game.update(0.06);
+      game.update(1.50);
+      expect(game.isMatchOverResultPending, isTrue);
+      expect(
+        ['面あり', '小手あり', '胴あり'].contains(game.overlayTextNotifier.value),
+        isTrue,
+      );
+
+      // Advance another 0.6s (total > 2.0s) -> Transitions to "あなたの勝ち"
+      game.update(0.60);
+      expect(game.isMatchOverResultPending, isFalse);
       expect(game.overlayTextNotifier.value, equals('あなたの勝ち'));
 
-      // P2 (CPU) wins -> matchOver with "あなたの負け"
+      // P2 (CPU) wins -> matchOver with Ippon call first, then "あなたの負け" after 2.0s
       final game2 = KendoGame();
       await game2.onLoad();
       game2.isRoundStarting = false;
@@ -525,6 +573,16 @@ void main() {
 
       expect(game2.p2.winCount, equals(2));
       expect(game2.gameStateNotifier.value, equals(KendoGameState.matchOver));
+      expect(game2.isMatchOverResultPending, isTrue);
+      expect(
+        ['面あり', '小手あり', '胴あり'].contains(game2.overlayTextNotifier.value),
+        isTrue,
+      );
+
+      // Clear hitStop (0.06s) + advance 2.1s -> Transitions to "あなたの負け"
+      game2.update(0.06);
+      game2.update(2.10);
+      expect(game2.isMatchOverResultPending, isFalse);
       expect(game2.overlayTextNotifier.value, equals('あなたの負け'));
     });
   });

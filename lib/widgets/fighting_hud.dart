@@ -106,7 +106,7 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                           ValueListenableBuilder<int>(
                             valueListenable: ScoreManager.streakNotifier,
                             builder: (context, streak, _) {
-                              final streakText = streak > 0 ? ' ($streak連勝中)' : '';
+                              final streakText = streak >= 2 ? ' ($streak連勝中)' : '';
                               return ValueListenableBuilder<int>(
                                 valueListenable: ScoreManager.winsNotifier,
                                 builder: (context, totalWins, _) {
@@ -209,7 +209,7 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
             ),
           ),
 
-          // 2. Center Banner Overlay (Pre-Round Start Text & Victory/Loss Result Text)
+          // 2. Center Banner Overlay (Pre-Round Start Text, Ippon Call Text & Victory/Loss Result Text)
           Center(
             child: ValueListenableBuilder<String>(
               valueListenable: widget.game.overlayTextNotifier,
@@ -250,7 +250,8 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                     ValueListenableBuilder<KendoGameState>(
                       valueListenable: widget.game.gameStateNotifier,
                       builder: (context, gameState, _) {
-                        if (gameState != KendoGameState.matchOver) {
+                        if (gameState != KendoGameState.matchOver ||
+                            widget.game.isMatchOverResultPending) {
                           return const SizedBox.shrink();
                         }
 

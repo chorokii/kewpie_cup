@@ -1,36 +1,30 @@
-# 開発報告書: 防御有効時間の範囲変更（0.2〜1.0秒）・効果音初期値の変更・打撃音と防御音の有効化
+# 開発報告書: 連勝表示条件の変更（2連勝から表示）および一本決まり手（「面あり」「小手あり」「胴あり」）表示と勝敗遷移の実装
 
 ## 1. 概要
-- 設定画面の「防御有効時間」の調整範囲を `0.2秒〜1.0秒`（初期値 `0.4秒`）に変更しました。
-- 効果音の初期値を「切（`false`）」に変更しました。
-- 一時停止していた効果音機能のうち、「打撃音（`playHit`）」と「防御音（`playGuard`）」を有効化し、効果音「入」の状態で音が鳴るように実装しました。
+- タイトル画面および対戦HUDにおける連勝表示について、「1連勝中」を表示せず、最小で「2連勝中」（`streak >= 2`）から表示するように変更しました。
+- 1本獲得時に「面あり（50%）」「小手あり（40%）」「胴あり（10%）」をランダムに表示する処理を追加し、2本先取時は「〇あり」を2秒間表示した後に「あなたの勝ち」または「あなたの負け」を表示するよう変更しました。
 
 ---
 
 ## 2. 実施内容
-- `lib/game/audio/sound_manager.dart`:
-  - `isEnabled` の初期値を `false`（切）に変更。
-  - `playGuard()`（防御音）および `playHit()`（打撃音）を16bit PCM WAV波形生成＋`AudioPlayer`（`BytesSource`）再生により有効化（チャージ音は無効維持）。
-- `lib/game/score/score_manager.dart`:
-  - `guardActiveDuration` の初期値を `0.4` とし、設定・読込時のクランプ範囲を `0.2〜1.0` に変更。
 - `lib/screens/title_screen.dart`:
-  - 効果音設定 `_soundEnabled` の初期値を `false`（切）に変更。
-  - 設定ダイアログの防御有効時間スライダーを `min: 0.2`, `max: 1.0`, `divisions: 8`（0.1秒刻み）に変更。
-  - 心得ダイアログの記載を `0.2秒〜1.0秒` に更新。
-- `lib/game/kendo_game.dart` / `lib/game/components/kendo_fighter.dart`:
-  - `isSoundEnabledNotifier` の初期値を `false` に変更し、関連コメントを更新。
+  - 通算成績バッジの連勝表示条件を `streak > 0` から `streak >= 2` に変更。
+- `lib/widgets/fighting_hud.dart`:
+  - 1Pステータス表示の連勝表示条件を `streak > 0` から `streak >= 2` に変更。
+  - 2本先取時、「〇あり」を表示している2秒間（`isMatchOverResultPending == true`）は再戦・タイトルへボタンを待機し、勝敗テキスト表示時にボタンを表示するよう調整。
+- `lib/game/kendo_game.dart`:
+  - `rollIpponCallText` メソッドを実装（面あり: 50%、小手あり: 40%、胴あり: 10%）。
+  - `_scoreIppon` にて1本目・2本目ともに決まり手テキストを `overlayTextNotifier` にセットし、2本先取時は `matchOverAnnouncementDelay`（2.0秒）経過後に「あなたの勝ち」または「あなたの負け」へ遷移するロジックを実装。
 - `test/widget_test.dart`:
-  - `setGuardDuration` のユニットテストを `0.2〜1.0` の範囲に合わせて更新。
+  - 1勝時に連勝表示が出ず2連勝から表示されるテスト、決まり手確率の境界値テスト、および2本先取時の2秒遷移テストを追加・更新。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `lib/game/audio/sound_manager.dart`
-2. `lib/game/score/score_manager.dart`
-3. `lib/screens/title_screen.dart`
-4. `lib/game/kendo_game.dart`
-5. `lib/game/components/kendo_fighter.dart`
-6. `test/widget_test.dart`
+1. `lib/screens/title_screen.dart`
+2. `lib/widgets/fighting_hud.dart`
+3. `lib/game/kendo_game.dart`
+4. `test/widget_test.dart`
 
 ---
 
@@ -39,10 +33,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 2.4s)
+No issues found! (ran in 1.7s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:06 +26: All tests passed!
+00:04 +27: All tests passed!
 ```

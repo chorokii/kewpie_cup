@@ -28,6 +28,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
   late final KendoFighter p1;
   late final KendoFighter p2;
 
+  final math.Random _random = math.Random();
+
   final double minFighterDistance = 108.0; // Scaled 3x (36.0 -> 108.0)
   final double stageMinX = -520.0;
   final double stageMaxX = 520.0;
@@ -62,8 +64,14 @@ class KendoGame extends FlameGame with KeyboardEvents {
   double roundTimer = roundDuration;
   final roundTimerNotifier = ValueNotifier<int>(30);
 
+  // Round Over & Match Over (2.0s Ippon announcement before next round or match result)
   double roundOverTimer = 0.0;
-  static const double roundOverDelay = 1.8;
+  static const double roundOverDelay = 2.0;
+
+  bool isMatchOverResultPending = false;
+  double matchOverResultTimer = 0.0;
+  static const double matchOverAnnouncementDelay = 2.0;
+  String pendingMatchResultText = '';
 
   // CPU AI & Tsubazeriai State variables
   double cpuDecisionTimer = 0.0;
@@ -79,6 +87,18 @@ class KendoGame extends FlameGame with KeyboardEvents {
       return '二本目';
     } else {
       return '三本目';
+    }
+  }
+
+  /// 決まり手テキストの抽選（面あり: 50%, 小手あり: 40%, 胴あり: 10%）
+  String rollIpponCallText([double? randomValue]) {
+    final r = randomValue ?? _random.nextDouble();
+    if (r < 0.50) {
+      return '面あり';
+    } else if (r < 0.90) {
+      return '小手あり';
+    } else {
+      return '胴あり';
     }
   }
 
@@ -255,6 +275,9 @@ class KendoGame extends FlameGame with KeyboardEvents {
     SoundManager.stopCharge();
     hitStopTimer = 0.0;
     screenShakeTimer = 0.0;
+    isMatchOverResultPending = false;
+    matchOverResultTimer = 0.0;
+    pendingMatchResultText = '';
     p1.resetMatch(startX: -260.0);
     p2.resetMatch(startX: 440.0);
     gameStateNotifier.value = KendoGameState.playing;
@@ -278,7 +301,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
     final currentGameState = gameStateNotifier.value;
 
-    // 1. Handle Round Over timer (delay before starting next round after Ippon)
+    // 1. Handle Round Over timer (2.0s display of "〇あり" before starting next round)
     if (currentGameState == KendoGameState.roundOver) {
       roundOverTimer += dt;
       if (roundOverTimer >= roundOverDelay) {
@@ -291,6 +314,16 @@ class KendoGame extends FlameGame with KeyboardEvents {
         gameStateNotifier.value = KendoGameState.playing;
         cpuTsubazeriaiTimer = 0.0;
         startRoundSequence(); // Start pre-round sequence for next round ("二本目"/"三本目" -> "はじめ！")
+      }
+    }
+
+    // 1-B. Handle Match Over transition (2.0s display of "〇あり" -> "あなたの勝ち" / "あなたの負け")
+    if (currentGameState == KendoGameState.matchOver && isMatchOverResultPending) {
+      matchOverResultTimer += dt;
+      if (matchOverResultTimer >= matchOverAnnouncementDelay) {
+        isMatchOverResultPending = false;
+        matchOverResultTimer = 0.0;
+        overlayTextNotifier.value = pendingMatchResultText;
       }
     }
 
@@ -411,8 +444,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
     if (screenShakeTimer > 0) {
       screenShakeTimer -= dt;
       if (screenShakeTimer < 0) screenShakeTimer = 0;
-      final offsetX = (math.Random().nextDouble() * 2.0 - 1.0) * screenShakeIntensity;
-      final offsetY = (math.Random().nextDouble() * 2.0 - 1.0) * screenShakeIntensity;
+      final offsetX = (_random.nextDouble() * 2.0 - 1.0) * screenShakeIntensity;
+      final offsetY = (_random.nextDouble() * 2.0 - 1.0) * screenShakeIntensity;
       camera.viewfinder.position = Vector2(offsetX, offsetY);
     } else {
       camera.viewfinder.position = Vector2(0.0, 0.0);
@@ -485,7 +518,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       if (!p2.isPlayer) {
         cpuTsubazeriaiTimer += dt;
         if (cpuTsubazeriaiTimer >= 0.35) {
-          final rand = math.Random().nextDouble();
+          final rand = _random.nextDouble();
           if (rand < 0.50) {
             p2.disengage();
           } else {
@@ -552,7 +585,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
         attacker.hasDealtDamageThisAttack = true;
 
         if (defender.isGuarding) {
-          // Just Guard Success! (ジャスト防御成功 - 先守後攻)
+          // Just Guard Success! (ジャスト防御成功・先守後攻)
           // Player blocked CPU's Men strike -> Stop Charge SE & Play Guard SE!
           _hasStoppedChargeSound = true;
           SoundManager.stopCharge();
@@ -585,19 +618,25 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
   void _scoreIppon({required KendoFighter attacker, required KendoFighter defender}) {
     attacker.winCount++;
+    final ipponCall = rollIpponCallText();
+
     if (attacker.winCount >= 2) {
       gameStateNotifier.value = KendoGameState.matchOver;
+      overlayTextNotifier.value = ipponCall;
+      isMatchOverResultPending = true;
+      matchOverResultTimer = 0.0;
+
       if (attacker.isPlayer) {
-        overlayTextNotifier.value = 'あなたの勝ち';
+        pendingMatchResultText = 'あなたの勝ち';
         ScoreManager.recordWin();
       } else {
-        overlayTextNotifier.value = 'あなたの負け';
+        pendingMatchResultText = 'あなたの負け';
         ScoreManager.recordLoss();
       }
     } else {
       gameStateNotifier.value = KendoGameState.roundOver;
       roundOverTimer = 0.0;
-      overlayTextNotifier.value = '';
+      overlayTextNotifier.value = ipponCall;
     }
   }
 
@@ -629,11 +668,11 @@ class KendoGame extends FlameGame with KeyboardEvents {
         // Close / Strike range
         p2.stop();
         if (!p2.isGuarding && !p2.isTsubazeriai && !p2.isPassingThrough && !p2.isTurningAround && !p2.isAttacking) {
-          final rand = math.Random().nextDouble();
+          final rand = _random.nextDouble();
           if (rand < 0.50) {
             // CPU initiates 2-phase attack with randomly chosen flash duration (0.3s Short / 0.5s Medium / 0.8s Long)
             final blinkDurations = KendoFighter.cpuBlinkDurations;
-            final chosenBlink = blinkDurations[math.Random().nextInt(blinkDurations.length)];
+            final chosenBlink = blinkDurations[_random.nextInt(blinkDurations.length)];
             p2.attack(blinkDuration: chosenBlink);
             _hasStoppedChargeSound = false;
             SoundManager.playCharge(); // Play Charge SE on CPU attack windup start
@@ -691,7 +730,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       return KeyEventResult.handled;
     }
 
-    if (gameStateNotifier.value == KendoGameState.matchOver) {
+    if (gameStateNotifier.value == KendoGameState.matchOver && !isMatchOverResultPending) {
       if (event is KeyDownEvent &&
           (event.logicalKey == LogicalKeyboardKey.keyR ||
            event.logicalKey == LogicalKeyboardKey.space ||
