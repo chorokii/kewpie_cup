@@ -30,11 +30,11 @@
 2. **プレイヤーの防御とジャスト防御判定**:
    - 防御有効時間（`KendoFighter.guardActiveDuration`）は設定画面にて **`0.2秒〜1.0秒`（0.1秒刻み、初期値 `0.4秒`）** の範囲で変更可能。
    - 防御持続時間が満了するか中断すると、`0.2秒`（`guardCooldownDuration`）のクールダウンに入る。
-   - CPUの打突判定時にプレイヤーが防御中（`isGuarding == true`）であれば「ジャスト防御成功」となり、青い閃光エフェクト・ヒットストップ（`0.06s`）・防御音が発生し、CPUが **`1.5秒間`の体勢崩れ（`cpuVulnerableTimer = 1.5`、「スキあり」表示）** となる。
+   - CPUの打突判定時にプレイヤーが防御中（`isGuarding == true`）であれば「ジャスト防御成功」となり、青い閃光エフェクト・ヒットストップ（`0.06s`）・防御音（`guard.mp3`）が発生し、CPUが **`1.5秒間`の体勢崩れ（`cpuVulnerableTimer = 1.5`、「スキあり」表示）** となる。
 3. **プレイヤーの打突と間合い管理**:
    - 一足一刀の間合い（`attackRange = 255.0`）より遠い状態で攻撃を入力した場合、1ステップ（`farAdvanceDuration = 0.35s`）だけ前進して自動停止する。
    - 間合い内で攻撃を入力した場合、2段階の踏み込み打突（`attackDuration = 0.45s`）を行う。
-   - 平常時（`cpuVulnerableTimer <= 0`）のプレイヤー打突はCPUに自動防御される。**CPUが体勢崩れ（反撃チャンス）の間のみ打突がヒット**し、ダメージ（`25.0`）、衝撃波エフェクト、画面揺れ、打撃音、および背後へのすり抜け（Pass-Through）＋同時振り返り（Turnaround）が発生する。
+   - 平常時（`cpuVulnerableTimer <= 0`）のプレイヤー打突はCPUに自動防御される。**CPUが体勢崩れ（反撃チャンス）の間のみ打突がヒット**し、ダメージ（`25.0`）、衝撃波エフェクト、画面揺れ、打撃音（`hit.mp3`）、および背後へのすり抜け（Pass-Through）＋同時振り返り（Turnaround）が発生する。
 
 ### C. 鍔迫り合い・離脱・突き飛ばしルール
 1. **鍔迫り合い (`isTsubazeriai`)**:
@@ -67,7 +67,8 @@
    - スマホ操作は画面左半分・右半分のタップ／ダブルタップで制御。PCキーボードは `Q`（左タップ相当）、`E`（右タップ相当）、`A`/`D`/矢印（移動）、`K`（防御）、`J`/`Space`（攻撃）、`S`/`↓`（離脱）、`P`（ポーズ）、`R`（再戦）に対応。
 3. **効果音 (`SoundManager`)**:
    - 初期値は `isEnabled = false`（切）。
-   - 外部音源ファイルに依存せず、`audioplayers` の `BytesSource` を用いてメモリ上で生成した16bit PCM WAVデータにより「防御音（`playGuard`）」と「打撃音（`playHit`）」を再生する（チャージ音は無効化維持）。
+   - `assets/audio/sfx/guard.mp3`（防御音）および `assets/audio/sfx/hit.mp3`（打撃音）を `audioplayers` の `AssetSource` で再生する（チャージ音は無効化維持）。
+   - ※ `.repomixignore` により `*.mp3` はRepomix出力から除外されているが、実ファイルは `assets/audio/sfx/` に存在する。
 
 ---
 
@@ -75,10 +76,18 @@
 
 ```text
 kewpie_cup/
+  assets/
+    audio/
+      sfx/
+        guard.mp3            # 防御音アセット(.repomixignore対象)
+        hit.mp3              # 打撃音アセット(.repomixignore対象)
+    images/
+      stage/
+        dojo_background.png_org
   lib/
     game/
       audio/
-        sound_manager.dart     # 16bit PCM WAV動的生成による打撃音・防御音再生管理(初期値:切)
+        sound_manager.dart     # guard.mp3 / hit.mp3 再生管理(初期値:切)
       components/
         debug_grid.dart        # デバッグ用ワールド座標グリッド表示コンポーネント
         dojo_stage.dart        # 1280x720道場ステージ描画・打撃直前赤フラッシュ警告
@@ -112,5 +121,3 @@ kewpie_cup/
    - キーボードの `P` キーだけでなく、画面タッチでも一時停止・タイトル帰還ができるよう上部HUDにポーズボタンを追加する。
 3. **決まり手（面・小手・胴）に応じたエフェクト・演出の差別化**:
    - 抽選された決まり手に応じて打撃衝撃波の高さや竹刀の軌道を変化させる。
-4. **アセット設定の整理**:
-   - `assets/images/stage/dojo_background.png_org` や `pubspec.yaml` 内の未使用アセットパスの整理。

@@ -1,21 +1,24 @@
-# 開発報告書: CURRENT_CONTEXT.md の最新実装仕様への更新
+# 開発報告書: SoundManager の実音声アセット（hit.mp3 / guard.mp3）再生への変更および CURRENT_CONTEXT.md の更新
 
 ## 1. 概要
-- 開発初期の記述のままとなっていた `CURRENT_CONTEXT.md` を、現在の最新ソースコードの実装仕様に合わせて全面的に更新しました。
+- `lib/game/audio/sound_manager.dart` において、合成WAV波形による再生を廃止し、`assets/audio/sfx/hit.mp3`（打撃音）および `assets/audio/sfx/guard.mp3`（防御音）を `AssetSource` で再生するように変更しました。
+- あわせて `CURRENT_CONTEXT.md` を最新の実装仕様およびアセット構成に合わせて更新しました。
 
 ---
 
 ## 2. 実施内容
+- `lib/game/audio/sound_manager.dart`:
+  - プログラム合成WAV生成コードを削除。
+  - `AssetSource('audio/sfx/guard.mp3')` と `AssetSource('audio/sfx/hit.mp3')` を用いた再生処理に変更（初期値 `isEnabled = false` およびチャージ音無効化は維持）。
+  - ヘッドレスユニットテスト環境でのハング防止のため `isEnabled` 時のみプレイヤーを初期化するよう保護追加。
 - `CURRENT_CONTEXT.md`:
-  - 固定解像度（1280×720）およびキャラクター接地座標（`fighterGroundY = 250.0`, 3倍スケール）の仕様を明記。
-  - 先守後攻バトルシステム、防御有効時間（0.2〜1.0秒、初期値0.4秒）、決まり手表示（面50%・小手40%・胴10%・時間切れ）および2本先取時の2秒遷移仕様を記載。
-  - 鍔迫り合い時の攻撃ダブルタップによる突き飛ばし（後退の1.5倍速度＝480.0px/sでの連続移動）ルールを記載。
-  - 横画面対応のタイトル画面レイアウト、2連勝以上からの連勝表示、および16bit PCM WAV生成による効果音仕様（初期値：切）を記載。
+  - 最新のゲーム仕様、および `assets/audio/sfx/guard.mp3` / `hit.mp3` を使用する音響仕様を明記。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `CURRENT_CONTEXT.md`
+1. `lib/game/audio/sound_manager.dart`
+2. `CURRENT_CONTEXT.md`
 
 ---
 
@@ -24,10 +27,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 3.1s)
+No issues found! (ran in 2.7s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:05 +29: All tests passed!
+00:04 +29: All tests passed!
 ```
