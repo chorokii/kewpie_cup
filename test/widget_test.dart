@@ -7,6 +7,7 @@ import 'package:kewpie_cup/game/enums/facing_direction.dart';
 import 'package:kewpie_cup/game/kendo_game.dart';
 import 'package:kewpie_cup/game/score/score_manager.dart';
 import 'package:kewpie_cup/main.dart';
+import 'package:kewpie_cup/widgets/fighting_hud.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,6 +52,42 @@ void main() {
     expect(find.textContaining('1P 剣士1'), findsOneWidget);
     expect(find.text('2P 剣士2 (CPU)'), findsOneWidget);
     expect(find.text('30'), findsOneWidget);
+  });
+
+  testWidgets('Health bars deplete from outer edges toward center (Street Fighter II style)',
+      (WidgetTester tester) async {
+    final game = KendoGame();
+    await game.onLoad();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FightingHudOverlay(game: game),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Set both P1 and P2 health to 50%
+    game.p1HealthNotifier.value = 50.0;
+    game.p2HealthNotifier.value = 50.0;
+    await tester.pump();
+
+    final p1BarRect = tester.getRect(find.byKey(const ValueKey('p1_health_bar')));
+    final p1FillRect = tester.getRect(find.byKey(const ValueKey('p1_health_fill')));
+
+    final p2BarRect = tester.getRect(find.byKey(const ValueKey('p2_health_bar')));
+    final p2FillRect = tester.getRect(find.byKey(const ValueKey('p2_health_fill')));
+
+    // P1 (Left side): Yellow remaining health must be anchored to the RIGHT (center timer side),
+    // so the LEFT (outer edge) is depleted!
+    expect(p1FillRect.right, closeTo(p1BarRect.right - 2.0, 0.5));
+    expect(p1FillRect.left, greaterThan(p1BarRect.left + 10.0));
+
+    // P2 (Right side): Yellow remaining health must be anchored to the LEFT (center timer side),
+    // so the RIGHT (outer edge) is depleted!
+    expect(p2FillRect.left, closeTo(p2BarRect.left + 2.0, 0.5));
+    expect(p2FillRect.right, lessThan(p2BarRect.right - 10.0));
   });
 
   group('ScoreManager persistent score tracking and clear tests', () {
@@ -159,7 +196,7 @@ void main() {
       game.p2.position.x = 100.0;
       game.p1.facingDirection = FacingDirection.left;
       game.p2.facingDirection = FacingDirection.right;
-      game.p2.health = 25.0;
+      game.p2.health = 34.0;
       game.p2.cpuVulnerableTimer = 1.5;
 
       // P1 scores Ippon to end Round 1
@@ -488,22 +525,50 @@ void main() {
       expect(game.p2.cpuVulnerableTimer, greaterThan(0.0)); // CPU enters Counter Opportunity!
     });
 
-    test('Counter Opportunity: Player attack deals damage and scores Ippon with call text when CPU health is 0', () async {
+    test('Counter Opportunity: 3 hits (34.0 damage each) reduce health from 100.0 to 0.0 and score Ippon', () async {
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
 
+      // Hit 1: 100.0 -> 66.0
       game.p1.position.x = -80.0;
       game.p2.position.x = 80.0;
-      game.p2.cpuVulnerableTimer = 1.5; // Player has Counter Opportunity!
-      game.p2.health = 25.0;
-
+      game.p2.cpuVulnerableTimer = 1.5;
       game.p1.attack();
       game.p1.update(0.20);
+      game.update(0.01);
+      expect(game.p2.health, equals(66.0));
+      expect(game.p1.winCount, equals(0));
 
+      // Clear hitStop & passThrough for Hit 2: 66.0 -> 32.0
+      game.hitStopTimer = 0.0;
+      game.p1.stopAllActions();
+      game.p2.stopAllActions();
+      game.p1.hitStunTimer = 0.0;
+      game.p2.hitStunTimer = 0.0;
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p2.cpuVulnerableTimer = 1.5;
+      game.p1.attack();
+      game.p1.update(0.20);
+      game.update(0.01);
+      expect(game.p2.health, equals(32.0));
+      expect(game.p1.winCount, equals(0));
+
+      // Clear hitStop & passThrough for Hit 3: 32.0 -> 0.0 (Ippon!)
+      game.hitStopTimer = 0.0;
+      game.p1.stopAllActions();
+      game.p2.stopAllActions();
+      game.p1.hitStunTimer = 0.0;
+      game.p2.hitStunTimer = 0.0;
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p2.cpuVulnerableTimer = 1.5;
+      game.p1.attack();
+      game.p1.update(0.20);
       game.update(0.01);
 
-      expect(game.p2.health, equals(0.0)); // Counter hit connects!
+      expect(game.p2.health, equals(0.0)); // 3rd counter hit scores Ippon!
       expect(game.p1.winCount, equals(1));
       expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
       expect(
@@ -623,7 +688,7 @@ void main() {
       expect(game.p2.isPushedBack, isTrue);
       expect(game.p2.position.x, closeTo(140.0, 1.0));
 
-      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches right edge (stageMaxX = 520.0) and stops
+      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches right edge (stageMaxX = 520.0)
       game.update(0.80);
       expect(game.p2.isPushedBack, isFalse);
       expect(game.p2.position.x, equals(game.stageMaxX));
@@ -654,7 +719,7 @@ void main() {
       expect(game.p2.isPushedBack, isTrue);
       expect(game.p2.position.x, closeTo(-140.0, 1.0));
 
-      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches left edge (stageMinX = -520.0) and stops
+      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches left edge (stageMinX = -520.0)
       game.update(0.80);
       expect(game.p2.isPushedBack, isFalse);
       expect(game.p2.position.x, equals(game.stageMinX));

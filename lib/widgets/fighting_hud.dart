@@ -138,6 +138,8 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                       ValueListenableBuilder<double>(
                         valueListenable: widget.game.p1HealthNotifier,
                         builder: (context, health, _) => _buildHealthBar(
+                          barKey: const ValueKey('p1_health_bar'),
+                          fillKey: const ValueKey('p1_health_fill'),
                           healthRatio: health / 100.0,
                           isFlipped: false,
                         ),
@@ -198,6 +200,8 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                       ValueListenableBuilder<double>(
                         valueListenable: widget.game.p2HealthNotifier,
                         builder: (context, health, _) => _buildHealthBar(
+                          barKey: const ValueKey('p2_health_bar'),
+                          fillKey: const ValueKey('p2_health_fill'),
                           healthRatio: health / 100.0,
                           isFlipped: true,
                         ),
@@ -482,6 +486,8 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
   }
 
   Widget _buildHealthBar({
+    Key? barKey,
+    Key? fillKey,
     required double healthRatio,
     required bool isFlipped,
   }) {
@@ -489,13 +495,13 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
     const remainingHealthColor = Color(0xFFFFD54F); // 残り体力（黄色）
     const damageColor = Color(0xFFD32F2F); // 受けたダメージ（赤色）
 
-    // 減少アライメント:
-    // 画面端側から画面中央側（タイマー側）に向けて体力が残り、端側から赤色が露出する。
-    // 1P（画面左側 / isFlipped: false）: 黄色は右揃え（Alignment.centerRight）にし、左端側から削れる。
-    // 2P（画面右側 / isFlipped: true） : 黄色は左揃え（Alignment.centerLeft）にし、右端側から削れる。
+    // ストリートファイター2方式の減少アライメント（画面外側から中央へ向かって減る）:
+    // 1P（画面左側 / isFlipped: false）: 残り体力（黄色）を右端（中央タイマー側: Alignment.centerRight）に固定し、左端（外側）から減らす。
+    // 2P（画面右側 / isFlipped: true） : 残り体力（黄色）を左端（中央タイマー側: Alignment.centerLeft）に固定し、右端（外側）から減らす。
     final healthAlignment = isFlipped ? Alignment.centerLeft : Alignment.centerRight;
 
     return Container(
+      key: barKey,
       height: 18,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.white, width: 2), // 固定サイズの白枠
@@ -503,6 +509,7 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
       ),
       clipBehavior: Clip.hardEdge, // 枠外への描画はみ出しを防止
       child: Stack(
+        alignment: healthAlignment,
         children: [
           // 1. 背景層：受けたダメージを示す赤色ベタ塗り（常時全面に敷く）
           Positioned.fill(
@@ -510,12 +517,18 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
               color: damageColor,
             ),
           ),
-          // 2. 前面層：残り体力を示す黄色バー（割合に応じて伸縮）
-          FractionallySizedBox(
-            alignment: healthAlignment,
-            widthFactor: clampedRatio,
-            child: Container(
-              color: remainingHealthColor,
+          // 2. 前面層：Alignで中央タイマー側に固定した上で、widthFactorに応じて外側から縮む黄色バー
+          Positioned.fill(
+            child: Align(
+              alignment: healthAlignment,
+              child: FractionallySizedBox(
+                widthFactor: clampedRatio,
+                heightFactor: 1.0,
+                child: Container(
+                  key: fillKey,
+                  color: remainingHealthColor,
+                ),
+              ),
             ),
           ),
         ],
