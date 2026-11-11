@@ -146,44 +146,39 @@ void main() {
     });
   });
 
-  group('Pre-round start sequence and facing direction tests ("一本目" -> "はじめ！")', () {
-    test('Round 1 displays 一本目 for 2.0s then はじめ！ for 0.8s', () async {
+  group('Pre-round start sequence and facing direction tests ("はじめ！" / "二本目！" / "勝負！")', () {
+    test('Round 1 displays はじめ！ only for 1.2s then starts fight', () async {
       final game = KendoGame();
       await game.onLoad();
 
       expect(game.isRoundStarting, isTrue);
-      expect(game.overlayTextNotifier.value, equals('一本目'));
+      expect(game.overlayTextNotifier.value, equals('はじめ！'));
 
-      // Advance 1.5s -> still "一本目"
-      game.update(1.50);
-      expect(game.isRoundStarting, isTrue);
-      expect(game.overlayTextNotifier.value, equals('一本目'));
-
-      // Advance 0.6s (total 2.1s) -> transitions to "はじめ！"
-      game.update(0.60);
+      // Advance 0.8s -> still "はじめ！"
+      game.update(0.80);
       expect(game.isRoundStarting, isTrue);
       expect(game.overlayTextNotifier.value, equals('はじめ！'));
 
-      // Advance 0.8s (total 2.9s) -> pre-round sequence finishes, active fight begins!
-      game.update(0.80);
+      // Advance 0.5s (total 1.3s > 1.2s) -> pre-round sequence finishes, active fight begins!
+      game.update(0.50);
       expect(game.isRoundStarting, isFalse);
       expect(game.overlayTextNotifier.value, equals(''));
     });
 
-    test('Round title text changes to 二本目 for round 2 and 三本目 for round 3', () async {
+    test('Round title text is はじめ！ for round 1, 二本目！ for round 2, and 勝負！ for round 3', () async {
       final game = KendoGame();
       await game.onLoad();
 
-      // Round 1
-      expect(game.currentRoundTitleText, equals('一本目'));
+      // Round 1 (0 wins)
+      expect(game.currentRoundTitleText, equals('はじめ！'));
 
       // Set P1 winCount = 1 (Round 2)
       game.p1.winCount = 1;
-      expect(game.currentRoundTitleText, equals('二本目'));
+      expect(game.currentRoundTitleText, equals('二本目！'));
 
-      // Set P2 winCount = 1 (Round 3)
+      // Set P2 winCount = 1 (Round 3: 1-1 tie)
       game.p2.winCount = 1;
-      expect(game.currentRoundTitleText, equals('三本目'));
+      expect(game.currentRoundTitleText, equals('勝負！'));
     });
 
     test('Fighters face inward (each other) immediately when Round 2 starts even if swapped in Round 1', () async {
@@ -210,9 +205,9 @@ void main() {
       game.update(0.06);
       game.update(2.05);
 
-      // Immediately at the start of Round 2 ("二本目"), both fighters must face inward!
+      // Immediately at the start of Round 2 ("二本目！"), both fighters must face inward!
       expect(game.isRoundStarting, isTrue);
-      expect(game.overlayTextNotifier.value, equals('二本目'));
+      expect(game.overlayTextNotifier.value, equals('二本目！'));
       expect(game.p1.position.x, equals(-260.0));
       expect(game.p2.position.x, equals(440.0));
       expect(game.p1.facingDirection, equals(FacingDirection.right));
@@ -616,7 +611,7 @@ void main() {
       expect(game.rollIpponCallText(0.99), equals('胴あり'));
     });
 
-    test('30-second time-out awards Ippon to CPU and displays 時間切れ', () async {
+    test('30-second time-out awards Ippon to CPU and displays やめ！ then 勝負あり！ on 2nd win', () async {
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -626,12 +621,12 @@ void main() {
       // Advance time by 30.1 seconds
       game.update(30.1);
 
-      // CPU (p2) receives win from time-out with "時間切れ"
+      // CPU (p2) receives win from time-out with "やめ！"
       expect(game.p2.winCount, equals(1));
       expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
-      expect(game.overlayTextNotifier.value, equals('時間切れ'));
+      expect(game.overlayTextNotifier.value, equals('やめ！'));
 
-      // 2nd time-out leads to matchOver displaying "時間切れ" for 2.0s then "あなたの負け"
+      // 2nd time-out leads to matchOver displaying "やめ！" (1.2s) -> "勝負あり！" (1.0s) -> "あなたの負け"
       final game2 = KendoGame();
       await game2.onLoad();
       game2.isRoundStarting = false;
@@ -641,9 +636,15 @@ void main() {
       expect(game2.p2.winCount, equals(2));
       expect(game2.gameStateNotifier.value, equals(KendoGameState.matchOver));
       expect(game2.isMatchOverResultPending, isTrue);
-      expect(game2.overlayTextNotifier.value, equals('時間切れ'));
+      expect(game2.overlayTextNotifier.value, equals('やめ！'));
 
-      game2.update(2.1);
+      // Advance 1.3s (into Phase 2: 1.2s..2.2s) -> Displays "勝負あり！"
+      game2.update(1.3);
+      expect(game2.isMatchOverResultPending, isTrue);
+      expect(game2.overlayTextNotifier.value, equals('勝負あり！'));
+
+      // Advance another 1.0s (total 2.3s > 2.2s) -> Transitions to "あなたの負け"
+      game2.update(1.0);
       expect(game2.isMatchOverResultPending, isFalse);
       expect(game2.overlayTextNotifier.value, equals('あなたの負け'));
     });
@@ -688,7 +689,7 @@ void main() {
       expect(game.p2.isPushedBack, isTrue);
       expect(game.p2.position.x, closeTo(140.0, 1.0));
 
-      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches right edge (stageMaxX = 520.0)
+      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches right edge (stageMaxX = 520.0) and stops
       game.update(0.80);
       expect(game.p2.isPushedBack, isFalse);
       expect(game.p2.position.x, equals(game.stageMaxX));
@@ -719,18 +720,18 @@ void main() {
       expect(game.p2.isPushedBack, isTrue);
       expect(game.p2.position.x, closeTo(-140.0, 1.0));
 
-      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches left edge (stageMinX = -520.0)
+      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches left edge (stageMinX = -520.0) and stops
       game.update(0.80);
       expect(game.p2.isPushedBack, isFalse);
       expect(game.p2.position.x, equals(game.stageMinX));
     });
 
-    test('2 wins displays Ippon call for 2.0s then transitions to あなたの勝ち or あなたの負け', () async {
+    test('2 wins displays Ippon call (1.2s) -> 勝負あり！ (1.0s) -> あなたの勝ち or あなたの負け', () async {
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
 
-      // P1 (Player) wins 2nd round -> matchOver with Ippon call first, then "あなたの勝ち" after 2.0s
+      // P1 (Player) wins 2nd round -> matchOver with Ippon call (1.2s) -> "勝負あり！" (1.0s) -> "あなたの勝ち"
       game.p1.winCount = 1;
       game.p1.position.x = -80.0;
       game.p2.position.x = 80.0;
@@ -750,21 +751,26 @@ void main() {
         isTrue,
       );
 
-      // Clear hitStop (0.06s) + advance 1.5s -> Still displaying Ippon call
+      // Clear hitStop (0.06s) + advance 1.0s (< 1.2s) -> Still displaying Ippon call
       game.update(0.06);
-      game.update(1.50);
+      game.update(1.00);
       expect(game.isMatchOverResultPending, isTrue);
       expect(
         ['面あり', '小手あり', '胴あり'].contains(game.overlayTextNotifier.value),
         isTrue,
       );
 
-      // Advance another 0.6s (total > 2.0s) -> Transitions to "あなたの勝ち"
-      game.update(0.60);
+      // Advance 0.5s (total 1.5s, between 1.2s and 2.2s) -> Displays "勝負あり！"
+      game.update(0.50);
+      expect(game.isMatchOverResultPending, isTrue);
+      expect(game.overlayTextNotifier.value, equals('勝負あり！'));
+
+      // Advance another 0.8s (total 2.3s > 2.2s) -> Transitions to "あなたの勝ち"
+      game.update(0.80);
       expect(game.isMatchOverResultPending, isFalse);
       expect(game.overlayTextNotifier.value, equals('あなたの勝ち'));
 
-      // P2 (CPU) wins -> matchOver with Ippon call first, then "あなたの負け" after 2.0s
+      // P2 (CPU) wins -> matchOver with Ippon call (1.2s) -> "勝負あり！" (1.0s) -> "あなたの負け"
       final game2 = KendoGame();
       await game2.onLoad();
       game2.isRoundStarting = false;
@@ -787,9 +793,14 @@ void main() {
         isTrue,
       );
 
-      // Clear hitStop (0.06s) + advance 2.1s -> Transitions to "あなたの負け"
+      // Clear hitStop (0.06s) + advance 1.5s -> Displays "勝負あり！"
       game2.update(0.06);
-      game2.update(2.10);
+      game2.update(1.50);
+      expect(game2.isMatchOverResultPending, isTrue);
+      expect(game2.overlayTextNotifier.value, equals('勝負あり！'));
+
+      // Advance another 0.8s (total 2.3s > 2.2s) -> Transitions to "あなたの負け"
+      game2.update(0.80);
       expect(game2.isMatchOverResultPending, isFalse);
       expect(game2.overlayTextNotifier.value, equals('あなたの負け'));
     });

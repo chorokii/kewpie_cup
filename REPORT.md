@@ -1,22 +1,27 @@
-# 開発報告書: HPゲージ（ヘルスバー）の減少方向を「外側から中央へ向かって減る」方式（スト2方式）へ修正
+# 開発報告書: 剣道審判宣告の本格化（「はじめ！」「二本目！」「勝負！」「やめ！」「勝負あり！」）の実装
 
 ## 1. 概要
-- 1P側のHPゲージが中央から外側に向かって減っていた不具合の原因（`Stack` 直下の `FractionallySizedBox` における `alignment` の仕様上の無効化）を特定し、1P・2Pともに画面外側から中央（タイマー側）に向かって減るストリートファイター2方式へ修正しました。
+- 剣道の公式試合審判規則に合わせ、ラウンド開始時の宣告を1本目は「はじめ！」のみ、2本目は「二本目！」、3本目（1対1時）は「勝負！」（各1.2秒表示）に変更しました。
+- 制限時間30秒経過時の表示を「やめ！」に変更し、2本先取（試合決着）時は「決まり手（1.2秒）」→「勝負あり！（1.0秒）」→「あなたの勝ち／あなたの負け」へ遷移するように実装しました。
 
 ---
 
 ## 2. 実施内容
-- `lib/widgets/fighting_hud.dart`:
-  - `_buildHealthBar` において、`Positioned.fill` 内に `Align(alignment: healthAlignment)` を配置し、その子として `FractionallySizedBox(widthFactor: clampedRatio, heightFactor: 1.0)` を配置する構造へ修正。
-  - 1P（`isFlipped: false`）は黄色バーが右端（中央タイマー側）に固定されて左端（外側）から減り、2P（`isFlipped: true`）は黄色バーが左端（中央タイマー側）に固定されて右端（外側）から減る動作を確立。
+- `lib/game/kendo_game.dart`:
+  - `currentRoundTitleText` を `totalWins == 0` で `'はじめ！'`、`totalWins == 1` で `'二本目！'`、それ以外で `'勝負！'` に変更し、1.2秒間の単一フェーズ表示に簡潔化。
+  - タイムアウト時の `customCallText` を `'やめ！'` に変更。
+  - 2本先取時の決着演出に `'勝負あり！'` フェーズ（1.2s〜2.2s）を追加。
+- `CURRENT_CONTEXT.md`:
+  - 審判宣告および試合進行フローの記述を最新仕様へ更新。
 - `test/widget_test.dart`:
-  - 1Pおよび2PのHPを50%にした際の描画矩形（`Rect`）を取得し、外側から減少していることを検証するウィジェットテストを追加。
+  - 各ラウンドの開始宣告テキスト検証、「やめ！」表示検証、および「決まり手 → 勝負あり！ → 勝敗結果」の3段階遷移テストへ更新。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `lib/widgets/fighting_hud.dart`
-2. `test/widget_test.dart`
+1. `lib/game/kendo_game.dart`
+2. `CURRENT_CONTEXT.md`
+3. `test/widget_test.dart`
 
 ---
 
@@ -25,10 +30,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 1.8s)
+No issues found! (ran in 1.6s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:03 +32: All tests passed!
+00:02 +32: All tests passed!
 ```

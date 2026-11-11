@@ -52,12 +52,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final bgFlashNotifier = ValueNotifier<double>(0.0); // 全画面打撃直前200ms背景フラッシュ警告
   final isEnemyOnRightNotifier = ValueNotifier<bool>(true); // 敵が右側にいるか（左右動的判定・ボタン色反転用）
 
-  // Pre-Round Start Banner Sequence ("一本目"/"二本目"/"三本目" 2.0s -> "はじめ！" 0.8s)
+  // Pre-Round Start Banner Sequence (Round 1: "はじめ！", Round 2: "二本目！", Round 3: "勝負！" for 1.2s)
   bool isRoundStarting = false;
   double roundStartTimer = 0.0;
-  static const double roundStartTitleDelay = 2.0; // 一本目・二本目・三本目 表示時間 (2.0秒)
-  static const double roundStartHajimeDelay = 0.8; // はじめ！ 表示時間 (0.8秒)
-  static const double totalRoundStartDelay = 2.8; // 合計開始アナウンス時間 (2.8秒)
+  static const double totalRoundStartDelay = 1.2; // 開始宣告の表示時間 (1.2秒)
 
   // Hit-Stop & Screen Shake Effect Timers
   double hitStopTimer = 0.0;
@@ -69,13 +67,17 @@ class KendoGame extends FlameGame with KeyboardEvents {
   double roundTimer = roundDuration;
   final roundTimerNotifier = ValueNotifier<int>(30);
 
-  // Round Over & Match Over (2.0s Ippon announcement before next round or match result)
+  // Round Over & Match Over announcement timers
   double roundOverTimer = 0.0;
   static const double roundOverDelay = 2.0;
 
   bool isMatchOverResultPending = false;
   double matchOverResultTimer = 0.0;
-  static const double matchOverAnnouncementDelay = 2.0;
+  static const double matchOverIpponPhaseDuration = 1.2; // 決まり手（「面あり」等）表示時間 (1.2秒)
+  static const double matchOverShobuAriPhaseDuration = 1.0; // 「勝負あり！」表示時間 (1.0秒)
+  static const double matchOverAnnouncementDelay =
+      matchOverIpponPhaseDuration + matchOverShobuAriPhaseDuration; // 合計 2.2秒
+  String pendingIpponCallText = '';
   String pendingMatchResultText = '';
 
   // CPU AI & Tsubazeriai State variables
@@ -90,14 +92,15 @@ class KendoGame extends FlameGame with KeyboardEvents {
       !isRoundStarting &&
       gameStateNotifier.value == KendoGameState.playing;
 
+  /// 剣道審判規則に基づく各ラウンド開始時の宣告テキスト
   String get currentRoundTitleText {
     final totalWins = p1.winCount + p2.winCount;
     if (totalWins == 0) {
-      return '一本目';
+      return 'はじめ！';
     } else if (totalWins == 1) {
-      return '二本目';
+      return '二本目！';
     } else {
-      return '三本目';
+      return '勝負！';
     }
   }
 
@@ -197,7 +200,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     // 5. Debug Grid Component (with isDebugVisibleNotifier)
     world.add(DebugGrid(isDebugVisible: isDebugVisibleNotifier));
 
-    // 6. Start Pre-Round Sequence ("一本目" -> "はじめ！")
+    // 6. Start Pre-Round Sequence ("はじめ！")
     startRoundSequence();
   }
 
@@ -331,6 +334,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     _lastAttackTapTimeMs = 0;
     isMatchOverResultPending = false;
     matchOverResultTimer = 0.0;
+    pendingIpponCallText = '';
     pendingMatchResultText = '';
     p1.resetMatch(startX: -260.0);
     p2.resetMatch(startX: 440.0);
@@ -355,7 +359,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
     final currentGameState = gameStateNotifier.value;
 
-    // 1. Handle Round Over timer (2.0s display of "〇あり" or "時間切れ" before starting next round)
+    // 1. Handle Round Over timer (2.0s display of "〇あり" or "やめ！" before starting next round)
     if (currentGameState == KendoGameState.roundOver) {
       roundOverTimer += dt;
       if (roundOverTimer >= roundOverDelay) {
@@ -367,31 +371,36 @@ class KendoGame extends FlameGame with KeyboardEvents {
         roundTimerNotifier.value = 30;
         gameStateNotifier.value = KendoGameState.playing;
         cpuTsubazeriaiTimer = 0.0;
-        startRoundSequence(); // Start pre-round sequence for next round ("二本目"/"三本目" -> "はじめ！")
+        startRoundSequence(); // Start pre-round sequence for next round ("二本目！" or "勝負！")
       }
     }
 
-    // 1-B. Handle Match Over transition (2.0s display of "〇あり" or "時間切れ" -> "あなたの勝ち" / "あなたの負け")
+    // 1-B. Handle Match Over transition:
+    // Phase 1 (0.0s .. 1.2s): 決まり手 ("面あり"/"小手あり"/"胴あり"/"やめ！")
+    // Phase 2 (1.2s .. 2.2s): "勝負あり！"
+    // Phase 3 (2.2s+): "あなたの勝ち" / "あなたの負け"
     if (currentGameState == KendoGameState.matchOver && isMatchOverResultPending) {
       matchOverResultTimer += dt;
-      if (matchOverResultTimer >= matchOverAnnouncementDelay) {
+      if (matchOverResultTimer < matchOverIpponPhaseDuration) {
+        overlayTextNotifier.value = pendingIpponCallText;
+      } else if (matchOverResultTimer < matchOverAnnouncementDelay) {
+        overlayTextNotifier.value = '勝負あり！';
+      } else {
         isMatchOverResultPending = false;
         matchOverResultTimer = 0.0;
         overlayTextNotifier.value = pendingMatchResultText;
       }
     }
 
-    // 2. Handle Pre-Round Start Sequence ("一本目"/"二本目"/"三本目" 2.0s -> "はじめ！" 0.8s)
+    // 2. Handle Pre-Round Start Sequence ("はじめ！" / "二本目！" / "勝負！" for 1.2s)
     if (currentGameState == KendoGameState.playing && isRoundStarting) {
       roundStartTimer += dt;
       p1.stop();
       p2.stop();
       _syncFacingDirections();
 
-      if (roundStartTimer < roundStartTitleDelay) {
+      if (roundStartTimer < totalRoundStartDelay) {
         overlayTextNotifier.value = currentRoundTitleText;
-      } else if (roundStartTimer < totalRoundStartDelay) {
-        overlayTextNotifier.value = 'はじめ！';
       } else {
         isRoundStarting = false;
         roundStartTimer = 0.0;
@@ -407,10 +416,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
       roundTimerNotifier.value = displaySeconds;
 
       if (roundTimer <= 0.0) {
-        // Time-Out! CPU (p2) scores Ippon on time expiration with "時間切れ" display
+        // Time-Out! Referee calls "やめ！" and CPU (p2) scores Ippon
         roundTimer = 0.0;
         roundTimerNotifier.value = 0;
-        _scoreIppon(attacker: p2, defender: p1, customCallText: '時間切れ');
+        _scoreIppon(attacker: p2, defender: p1, customCallText: 'やめ！');
       }
     }
 
@@ -679,6 +688,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
     if (attacker.winCount >= 2) {
       gameStateNotifier.value = KendoGameState.matchOver;
+      pendingIpponCallText = ipponCall;
       overlayTextNotifier.value = ipponCall;
       isMatchOverResultPending = true;
       matchOverResultTimer = 0.0;
