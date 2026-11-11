@@ -83,6 +83,12 @@ class KendoGame extends FlameGame with KeyboardEvents {
   double cpuTsubazeriaiTimer = 0.0;
   bool _hasStoppedChargeSound = false;
 
+  /// 試合中（playing）かつラウンド開始演出中やポーズ中でない場合のみ操作を受け付ける
+  bool get _canControlP1 =>
+      !isPausedNotifier.value &&
+      !isRoundStarting &&
+      gameStateNotifier.value == KendoGameState.playing;
+
   String get currentRoundTitleText {
     final totalWins = p1.winCount + p2.winCount;
     if (totalWins == 0) {
@@ -115,12 +121,31 @@ class KendoGame extends FlameGame with KeyboardEvents {
     screenShakeIntensity = intensity;
   }
 
+  void _syncFacingDirections() {
+    final isEnemyRight = p1.position.x < p2.position.x;
+    isEnemyOnRightNotifier.value = isEnemyRight;
+
+    final isPassingOrTurning = p1.isPassingThrough || p2.isPassingThrough ||
+        p1.isTurningAround || p2.isTurningAround;
+
+    if (!isPassingOrTurning) {
+      if (isEnemyRight) {
+        p1.facingDirection = FacingDirection.right;
+        p2.facingDirection = FacingDirection.left;
+      } else {
+        p1.facingDirection = FacingDirection.left;
+        p2.facingDirection = FacingDirection.right;
+      }
+    }
+  }
+
   void startRoundSequence() {
     isRoundStarting = true;
     roundStartTimer = 0.0;
     overlayTextNotifier.value = currentRoundTitleText;
-    p1.stop();
-    p2.stop();
+    p1.stopAllActions();
+    p2.stopAllActions();
+    _syncFacingDirections();
   }
 
   @override
@@ -195,7 +220,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
   // Unified Screen Tap / Hotkey Input Handlers (左右入力・画面タップ・Q/Eキー共通ハンドラ)
   void handleLeftInputDown() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
     if (p1.position.x < p2.position.x) {
       guardP1Start();
     } else {
@@ -204,11 +229,11 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void handleLeftInputUp() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
   }
 
   void handleRightInputDown() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
     if (p1.position.x < p2.position.x) {
       attackP1();
     } else {
@@ -217,16 +242,16 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void handleRightInputUp() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
   }
 
   void moveP1Left() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
     p1.move(-1.0);
   }
 
   void moveP1Right() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
     p1.move(1.0);
   }
 
@@ -235,7 +260,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void guardP1Start() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
     p1.startGuard();
   }
 
@@ -244,7 +269,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void attackP1({bool? forceDoubleTap}) {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final isDoubleTap = forceDoubleTap ??
@@ -289,7 +314,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }
 
   void disengageP1() {
-    if (isPausedNotifier.value || isRoundStarting) return;
+    if (!_canControlP1) return;
     p1.disengage();
   }
 
@@ -360,6 +385,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       roundStartTimer += dt;
       p1.stop();
       p2.stop();
+      _syncFacingDirections();
 
       if (roundStartTimer < roundStartTitleDelay) {
         overlayTextNotifier.value = currentRoundTitleText;
@@ -425,7 +451,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       p2.position.x = stageMaxX;
     }
 
-    // 6. Body Pushing & Collision (Bypassed during Pass-Through or Turnaround)
+    // 6. Body Pushing & Collision (Bypassed during Pass-Through, Turnaround, or Push-Back)
     final isPassingOrTurning = p1.isPassingThrough || p2.isPassingThrough ||
         p1.isTurningAround || p2.isTurningAround ||
         p1.isPushedBack || p2.isPushedBack;
@@ -447,18 +473,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     }
 
     // 7. Auto-Facing Direction & Position Notifier
-    final isEnemyRight = p1.position.x < p2.position.x;
-    isEnemyOnRightNotifier.value = isEnemyRight;
-
-    if (!isPassingOrTurning) {
-      if (isEnemyRight) {
-        p1.facingDirection = FacingDirection.right;
-        p2.facingDirection = FacingDirection.left;
-      } else {
-        p1.facingDirection = FacingDirection.left;
-        p2.facingDirection = FacingDirection.right;
-      }
-    }
+    _syncFacingDirections();
 
     // 8. Active Combat & Pass-Through logic
     if (currentGameState == KendoGameState.playing) {
@@ -591,12 +606,13 @@ class KendoGame extends FlameGame with KeyboardEvents {
           SoundManager.playHit();
           triggerHitStop(0.06); // 0.06s Hit-Stop!
           triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
-          _tryTriggerPassThrough(attacker: attacker, defender: defender);
           final wasZeroHealth = defender.health <= 0;
           defender.takeDamage(25.0);
 
           if (wasZeroHealth || defender.health <= 0) {
             _scoreIppon(attacker: attacker, defender: defender);
+          } else {
+            _tryTriggerPassThrough(attacker: attacker, defender: defender);
           }
         } else {
           // CPU is in Normal State -> CPU automatically blocks Player's attack!
@@ -635,12 +651,13 @@ class KendoGame extends FlameGame with KeyboardEvents {
           SoundManager.playHit();
           triggerHitStop(0.06); // 0.06s Hit-Stop!
           triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
-          _tryTriggerPassThrough(attacker: attacker, defender: defender);
           final wasZeroHealth = defender.health <= 0;
           defender.takeDamage(25.0);
 
           if (wasZeroHealth || defender.health <= 0) {
             _scoreIppon(attacker: attacker, defender: defender);
+          } else {
+            _tryTriggerPassThrough(attacker: attacker, defender: defender);
           }
         }
       }
@@ -654,6 +671,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
   }) {
     attacker.winCount++;
     final ipponCall = customCallText ?? rollIpponCallText();
+
+    // Stop any ongoing movement or actions immediately upon Ippon
+    p1.stopAllActions();
+    p2.stopAllActions();
 
     if (attacker.winCount >= 2) {
       gameStateNotifier.value = KendoGameState.matchOver;

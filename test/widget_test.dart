@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kewpie_cup/game/audio/sound_manager.dart';
 import 'package:kewpie_cup/game/components/dojo_stage.dart';
 import 'package:kewpie_cup/game/components/kendo_fighter.dart';
+import 'package:kewpie_cup/game/enums/facing_direction.dart';
 import 'package:kewpie_cup/game/kendo_game.dart';
 import 'package:kewpie_cup/game/score/score_manager.dart';
 import 'package:kewpie_cup/main.dart';
@@ -108,7 +109,7 @@ void main() {
     });
   });
 
-  group('Pre-round start sequence tests ("一本目" -> "はじめ！")', () {
+  group('Pre-round start sequence and facing direction tests ("一本目" -> "はじめ！")', () {
     test('Round 1 displays 一本目 for 2.0s then はじめ！ for 0.8s', () async {
       final game = KendoGame();
       await game.onLoad();
@@ -146,6 +147,39 @@ void main() {
       // Set P2 winCount = 1 (Round 3)
       game.p2.winCount = 1;
       expect(game.currentRoundTitleText, equals('三本目'));
+    });
+
+    test('Fighters face inward (each other) immediately when Round 2 starts even if swapped in Round 1', () async {
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // Simulate swapped positions & outward facing directions at the end of Round 1
+      game.p1.position.x = 200.0;
+      game.p2.position.x = 100.0;
+      game.p1.facingDirection = FacingDirection.left;
+      game.p2.facingDirection = FacingDirection.right;
+      game.p2.health = 25.0;
+      game.p2.cpuVulnerableTimer = 1.5;
+
+      // P1 scores Ippon to end Round 1
+      game.p1.attack();
+      game.p1.update(0.20);
+      game.update(0.01);
+
+      expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
+
+      // Clear hitStop (0.06s) + advance roundOverDelay (2.0s) to trigger Round 2 start
+      game.update(0.06);
+      game.update(2.05);
+
+      // Immediately at the start of Round 2 ("二本目"), both fighters must face inward!
+      expect(game.isRoundStarting, isTrue);
+      expect(game.overlayTextNotifier.value, equals('二本目'));
+      expect(game.p1.position.x, equals(-260.0));
+      expect(game.p2.position.x, equals(440.0));
+      expect(game.p1.facingDirection, equals(FacingDirection.right));
+      expect(game.p2.facingDirection, equals(FacingDirection.left));
     });
   });
 
@@ -316,6 +350,36 @@ void main() {
       // Guard stays active for guardActiveDuration (0.4s)
       game.p1.update(0.45);
       expect(game.p1.isGuarding, isFalse);
+    });
+
+    test('Inputs are ignored during roundOver and matchOver states', () async {
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // Test during roundOver
+      game.gameStateNotifier.value = KendoGameState.roundOver;
+      game.attackP1();
+      game.guardP1Start();
+      game.disengageP1();
+      game.moveP1Right();
+      expect(game.p1.isAttacking, isFalse);
+      expect(game.p1.isFarAdvancing, isFalse);
+      expect(game.p1.isGuarding, isFalse);
+      expect(game.p1.isDisengaging, isFalse);
+      expect(game.p1.velocityX, equals(0.0));
+
+      // Test during matchOver
+      game.gameStateNotifier.value = KendoGameState.matchOver;
+      game.handleLeftInputDown();
+      game.handleRightInputDown();
+      game.disengageP1();
+      game.moveP1Left();
+      expect(game.p1.isAttacking, isFalse);
+      expect(game.p1.isFarAdvancing, isFalse);
+      expect(game.p1.isGuarding, isFalse);
+      expect(game.p1.isDisengaging, isFalse);
+      expect(game.p1.velocityX, equals(0.0));
     });
   });
 

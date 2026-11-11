@@ -129,6 +129,27 @@ class KendoFighter extends PositionComponent {
     }
   }
 
+  /// ラウンド終了・試合終了時に進行中の全移動・アクションを即座に停止する
+  void stopAllActions() {
+    velocityX = 0.0;
+    isMoving = false;
+    walkAnimationTimer = 0.0;
+    isGuarding = false;
+    guardTimer = 0.0;
+    isAttacking = false;
+    attackTimer = 0.0;
+    isFarAdvancing = false;
+    farAdvanceTimer = 0.0;
+    isTsubazeriai = false;
+    isDisengaging = false;
+    disengageTimer = 0.0;
+    isPushedBack = false;
+    isPassingThrough = false;
+    isTurningAround = false;
+    turnaroundTimer = 0.0;
+    cpuVulnerableTimer = 0.0;
+  }
+
   void triggerJustGuardEffect() {
     justGuardEffectTimer = 0.25;
   }
@@ -259,18 +280,22 @@ class KendoFighter extends PositionComponent {
   void resetRound({required double startX}) {
     health = maxHealth;
     position.x = startX;
+    facingDirection = startX < 0 ? FacingDirection.right : FacingDirection.left;
     velocityX = 0.0;
     isMoving = false;
+    walkAnimationTimer = 0.0;
     isGuarding = false;
     guardTimer = 0.0;
     guardCooldownTimer = guardCooldownDuration;
     isAttacking = false;
     isTsubazeriai = false;
     isDisengaging = false;
+    disengageTimer = 0.0;
     isPushedBack = false;
     pushBackTargetX = 0.0;
     isPassingThrough = false;
     isTurningAround = false;
+    turnaroundTimer = 0.0;
     isFarAdvancing = false;
     farAdvanceTimer = 0.0;
     attackTimer = 0.0;
@@ -324,7 +349,11 @@ class KendoFighter extends PositionComponent {
       } else {
         final dir = diff > 0 ? 1.0 : -1.0;
         velocityX = dir * pushBackSpeed;
+        isMoving = true;
+        walkAnimationTimer += dt * 12.0;
+        position.x += velocityX * dt;
       }
+      return;
     }
 
     // Handle 1-step Far Advance (間合い外攻撃タップ時の1踏み込み前進と自動停止)
