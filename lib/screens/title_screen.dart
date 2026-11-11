@@ -57,30 +57,30 @@ class _TitleScreenState extends State<TitleScreen> {
                 children: [
                   _buildSectionHeader('【基本操作（スマホ）】'),
                   const Text(
-                    '・画面左右下の円アイコンが操作ガイドです（赤円＝攻撃、青円＝防御）。\n'
-                    '・敵の位置に応じて赤円（攻撃）と青円（防御）が自動で入れ替わります。\n'
-                    '・敵が右側にいる場合: 左エリア（青円）＝防御、左ダブルタップ＝離脱、右エリア（赤円）＝攻撃\n'
-                    '・敵が左側にいる場合: 左エリア（赤円）＝攻撃、右エリア（青円）＝防御、右ダブルタップ＝離脱\n'
-                    '・鍔迫り合い中、自陣側（中央より外側）で攻撃をダブルタップすると相手を反対側の端まで突き飛ばします。',
+                    '・赤円が攻撃ボタン、青円が防御ボタン\n'
+                    '・赤円（攻撃）と青円（防御）は、敵と自分の位置により入れ替わる\n'
+                    '・赤円１タップ＝攻撃、ツバゼリ中２タップで吹き飛ばし\n'
+                    '・青円１タップ＝防御、２タップで後ろ回避\n'
+                    '・敵の攻撃は予兆があるので、見極めて防御',
                     style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                   ),
                   const SizedBox(height: 10),
-                  _buildSectionHeader('【キーボード操作（PC）】'),
+                  // _buildSectionHeader('【キーボード操作（PC）】'),
+                  // const Text(
+                  //   '・Q キー: 画面左側タップ相当\n'
+                  //   '・E キー: 画面右側タップ相当\n'
+                  //   '・S キー: 離脱\n'
+                  //   '・P キー: ポーズ（一時停止）',
+                  //   style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  // ),
+                  // const SizedBox(height: 10),
+                  _buildSectionHeader('【勝つためのルール（先守後攻）】'),
                   const Text(
-                    '・Q キー: 画面左側タップ相当\n'
-                    '・E キー: 画面右側タップ相当\n'
-                    '・S キー: 離脱\n'
-                    '・P キー: ポーズ（一時停止）',
-                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildSectionHeader('【勝負のルール（先守後攻）】'),
-                  const Text(
-                    '・敵の面打ち（赤エフェクト）に合わせて防御すると「ジャスト防御成功」！\n'
-                    '・成功時、敵が1.5秒間「体勢崩れ（反撃チャンス）」になります。\n'
-                    '・反撃チャンス中のみプレイヤーの攻撃がヒットし一本となります（平常時の攻撃は自動防がれます）。\n'
-                    '・防御有効時間は設定画面で0.2秒〜1.0秒まで自由に調整可能です。\n'
-                    '・制限時間30秒（時間切れは相手の一本）、2本先取で勝利！',
+                    '・画面が赤く光ったら防御する\n'
+                    '・防御成功時、攻撃のチャンス\n'
+                    '・防御成功していないと、攻撃は効かない\n'
+                    '・３回攻撃を決めると、１本取れる\n'
+                    '・時間切れは、相手の一本',
                     style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                   ),
                 ],
