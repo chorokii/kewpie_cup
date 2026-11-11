@@ -338,124 +338,190 @@ class _TitleScreenState extends State<TitleScreen> {
               ),
             ),
 
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Title Logo / Header
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade900.withValues(alpha: 0.9),
-                        border: Border.all(color: Colors.amber, width: 2),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black87,
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: const Column(
+            // Responsive Content Area
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isLandscape = constraints.maxWidth > constraints.maxHeight;
+                  final isCompactHeight = constraints.maxHeight < 420;
+                  final buttonWidth = isLandscape ? 180.0 : 240.0;
+                  final buttonHeight = isCompactHeight ? 42.0 : 48.0;
+
+                  return Center(
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'キューピーカップ',
-                            style: TextStyle(
-                              color: Colors.amberAccent,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 3,
+                          // Title Logo / Header
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isCompactHeight ? 20 : 28,
+                              vertical: isCompactHeight ? 8 : 12,
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            '剣道対戦',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 6,
-                              shadows: [
-                                Shadow(color: Colors.red, blurRadius: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade900.withValues(alpha: 0.9),
+                              border: Border.all(color: Colors.amber, width: 2),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black87,
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'キューピーカップ',
+                                  style: TextStyle(
+                                    color: Colors.amberAccent,
+                                    fontSize: isCompactHeight ? 14 : 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 3,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '剣道対戦',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: isCompactHeight ? 28 : 36,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 6,
+                                    shadows: const [
+                                      Shadow(color: Colors.red, blurRadius: 10),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),
+                          SizedBox(height: isCompactHeight ? 10 : 18),
+
+                          // Persistent Score & Win Streak Badge
+                          ValueListenableBuilder<int>(
+                            valueListenable: ScoreManager.winsNotifier,
+                            builder: (context, wins, _) {
+                              return ValueListenableBuilder<int>(
+                                valueListenable: ScoreManager.lossesNotifier,
+                                builder: (context, losses, _) {
+                                  return ValueListenableBuilder<int>(
+                                    valueListenable: ScoreManager.streakNotifier,
+                                    builder: (context, streak, _) {
+                                      final streakText = streak > 0 ? ' ($streak連勝中！)' : '';
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.8),
+                                          border: Border.all(color: Colors.amber, width: 1.5),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          '通算成績: $wins勝 $losses敗$streakText',
+                                          style: TextStyle(
+                                            color: Colors.amberAccent,
+                                            fontSize: isCompactHeight ? 12 : 14,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1.2,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          SizedBox(height: isCompactHeight ? 12 : 20),
+
+                          // 3 Menu Choice Buttons: 試合開始, 心得, 設定
+                          if (isLandscape)
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 12,
+                              runSpacing: 10,
+                              children: [
+                                _buildMenuButton(
+                                  icon: Icons.play_arrow,
+                                  label: '試合開始',
+                                  color: Colors.red.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => GamePage(
+                                          isDebugEnabled: _debugEnabled,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                _buildMenuButton(
+                                  icon: Icons.auto_stories,
+                                  label: '心得',
+                                  color: Colors.amber.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openGuideDialog,
+                                ),
+                                _buildMenuButton(
+                                  icon: Icons.settings,
+                                  label: '設定',
+                                  color: Colors.blueGrey.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openSettingsDialog,
+                                ),
+                              ],
+                            )
+                          else
+                            Column(
+                              children: [
+                                _buildMenuButton(
+                                  icon: Icons.play_arrow,
+                                  label: '試合開始',
+                                  color: Colors.red.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => GamePage(
+                                          isDebugEnabled: _debugEnabled,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                _buildMenuButton(
+                                  icon: Icons.auto_stories,
+                                  label: '心得',
+                                  color: Colors.amber.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openGuideDialog,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildMenuButton(
+                                  icon: Icons.settings,
+                                  label: '設定',
+                                  color: Colors.blueGrey.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openSettingsDialog,
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Persistent Score & Win Streak Badge
-                    ValueListenableBuilder<int>(
-                      valueListenable: ScoreManager.winsNotifier,
-                      builder: (context, wins, _) {
-                        return ValueListenableBuilder<int>(
-                          valueListenable: ScoreManager.lossesNotifier,
-                          builder: (context, losses, _) {
-                            return ValueListenableBuilder<int>(
-                              valueListenable: ScoreManager.streakNotifier,
-                              builder: (context, streak, _) {
-                                final streakText = streak > 0 ? ' ($streak連勝中！)' : '';
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.8),
-                                    border: Border.all(color: Colors.amber, width: 1.5),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    '通算成績: $wins勝 $losses敗$streakText',
-                                    style: const TextStyle(
-                                      color: Colors.amberAccent,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.5,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    // 3 Menu Choice Buttons: 試合開始, 心得, 設定
-                    _buildMenuButton(
-                      icon: Icons.play_arrow,
-                      label: '試合開始',
-                      color: Colors.red.shade900,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => GamePage(
-                              isDebugEnabled: _debugEnabled,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    _buildMenuButton(
-                      icon: Icons.auto_stories,
-                      label: '心得',
-                      color: Colors.amber.shade900,
-                      onPressed: _openGuideDialog,
-                    ),
-                    const SizedBox(height: 14),
-
-                    _buildMenuButton(
-                      icon: Icons.settings,
-                      label: '設定',
-                      color: Colors.blueGrey.shade900,
-                      onPressed: _openSettingsDialog,
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ],
@@ -469,10 +535,12 @@ class _TitleScreenState extends State<TitleScreen> {
     required String label,
     required Color color,
     required VoidCallback onPressed,
+    double width = 240,
+    double height = 48,
   }) {
     return SizedBox(
-      width: 240,
-      height: 48,
+      width: width,
+      height: height,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
@@ -484,13 +552,13 @@ class _TitleScreenState extends State<TitleScreen> {
           elevation: 6,
         ),
         onPressed: onPressed,
-        icon: Icon(icon, color: Colors.amberAccent, size: 24),
+        icon: Icon(icon, color: Colors.amberAccent, size: height > 44 ? 24 : 20),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 18,
+          style: TextStyle(
+            fontSize: height > 44 ? 17 : 15,
             fontWeight: FontWeight.bold,
-            letterSpacing: 2,
+            letterSpacing: 1.5,
           ),
         ),
       ),
