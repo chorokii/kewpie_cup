@@ -23,15 +23,6 @@ class SoundManager {
     }
   }
 
-  /// チャージ音（無効化維持）
-  static Future<void> playCharge() async {
-    return;
-  }
-
-  static Future<void> stopCharge() async {
-    return;
-  }
-
   /// 防御音（assets/audio/sfx/guard.mp3 を再生）
   static void playGuard() {
     if (!isEnabled) return;
@@ -65,7 +56,7 @@ class SoundManager {
       await targetPlayer.stop();
       await targetPlayer.play(AssetSource(assetPath));
     } catch (e) {
-      debugPrint('SoundManager playback warning ($assetPath): $e');
+      debugPrint('SoundManager playback warning ($assetPath):$e');
     }
   }
 

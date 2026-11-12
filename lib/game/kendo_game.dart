@@ -86,7 +86,6 @@ class KendoGame extends FlameGame with KeyboardEvents {
   double cpuDecisionTimer = 0.0;
   double cpuGuardTimer = 0.0;
   double cpuTsubazeriaiTimer = 0.0;
-  bool _hasStoppedChargeSound = false;
 
   /// 試合中（playing）かつラウンド開始演出中やポーズ中でない場合のみ操作を受け付ける
   bool get _canControlP1 =>
@@ -334,8 +333,6 @@ class KendoGame extends FlameGame with KeyboardEvents {
       resumeEngine();
       isPausedNotifier.value = false;
     }
-    _hasStoppedChargeSound = true;
-    SoundManager.stopCharge();
     hitStopTimer = 0.0;
     screenShakeTimer = 0.0;
     _lastAttackTapTimeMs = 0;
@@ -379,8 +376,6 @@ class KendoGame extends FlameGame with KeyboardEvents {
     if (currentGameState == KendoGameState.roundOver) {
       roundOverTimer += dt;
       if (roundOverTimer >= roundOverDelay) {
-        _hasStoppedChargeSound = true;
-        SoundManager.stopCharge();
         p1.resetRound(startX: -260.0);
         p2.resetRound(startX: 440.0);
         roundTimer = roundDuration;
@@ -453,11 +448,6 @@ class KendoGame extends FlameGame with KeyboardEvents {
         stage.flashAlpha = (remainingSec / KendoFighter.postBlinkHoldDuration).clamp(0.0, 1.0);
       } else {
         stage.flashAlpha = 0.0;
-      }
-
-      if (!_hasStoppedChargeSound && p2.attackTimer >= p2.currentBlinkDuration) {
-        _hasStoppedChargeSound = true;
-        SoundManager.stopCharge();
       }
     } else {
       stage.flashAlpha = 0.0;
@@ -627,8 +617,6 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
         if (defender.cpuVulnerableTimer > 0) {
           // CPU is in Vulnerable Window (Counter Opportunity) -> Hit connects!
-          _hasStoppedChargeSound = true;
-          SoundManager.stopCharge();
           SoundManager.playHit();
           triggerHitStop(0.06); // 0.06s Hit-Stop!
           triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
@@ -659,9 +647,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
         if (defender.isGuarding) {
           // Just Guard Success! (ジャスト防御成功・先守後攻)
-          // Player blocked CPU's Men strike -> Stop Charge SE & Play Guard SE!
-          _hasStoppedChargeSound = true;
-          SoundManager.stopCharge();
+          // Player blocked CPU's Men strike -> Play Guard SE!
           SoundManager.playGuard();
           defender.triggerJustGuardEffect(); // 青い閃光・火花演出!
           triggerHitStop(0.06); // 0.06s Hit-Stop!
@@ -671,9 +657,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
           attacker.cpuVulnerableTimer = 1.5; // 1.5s Vulnerable Window!
           defender.hitStunTimer = 0.15;
         } else {
-          // Player failed to guard -> Men strike hits Player! Stop Charge SE & Play Hit SE!
-          _hasStoppedChargeSound = true;
-          SoundManager.stopCharge();
+          // Player failed to guard -> Men strike hits Player! Play Hit SE!
           SoundManager.playHit();
           triggerHitStop(0.06); // 0.06s Hit-Stop!
           triggerScreenShake(duration: 0.15, intensity: 12.0); // 画面揺れ演出!
@@ -758,8 +742,6 @@ class KendoGame extends FlameGame with KeyboardEvents {
             final blinkDurations = KendoFighter.cpuBlinkDurations;
             final chosenBlink = blinkDurations[_random.nextInt(blinkDurations.length)];
             p2.attack(blinkDuration: chosenBlink);
-            _hasStoppedChargeSound = false;
-            SoundManager.playCharge(); // Play Charge SE on CPU attack windup start
           } else if (rand < 0.70) {
             p2.startGuard();
             cpuGuardTimer = 0.35;

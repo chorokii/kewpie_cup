@@ -1,29 +1,31 @@
-# 開発報告書: 対戦画面（GamePage）の90度自動回転（RotatedBox）廃止と縦持ち直接プレイ仕様への復元
+# 開発報告書: リリースに向けたデッドコード整理（リファクタリング）および CURRENT_CONTEXT.md の最適化
 
 ## 1. 概要
-- 対戦画面（`GamePage`）における `RotatedBox(quarterTurns: 1)` による90度自動回転処理を廃止し、縦持ち（縦レイアウト）の状態でもそのままの向きで対戦画面を表示・プレイできる旧仕様に戻しました。
-- アプリ全体で `DeviceOrientation.values`（全方向許可）とし、縦持ち・横持ちのどちらでもそのままの向きで操作できるように統一しました。
+- リリースに向けて、不採用となったチャージ音関連のデッドコード削除、未使用パッケージ（`flame_audio`）の削除、および選手登録ダイアログにおける `TextEditingController` の確実なリソース解放処理を実装しました。
+- 現在の実装仕様（道場背景スプライトの適用、縦・横全方向許可、効果音2種構成）に合わせて `CURRENT_CONTEXT.md` を最適化しました。
 
 ---
 
 ## 2. 実施内容
-- `lib/main.dart`:
-  - `GamePage` の `initState` / `dispose` における画面向き固定処理を削除。
-  - `GamePage.build` から `LayoutBuilder` および `RotatedBox(quarterTurns: 1)` を削除し、`GameWidget<KendoGame>` を直接描画する構成に復元。
-- `lib/widgets/fighting_hud.dart`:
-  - 狭い縦画面幅での選手名・連勝数表示オーバーフロー（RenderFlex overflow）を防止するため、テキスト表示に `Expanded`＋`TextOverflow.ellipsis` を適用。
-- `test/widget_test.dart`:
-  - 縦画面（400×800）での起動・対戦開始テストにて、`RotatedBox` が存在しないこと、および縦画面のまま対戦HUDが表示されることを検証するように更新。
+- `pubspec.yaml`:
+  - 未使用であった `flame_audio` パッケージを `dependencies` から削除。
+- `lib/game/audio/sound_manager.dart`:
+  - 廃止された `playCharge()` および `stopCharge()` メソッドを削除。
+- `lib/game/kendo_game.dart`:
+  - `_hasStoppedChargeSound` フィールドおよび `SoundManager.playCharge()` / `stopCharge()` の呼び出しを削除。
+- `lib/screens/title_screen.dart`:
+  - `_openPlayerRegistrationDialog` の終了時（`finally` ブロック）に `playerController` および `cpuControllers` を `dispose()` する処理を追加（「心得」テキストは変更なし）。
 - `CURRENT_CONTEXT.md`:
-  - 画面の向き（オリエンテーション）規約を最新仕様に更新。
+  - リリース版の仕様に合わせて記述を最適化。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `lib/main.dart`
-2. `lib/widgets/fighting_hud.dart`
-3. `test/widget_test.dart`
-4. `CURRENT_CONTEXT.md`
+1. `pubspec.yaml`
+2. `lib/game/audio/sound_manager.dart`
+3. `lib/game/kendo_game.dart`
+4. `lib/screens/title_screen.dart`
+5. `CURRENT_CONTEXT.md`
 
 ---
 
@@ -32,7 +34,7 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 2.3s)
+No issues found! (ran in 2.7s)
 ```
 
 ### flutter test の実行結果
