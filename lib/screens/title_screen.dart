@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../game/audio/sound_manager.dart';
 import '../game/components/kendo_fighter.dart';
 import '../game/score/score_manager.dart';
 import '../main.dart';
@@ -13,14 +12,17 @@ class TitleScreen extends StatefulWidget {
 }
 
 class _TitleScreenState extends State<TitleScreen> {
-  static bool _soundEnabled = false;
-  static bool _debugEnabled = false;
-
   @override
   void initState() {
     super.initState();
-    SoundManager.isEnabled = _soundEnabled;
-    ScoreManager.loadScore();
+    _initSettingsAndScore();
+  }
+
+  Future<void> _initSettingsAndScore() async {
+    await ScoreManager.loadScore();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _openGuideDialog() {
@@ -107,6 +109,9 @@ class _TitleScreenState extends State<TitleScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final soundEnabled = ScoreManager.soundEnabledNotifier.value;
+            final debugEnabled = ScoreManager.debugEnabledNotifier.value;
+
             return AlertDialog(
               backgroundColor: Colors.grey.shade900,
               insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -146,26 +151,26 @@ class _TitleScreenState extends State<TitleScreen> {
                             children: [
                               ChoiceChip(
                                 label: const Text('入', style: TextStyle(fontSize: 13)),
-                                selected: _soundEnabled,
+                                selected: soundEnabled,
                                 selectedColor: Colors.amber.shade800,
                                 onSelected: (selected) {
                                   if (selected) {
-                                    setDialogState(() => _soundEnabled = true);
-                                    setState(() => _soundEnabled = true);
-                                    SoundManager.isEnabled = true;
+                                    ScoreManager.setSoundEnabled(true);
+                                    setDialogState(() {});
+                                    setState(() {});
                                   }
                                 },
                               ),
                               const SizedBox(width: 6),
                               ChoiceChip(
                                 label: const Text('切', style: TextStyle(fontSize: 13)),
-                                selected: !_soundEnabled,
+                                selected: !soundEnabled,
                                 selectedColor: Colors.red.shade900,
                                 onSelected: (selected) {
                                   if (selected) {
-                                    setDialogState(() => _soundEnabled = false);
-                                    setState(() => _soundEnabled = false);
-                                    SoundManager.isEnabled = false;
+                                    ScoreManager.setSoundEnabled(false);
+                                    setDialogState(() {});
+                                    setState(() {});
                                   }
                                 },
                               ),
@@ -186,24 +191,26 @@ class _TitleScreenState extends State<TitleScreen> {
                             children: [
                               ChoiceChip(
                                 label: const Text('入', style: TextStyle(fontSize: 13)),
-                                selected: _debugEnabled,
+                                selected: debugEnabled,
                                 selectedColor: Colors.amber.shade800,
                                 onSelected: (selected) {
                                   if (selected) {
-                                    setDialogState(() => _debugEnabled = true);
-                                    setState(() => _debugEnabled = true);
+                                    ScoreManager.setDebugEnabled(true);
+                                    setDialogState(() {});
+                                    setState(() {});
                                   }
                                 },
                               ),
                               const SizedBox(width: 6),
                               ChoiceChip(
                                 label: const Text('切', style: TextStyle(fontSize: 13)),
-                                selected: !_debugEnabled,
+                                selected: !debugEnabled,
                                 selectedColor: Colors.red.shade900,
                                 onSelected: (selected) {
                                   if (selected) {
-                                    setDialogState(() => _debugEnabled = false);
-                                    setState(() => _debugEnabled = false);
+                                    ScoreManager.setDebugEnabled(false);
+                                    setDialogState(() {});
+                                    setState(() {});
                                   }
                                 },
                               ),
@@ -458,7 +465,7 @@ class _TitleScreenState extends State<TitleScreen> {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (_) => GamePage(
-                                          isDebugEnabled: _debugEnabled,
+                                          isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
                                         ),
                                       ),
                                     );
@@ -496,7 +503,7 @@ class _TitleScreenState extends State<TitleScreen> {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (_) => GamePage(
-                                          isDebugEnabled: _debugEnabled,
+                                          isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
                                         ),
                                       ),
                                     );

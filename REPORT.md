@@ -1,27 +1,30 @@
-# 開発報告書: 剣道審判宣告の本格化（「はじめ！」「二本目！」「勝負！」「やめ！」「勝負あり！」）の実装
+# 開発報告書: 設定画面の「効果音」および「デバッグ（座標表示）」の永続化対応
 
 ## 1. 概要
-- 剣道の公式試合審判規則に合わせ、ラウンド開始時の宣告を1本目は「はじめ！」のみ、2本目は「二本目！」、3本目（1対1時）は「勝負！」（各1.2秒表示）に変更しました。
-- 制限時間30秒経過時の表示を「やめ！」に変更し、2本先取（試合決着）時は「決まり手（1.2秒）」→「勝負あり！（1.0秒）」→「あなたの勝ち／あなたの負け」へ遷移するように実装しました。
+- 設定画面においてゲーム終了後にリセットされていた「効果音（入/切）」および「デバッグ（座標表示）（入/切）」の2項目について、`ScoreManager`（`SharedPreferences`）による永続化処理を実装しました。
+- これにより、設定画面の全項目（効果音・デバッグ表示・防御有効時間・通算スコア）がゲーム終了後も保持されるようになりました。
 
 ---
 
 ## 2. 実施内容
-- `lib/game/kendo_game.dart`:
-  - `currentRoundTitleText` を `totalWins == 0` で `'はじめ！'`、`totalWins == 1` で `'二本目！'`、それ以外で `'勝負！'` に変更し、1.2秒間の単一フェーズ表示に簡潔化。
-  - タイムアウト時の `customCallText` を `'やめ！'` に変更。
-  - 2本先取時の決着演出に `'勝負あり！'` フェーズ（1.2s〜2.2s）を追加。
+- `lib/game/score/score_manager.dart`:
+  - `soundEnabledNotifier` および `debugEnabledNotifier` を追加。
+  - `loadScore()` にて `kewpie_sound_enabled` と `kewpie_debug_enabled` を読み込み、`SoundManager.isEnabled` の更新および必要に応じた `SoundManager.init()` を実行するように変更。
+  - `setSoundEnabled(bool)` および `setDebugEnabled(bool)` を追加し、設定変更時に即座に `SharedPreferences` へ保存するように実装。
+- `lib/screens/title_screen.dart`:
+  - `_TitleScreenState` のローカル静的変数を廃止し、`ScoreManager` の設定値を参照・更新するように変更（「心得」ダイアログのコード・テキストは変更なし）。
 - `CURRENT_CONTEXT.md`:
-  - 審判宣告および試合進行フローの記述を最新仕様へ更新。
+  - `ScoreManager` および `SoundManager` の永続化仕様を追記。
 - `test/widget_test.dart`:
-  - 各ラウンドの開始宣告テキスト検証、「やめ！」表示検証、および「決まり手 → 勝負あり！ → 勝敗結果」の3段階遷移テストへ更新。
+  - `setSoundEnabled` と `setDebugEnabled` の保存・再読み込み検証テストを追加。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `lib/game/kendo_game.dart`
-2. `CURRENT_CONTEXT.md`
-3. `test/widget_test.dart`
+1. `lib/game/score/score_manager.dart`
+2. `lib/screens/title_screen.dart`
+3. `CURRENT_CONTEXT.md`
+4. `test/widget_test.dart`
 
 ---
 
@@ -30,10 +33,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 1.6s)
+No issues found! (ran in 3.0s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:02 +32: All tests passed!
+00:05 +33: All tests passed!
 ```

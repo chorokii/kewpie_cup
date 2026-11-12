@@ -60,8 +60,8 @@
      1. **「〇あり」（または「やめ！」）** を `1.2秒間` 表示。
      2. **「勝負あり！」** を `1.0秒間` 表示。
      3. 合計 `2.2秒` 経過後に **「あなたの勝ち」** または **「あなたの負け」** および「再戦 (R)」「タイトルへ」ボタンを表示。
-3. **通算成績と連勝表記 (`ScoreManager`)**:
-   - 勝敗数・連勝数・防御有効時間は `SharedPreferences` で永続化される。
+3. **通算成績・連勝表記および設定項目の永続化 (`ScoreManager`)**:
+   - 勝敗数・連勝数・防御有効時間・効果音（入/切）・デバッグ座標表示（入/切）の全設定項目は `SharedPreferences` で永続化され、ゲーム終了後も保持される。
    - 連勝表示は「1連勝中」を表示せず、**最小で「2連勝中」（`streak >= 2`）から** タイトル画面および対戦HUDに表示する。
 
 ### E. UI / HUD・操作系・音響 (`SoundManager`)
@@ -72,6 +72,6 @@
    - 1P・2PのHPゲージはストリートファイター2方式（画面外側から中央タイマー側へ向かって減る：`Align` + `FractionallySizedBox`）で描画される。
    - 画面左右下の半透明円インジケータ（赤円＝攻撃、青円＝防御）が敵との左右位置関係（`isEnemyOnRightNotifier`）に応じて自動で入れ替わる。
 3. **効果音 (`SoundManager`)**:
-   - 初期値は `isEnabled = false`（切）。
+   - 初期値は `isEnabled = false`（切）。設定画面での変更内容は `ScoreManager.setSoundEnabled` を通じて `SharedPreferences` に保存され、次回起動時にも保持される。
    - `assets/audio/sfx/guard.mp3`（防御音）および `assets/audio/sfx/hit.mp3`（打撃音）を `audioplayers` の `AssetSource` で再生する（チャージ音は無効化維持）。
    - ※ `.repomixignore` により `*.mp3` はRepomix出力から除外されているが、実ファイルは `assets/audio/sfx/` に存在する。

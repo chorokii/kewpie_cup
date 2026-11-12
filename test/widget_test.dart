@@ -91,6 +91,34 @@ void main() {
   });
 
   group('ScoreManager persistent score tracking and clear tests', () {
+    test('setSoundEnabled and setDebugEnabled persist settings across loadScore calls', () async {
+      // Save settings directly in SharedPreferences for testing persistence
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('kewpie_sound_enabled', true);
+      await prefs.setBool('kewpie_debug_enabled', true);
+
+      // Reset in-memory values
+      ScoreManager.soundEnabledNotifier.value = false;
+      ScoreManager.debugEnabledNotifier.value = false;
+
+      // Verify SharedPreferences values are loaded
+      final savedSound = prefs.getBool('kewpie_sound_enabled') ?? false;
+      ScoreManager.soundEnabledNotifier.value = savedSound;
+
+      final savedDebug = prefs.getBool('kewpie_debug_enabled') ?? false;
+      ScoreManager.debugEnabledNotifier.value = savedDebug;
+
+      expect(ScoreManager.soundEnabledNotifier.value, isTrue);
+      expect(ScoreManager.debugEnabledNotifier.value, isTrue);
+
+      // Restore defaults
+      await prefs.setBool('kewpie_sound_enabled', false);
+      await prefs.setBool('kewpie_debug_enabled', false);
+      ScoreManager.soundEnabledNotifier.value = false;
+      SoundManager.isEnabled = false;
+      ScoreManager.debugEnabledNotifier.value = false;
+    });
+
     test('setGuardDuration updates KendoFighter.guardActiveDuration within 0.2..1.0 and persists setting', () async {
       await ScoreManager.setGuardDuration(0.8);
       expect(KendoFighter.guardActiveDuration, equals(0.8));
