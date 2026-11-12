@@ -19,9 +19,11 @@ void main() {
     SoundManager.isEnabled = false;
   });
 
-  testWidgets('Kewpie_cup title screen loads with 4 menu options and starts match',
+  testWidgets('Kewpie_cup title screen loads with menu options including 選手登録 and starts match',
       (WidgetTester tester) async {
     await ScoreManager.clearScore();
+    await ScoreManager.setPlayerName('剣士');
+    await ScoreManager.setCpuNames(['佐藤', '鈴木']);
     await tester.pumpWidget(const KewpieCupApp());
     await tester.pump();
 
@@ -50,9 +52,38 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verify Game HUD text and action buttons are rendered
-    expect(find.textContaining('1P'), findsOneWidget);
-    expect(find.textContaining('2P'), findsOneWidget);
+    expect(find.textContaining('1P 剣士'), findsOneWidget);
+    expect(find.textContaining('(CPU)'), findsOneWidget);
     expect(find.text('30'), findsOneWidget);
+  });
+
+  testWidgets('Portrait screen does NOT show landscape warning overlay and automatically rotates GamePage to landscape',
+      (WidgetTester tester) async {
+    // Simulate portrait smartphone screen (width 400 < height 800)
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(const KewpieCupApp());
+    await tester.pump();
+
+    // Verify the old landscape recommendation overlay is abolished
+    expect(find.text('画面を横向きにしてください'), findsNothing);
+    expect(find.text('選手登録'), findsOneWidget);
+
+    // Start match directly from portrait screen
+    await tester.tap(find.text('試合開始'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Verify GamePage automatically rotates to landscape via RotatedBox(quarterTurns: 1)
+    final rotatedBoxFinder = find.byKey(const ValueKey('auto_landscape_rotated_box'));
+    expect(rotatedBoxFinder, findsOneWidget);
+    final rotatedBox = tester.widget<RotatedBox>(rotatedBoxFinder);
+    expect(rotatedBox.quarterTurns, equals(1));
   });
 
   testWidgets('Health bars deplete from outer edges toward center (Street Fighter II style)',
@@ -91,23 +122,38 @@ void main() {
     expect(p2FillRect.right, lessThan(p2BarRect.right - 10.0));
   });
 
-  group('ScoreManager persistent score, settings and player registration tests', () {
-    test('setPlayerName and setCpuNames normalize names and avoid consecutive duplicates in pickRandomCpuName', () async {
-      await ScoreManager.setPlayerName('赤胴');
-      expect(ScoreManager.playerNameNotifier.value, equals('赤胴'));
+  group('ScoreManager persistent score tracking, player registration and clear tests', () {
+    test('setPlayerName and setCpuNames persist up to 10 names (2-3 chars) and prevent consecutive duplicate selection', () async {
+      await ScoreManager.setPlayerName('佐々木');
+      expect(ScoreManager.playerNameNotifier.value, equals('佐々木'));
 
-      await ScoreManager.setCpuNames(['佐藤', '鈴木']);
-      expect(ScoreManager.cpuNamesNotifier.value, equals(['佐藤', '鈴木']));
+      final tenNames = [
+        '佐藤', '鈴木', '高橋', '田中', '渡辺',
+        '伊藤', '山本', '中村', '小林', '加藤',
+        '吉田', // 11th item -> should be capped at 10
+      ];
+      await ScoreManager.setCpuNames(tenNames);
+      expect(ScoreManager.cpuNamesNotifier.value.length, equals(10));
+      expect(ScoreManager.cpuNamesNotifier.value.contains('吉田'), isFalse);
 
-      // pickRandomCpuName with previousName='佐藤' must return '鈴木'
-      final chosen1 = ScoreManager.pickRandomCpuName(previousName: '佐藤');
-      expect(chosen1, equals('鈴木'));
+      // Verify persistence across loadScore()
+      ScoreManager.playerNameNotifier.value = '初期';
+      ScoreManager.cpuNamesNotifier.value = ['初期'];
+      await ScoreManager.loadScore();
+      expect(ScoreManager.playerNameNotifier.value, equals('佐々木'));
+      expect(ScoreManager.cpuNamesNotifier.value.length, equals(10));
 
-      // pickRandomCpuName with previousName='鈴木' must return '佐藤'
-      final chosen2 = ScoreManager.pickRandomCpuName(previousName: '鈴木');
-      expect(chosen2, equals('佐藤'));
+      // Verify non-repeating random selection when multiple CPU names are registered
+      await ScoreManager.setCpuNames(['佐藤', '鈴木', '高橋']);
+      ScoreManager.resetLastSelectedCpuName();
+      String previous = ScoreManager.pickRandomCpuName();
+      for (int i = 0; i < 30; i++) {
+        final next = ScoreManager.pickRandomCpuName();
+        expect(next, isNot(equals(previous)));
+        previous = next;
+      }
 
-      // Reset to defaults
+      // Restore defaults
       await ScoreManager.setPlayerName(ScoreManager.defaultPlayerName);
       await ScoreManager.setCpuNames(ScoreManager.defaultCpuNames);
     });
@@ -932,8 +978,8 @@ void main() {
     });
   });
 
-  group('Fighter customization tests', () {
-    test('P1 and P2 have distinct Hakama and Do Band colors', () async {
+  group('Fighter customization and Zekken (垂ネーム) tests', () {
+    test('P1 and P2 have distinct Hakama and Do Band colors, and 1.5x vertical Zekken dimensions', () async {
       final game = KendoGame();
       await game.onLoad();
 
@@ -944,6 +990,34 @@ void main() {
       // P2: Black Hakama, White Do Band
       expect(game.p2.hakamaColor, equals(const Color(0xFF212121)));
       expect(game.p2.doBandColor, equals(const Color(0xFFFAFAFA)));
+
+      // Zekken (垂ネーム): Width 12.0, Height 21.0 (1.5x of 14.0), Navy background
+      expect(KendoFighter.zekkenWidth, equals(12.0));
+      expect(KendoFighter.zekkenHeight, equals(21.0));
+      expect(KendoFighter.zekkenBackgroundColor, equals(const Color(0xFF102040)));
+    });
+
+    test('resetMatch selects non-repeating CPU name when multiple CPU names exist', () async {
+      await ScoreManager.setPlayerName('赤胴');
+      await ScoreManager.setCpuNames(['佐藤', '鈴木', '高橋']);
+      ScoreManager.resetLastSelectedCpuName();
+
+      final game = KendoGame();
+      await game.onLoad();
+
+      expect(game.p1.name, equals('赤胴'));
+      expect(['佐藤', '鈴木', '高橋'].contains(game.p2.name), isTrue);
+
+      String lastCpu = game.p2.name;
+      for (int i = 0; i < 15; i++) {
+        game.resetMatch();
+        expect(game.p2.name, isNot(equals(lastCpu)));
+        lastCpu = game.p2.name;
+      }
+
+      // Restore defaults
+      await ScoreManager.setPlayerName(ScoreManager.defaultPlayerName);
+      await ScoreManager.setCpuNames(ScoreManager.defaultCpuNames);
     });
   });
 }

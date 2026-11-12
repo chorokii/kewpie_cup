@@ -36,420 +36,426 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Stack(
-        children: [
-          // 0. Full-Screen Left/Right Tap Control Gesture Area (スマホ向け画面左右タップ＆ダブルタップ離脱操作)
-          Positioned.fill(
-            child: Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (event) {
-                final screenWidth = MediaQuery.of(context).size.width;
-                final isTouchOnLeft = event.position.dx < screenWidth / 2;
-                final isEnemyOnRight = widget.game.p1.position.x < widget.game.p2.position.x;
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final hudWidth = constraints.maxWidth;
 
-                if (isEnemyOnRight) {
-                  // 敵が右側にいる場合: 左＝防御（ダブルタップで離脱）、右＝攻撃
-                  if (isTouchOnLeft) {
-                    _handleGuardSideInputDown();
-                  } else {
-                    widget.game.attackP1();
-                  }
-                } else {
-                  // 敵が左側にいる場合: 左＝攻撃、右＝防御（ダブルタップで離脱）
-                  if (isTouchOnLeft) {
-                    widget.game.attackP1();
-                  } else {
-                    _handleGuardSideInputDown();
-                  }
-                }
-              },
-              onPointerUp: (_) {},
-              onPointerCancel: (_) {},
-              child: const SizedBox.expand(),
-            ),
-          ),
+          return Stack(
+            children: [
+              // 0. Full-Screen Left/Right Tap Control Gesture Area (スマホ向け画面左右タップ＆ダブルタップ離脱操作)
+              Positioned.fill(
+                child: Listener(
+                  behavior: HitTestBehavior.translucent,
+                  onPointerDown: (event) {
+                    // RotatedBoxによる自動横画面回転時にも正しく左右判定されるよう localPosition.dx と hudWidth を使用
+                    final isTouchOnLeft = event.localPosition.dx < hudWidth / 2;
+                    final isEnemyOnRight = widget.game.p1.position.x < widget.game.p2.position.x;
 
-          // 0-B. 200ms Pre-Strike Full-Screen Warning Flash Overlay (全画面打撃直前背景フラッシュ警告)
-          ValueListenableBuilder<double>(
-            valueListenable: widget.game.bgFlashNotifier,
-            builder: (context, flashAlpha, _) {
-              if (flashAlpha <= 0.0) return const SizedBox.shrink();
-
-              return Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    color: const Color(0xFFFF3D00).withValues(
-                      alpha: (flashAlpha * 0.45).clamp(0.0, 0.45),
-                    ),
-                  ),
+                    if (isEnemyOnRight) {
+                      // 敵が右側にいる場合: 左＝防御（ダブルタップで離脱）、右＝攻撃
+                      if (isTouchOnLeft) {
+                        _handleGuardSideInputDown();
+                      } else {
+                        widget.game.attackP1();
+                      }
+                    } else {
+                      // 敵が左側にいる場合: 左＝攻撃、右＝防御（ダブルタップで離脱）
+                      if (isTouchOnLeft) {
+                        widget.game.attackP1();
+                      } else {
+                        _handleGuardSideInputDown();
+                      }
+                    }
+                  },
+                  onPointerUp: (_) {},
+                  onPointerCancel: (_) {},
+                  child: const SizedBox.expand(),
                 ),
-              );
-            },
-          ),
+              ),
 
-          // 1. Street Fighter II Style Top HUD
-          Positioned(
-            top: 12,
-            left: 12,
-            right: 12,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // P1 Health Bar, Win Count & Name
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // 0-B. 200ms Pre-Strike Full-Screen Warning Flash Overlay (全画面打撃直前背景フラッシュ警告)
+              ValueListenableBuilder<double>(
+                valueListenable: widget.game.bgFlashNotifier,
+                builder: (context, flashAlpha, _) {
+                  if (flashAlpha <= 0.0) return const SizedBox.shrink();
+
+                  return Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        color: const Color(0xFFFF3D00).withValues(
+                          alpha: (flashAlpha * 0.45).clamp(0.0, 0.45),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // 1. Street Fighter II Style Top HUD
+              Positioned(
+                top: 12,
+                left: 12,
+                right: 12,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // P1 Health Bar, Win Count & Name
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ValueListenableBuilder<String>(
-                            valueListenable: widget.game.p1NameNotifier,
-                            builder: (context, p1Name, _) {
-                              return ValueListenableBuilder<int>(
-                                valueListenable: ScoreManager.streakNotifier,
-                                builder: (context, streak, _) {
-                                  final streakText = streak >= 2 ? ' ($streak連勝中)' : '';
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ValueListenableBuilder<String>(
+                                valueListenable: widget.game.p1NameNotifier,
+                                builder: (context, p1Name, _) {
                                   return ValueListenableBuilder<int>(
-                                    valueListenable: ScoreManager.winsNotifier,
-                                    builder: (context, totalWins, _) {
+                                    valueListenable: ScoreManager.streakNotifier,
+                                    builder: (context, streak, _) {
+                                      final streakText = streak >= 2 ? ' ($streak連勝中)' : '';
                                       return ValueListenableBuilder<int>(
-                                        valueListenable: ScoreManager.lossesNotifier,
-                                        builder: (context, totalLosses, _) {
-                                          return Text(
-                                            '1P $p1Name [$totalWins勝$totalLosses敗$streakText]',
-                                            style: const TextStyle(
-                                              color: Colors.yellowAccent,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                                            ),
+                                        valueListenable: ScoreManager.winsNotifier,
+                                        builder: (context, totalWins, _) {
+                                          return ValueListenableBuilder<int>(
+                                            valueListenable: ScoreManager.lossesNotifier,
+                                            builder: (context, totalLosses, _) {
+                                              return Text(
+                                                '1P $p1Name [$totalWins勝$totalLosses敗$streakText]',
+                                                style: const TextStyle(
+                                                  color: Colors.yellowAccent,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                                                ),
+                                              );
+                                            },
                                           );
                                         },
                                       );
                                     },
                                   );
                                 },
-                              );
-                            },
+                              ),
+                              ValueListenableBuilder<int>(
+                                valueListenable: widget.game.p1WinsNotifier,
+                                builder: (context, wins, _) => _buildWinIndicators(wins),
+                              ),
+                            ],
                           ),
-                          ValueListenableBuilder<int>(
-                            valueListenable: widget.game.p1WinsNotifier,
-                            builder: (context, wins, _) => _buildWinIndicators(wins),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      ValueListenableBuilder<double>(
-                        valueListenable: widget.game.p1HealthNotifier,
-                        builder: (context, health, _) => _buildHealthBar(
-                          barKey: const ValueKey('p1_health_bar'),
-                          fillKey: const ValueKey('p1_health_fill'),
-                          healthRatio: health / 100.0,
-                          isFlipped: false,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Center Timer / VS Emblem (30-second countdown)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade900,
-                    border: Border.all(color: Colors.amber, width: 2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: widget.game.roundTimerNotifier,
-                    builder: (context, seconds, _) {
-                      return Text(
-                        seconds.toString().padLeft(2, '0'),
-                        style: const TextStyle(
-                          color: Colors.amberAccent,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'monospace',
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // P2 Health Bar, Win Count & Name
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ValueListenableBuilder<int>(
-                            valueListenable: widget.game.p2WinsNotifier,
-                            builder: (context, wins, _) => _buildWinIndicators(wins),
-                          ),
-                          ValueListenableBuilder<String>(
-                            valueListenable: widget.game.p2NameNotifier,
-                            builder: (context, p2Name, _) {
-                              return Text(
-                                '2P $p2Name (CPU)',
-                                style: const TextStyle(
-                                  color: Colors.cyanAccent,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                                ),
-                              );
-                            },
+                          const SizedBox(height: 4),
+                          ValueListenableBuilder<double>(
+                            valueListenable: widget.game.p1HealthNotifier,
+                            builder: (context, health, _) => _buildHealthBar(
+                              barKey: const ValueKey('p1_health_bar'),
+                              fillKey: const ValueKey('p1_health_fill'),
+                              healthRatio: health / 100.0,
+                              isFlipped: false,
+                            ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 4),
-                      ValueListenableBuilder<double>(
-                        valueListenable: widget.game.p2HealthNotifier,
-                        builder: (context, health, _) => _buildHealthBar(
-                          barKey: const ValueKey('p2_health_bar'),
-                          fillKey: const ValueKey('p2_health_fill'),
-                          healthRatio: health / 100.0,
-                          isFlipped: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 2. Center Banner Overlay (Pre-Round Start Text, Ippon Call Text & Victory/Loss Result Text)
-          Center(
-            child: ValueListenableBuilder<String>(
-              valueListenable: widget.game.overlayTextNotifier,
-              builder: (context, overlayText, _) {
-                if (overlayText.isEmpty) return const SizedBox.shrink();
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.85),
-                        border: Border.all(color: Colors.amberAccent, width: 3),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black87,
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          )
-                        ],
-                      ),
-                      child: Text(
-                        overlayText,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.amberAccent,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 3,
-                          shadows: [
-                            Shadow(color: Colors.red, blurRadius: 8),
-                          ],
-                        ),
                       ),
                     ),
-                    ValueListenableBuilder<KendoGameState>(
-                      valueListenable: widget.game.gameStateNotifier,
-                      builder: (context, gameState, _) {
-                        if (gameState != KendoGameState.matchOver ||
-                            widget.game.isMatchOverResultPending) {
-                          return const SizedBox.shrink();
-                        }
 
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 12),
-                            Row(
+                    // Center Timer / VS Emblem (30-second countdown)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade900,
+                        border: Border.all(color: Colors.amber, width: 2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: ValueListenableBuilder<int>(
+                        valueListenable: widget.game.roundTimerNotifier,
+                        builder: (context, seconds, _) {
+                          return Text(
+                            seconds.toString().padLeft(2, '0'),
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    // P2 Health Bar, Win Count & Name
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ValueListenableBuilder<int>(
+                                valueListenable: widget.game.p2WinsNotifier,
+                                builder: (context, wins, _) => _buildWinIndicators(wins),
+                              ),
+                              ValueListenableBuilder<String>(
+                                valueListenable: widget.game.p2NameNotifier,
+                                builder: (context, p2Name, _) {
+                                  return Text(
+                                    '2P $p2Name (CPU)',
+                                    style: const TextStyle(
+                                      color: Colors.cyanAccent,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          ValueListenableBuilder<double>(
+                            valueListenable: widget.game.p2HealthNotifier,
+                            builder: (context, health, _) => _buildHealthBar(
+                              barKey: const ValueKey('p2_health_bar'),
+                              fillKey: const ValueKey('p2_health_fill'),
+                              healthRatio: health / 100.0,
+                              isFlipped: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 2. Center Banner Overlay (Pre-Round Start Text, Ippon Call Text & Victory/Loss Result Text)
+              Center(
+                child: ValueListenableBuilder<String>(
+                  valueListenable: widget.game.overlayTextNotifier,
+                  builder: (context, overlayText, _) {
+                    if (overlayText.isEmpty) return const SizedBox.shrink();
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.85),
+                            border: Border.all(color: Colors.amberAccent, width: 3),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black87,
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              )
+                            ],
+                          ),
+                          child: Text(
+                            overlayText,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 3,
+                              shadows: [
+                                Shadow(color: Colors.red, blurRadius: 8),
+                              ],
+                            ),
+                          ),
+                        ),
+                        ValueListenableBuilder<KendoGameState>(
+                          valueListenable: widget.game.gameStateNotifier,
+                          builder: (context, gameState, _) {
+                            if (gameState != KendoGameState.matchOver ||
+                                widget.game.isMatchOverResultPending) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red.shade900,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                    side: const BorderSide(color: Colors.amber, width: 2),
-                                  ),
-                                  onPressed: widget.game.resetMatch,
-                                  icon: const Icon(Icons.replay),
-                                  label: const Text(
-                                    '再戦 (R)',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red.shade900,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                        side: const BorderSide(color: Colors.amber, width: 2),
+                                      ),
+                                      onPressed: widget.game.resetMatch,
+                                      icon: const Icon(Icons.replay),
+                                      label: const Text(
+                                        '再戦 (R)',
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    if (Navigator.of(context).canPop()) ...[
+                                      const SizedBox(width: 12),
+                                      ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blueGrey.shade900,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                          side: const BorderSide(color: Colors.amber, width: 2),
+                                        ),
+                                        onPressed: () => Navigator.of(context).pop(),
+                                        icon: const Icon(Icons.home),
+                                        label: const Text(
+                                          'タイトルへ',
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                                if (Navigator.of(context).canPop()) ...[
-                                  const SizedBox(width: 12),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+              // 3. Pause Overlay Modal
+              ValueListenableBuilder<bool>(
+                valueListenable: widget.game.isPausedNotifier,
+                builder: (context, isPaused, _) {
+                  if (!isPaused) return const SizedBox.shrink();
+
+                  return Positioned.fill(
+                    child: Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.9),
+                            border: Border.all(color: Colors.amber, width: 2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                '一時停止中 (PAUSE)',
+                                style: TextStyle(
+                                  color: Colors.amberAccent,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
                                   ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blueGrey.shade900,
+                                      backgroundColor: Colors.amber.shade800,
                                       foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                      side: const BorderSide(color: Colors.amber, width: 2),
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                     ),
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    icon: const Icon(Icons.home),
+                                    onPressed: widget.game.togglePause,
+                                    icon: const Icon(Icons.play_arrow),
                                     label: const Text(
-                                      'タイトルへ',
+                                      '再開する (P)',
                                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
                                   ),
+                                  if (Navigator.of(context).canPop()) ...[
+                                    const SizedBox(width: 12),
+                                    ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blueGrey.shade900,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        side: const BorderSide(color: Colors.amber, width: 1.5),
+                                      ),
+                                      onPressed: () {
+                                        widget.game.togglePause();
+                                        Navigator.of(context).pop();
+                                      },
+                                      icon: const Icon(Icons.home),
+                                      label: const Text(
+                                        'タイトルへ',
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-
-          // 3. Pause Overlay Modal
-          ValueListenableBuilder<bool>(
-            valueListenable: widget.game.isPausedNotifier,
-            builder: (context, isPaused, _) {
-              if (!isPaused) return const SizedBox.shrink();
-
-              return Positioned.fill(
-                child: Container(
-                  color: Colors.black54,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.9),
-                        border: Border.all(color: Colors.amber, width: 2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            '一時停止中 (PAUSE)',
-                            style: TextStyle(
-                              color: Colors.amberAccent,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber.shade800,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                ),
-                                onPressed: widget.game.togglePause,
-                                icon: const Icon(Icons.play_arrow),
-                                label: const Text(
-                                  '再開する (P)',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
                               ),
-                              if (Navigator.of(context).canPop()) ...[
-                                const SizedBox(width: 12),
-                                ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blueGrey.shade900,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                    side: const BorderSide(color: Colors.amber, width: 1.5),
-                                  ),
-                                  onPressed: () {
-                                    widget.game.togglePause();
-                                    Navigator.of(context).pop();
-                                  },
-                                  icon: const Icon(Icons.home),
-                                  label: const Text(
-                                    'タイトルへ',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-
-          // 4. Bottom-Left & Bottom-Right 3x Simple Semi-Transparent Control Area Indicator Circles (文字なし・シンプルな3倍大きい半透明の円)
-          ValueListenableBuilder<KendoGameState>(
-            valueListenable: widget.game.gameStateNotifier,
-            builder: (context, gameState, _) {
-              if (gameState == KendoGameState.matchOver) return const SizedBox.shrink();
-
-              return ValueListenableBuilder<bool>(
-                valueListenable: widget.game.isEnemyOnRightNotifier,
-                builder: (context, isEnemyOnRight, _) {
-                  // 赤＝攻撃、青＝防御
-                  // 敵が右側にいる場合: 左下＝青円（防御）、右下＝赤円（攻撃）
-                  // 敵が左側にいる場合: 左下＝赤円（攻撃）、右下＝青円（防御）
-                  const redColor = Color(0x66FF1744); // 赤半透明（攻撃）
-                  const redBorder = Color(0xAAFF5252);
-
-                  const blueColor = Color(0x660288D1); // 青半透明（防御）
-                  const blueBorder = Color(0xAA40C4FF);
-
-                  final leftColor = isEnemyOnRight ? blueColor : redColor;
-                  final leftBorder = isEnemyOnRight ? blueBorder : redBorder;
-
-                  final rightColor = isEnemyOnRight ? redColor : blueColor;
-                  final rightBorder = isEnemyOnRight ? redBorder : blueBorder;
-
-                  return IgnorePointer(
-                    child: Stack(
-                      children: [
-                        // Bottom-Left 3x Simple Circle (左下操作円)
-                        Positioned(
-                          bottom: -20,
-                          left: -20,
-                          child: _buildSimpleControlCircle(
-                            color: leftColor,
-                            borderColor: leftBorder,
-                          ),
-                        ),
-
-                        // Bottom-Right 3x Simple Circle (右下操作円)
-                        Positioned(
-                          bottom: -20,
-                          right: -20,
-                          child: _buildSimpleControlCircle(
-                            color: rightColor,
-                            borderColor: rightBorder,
-                          ),
-                        ),
-                      ],
                     ),
                   );
                 },
-              );
-            },
-          ),
-        ],
+              ),
+
+              // 4. Bottom-Left & Bottom-Right 3x Simple Semi-Transparent Control Area Indicator Circles (文字なし・シンプルな3倍大きい半透明の円)
+              ValueListenableBuilder<KendoGameState>(
+                valueListenable: widget.game.gameStateNotifier,
+                builder: (context, gameState, _) {
+                  if (gameState == KendoGameState.matchOver) return const SizedBox.shrink();
+
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: widget.game.isEnemyOnRightNotifier,
+                    builder: (context, isEnemyOnRight, _) {
+                      // 赤＝攻撃、青＝防御
+                      // 敵が右側にいる場合: 左下＝青円（防御）、右下＝赤円（攻撃）
+                      // 敵が左側にいる場合: 左下＝赤円（攻撃）、右下＝青円（防御）
+                      const redColor = Color(0x66FF1744); // 赤半透明（攻撃）
+                      const redBorder = Color(0xAAFF5252);
+
+                      const blueColor = Color(0x660288D1); // 青半透明（防御）
+                      const blueBorder = Color(0xAA40C4FF);
+
+                      final leftColor = isEnemyOnRight ? blueColor : redColor;
+                      final leftBorder = isEnemyOnRight ? blueBorder : redBorder;
+
+                      final rightColor = isEnemyOnRight ? redColor : blueColor;
+                      final rightBorder = isEnemyOnRight ? redBorder : blueBorder;
+
+                      return IgnorePointer(
+                        child: Stack(
+                          children: [
+                            // Bottom-Left 3x Simple Circle (左下操作円)
+                            Positioned(
+                              bottom: -20,
+                              left: -20,
+                              child: _buildSimpleControlCircle(
+                                color: leftColor,
+                                borderColor: leftBorder,
+                              ),
+                            ),
+
+                            // Bottom-Right 3x Simple Circle (右下操作円)
+                            Positioned(
+                              bottom: -20,
+                              right: -20,
+                              child: _buildSimpleControlCircle(
+                                color: rightColor,
+                                borderColor: rightBorder,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }

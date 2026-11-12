@@ -3,7 +3,11 @@
 ## 0. プロジェクト前提条件
 - **プロジェクト名**: `Kewpie_cup` (対CPU 剣道2D格闘バトルゲーム)
 - **フレームワーク**: Flutter (Stable) + Flame 2D Game Engine (v1.x)
-- **対象プラットフォーム**: Web (PWA対応), Android, Windows (横画面・ランドスケープ対戦操作を主軸とする)
+- **対象プラットフォーム**: Web (PWA対応), Android, Windows
+- **画面の向き（オリエンテーション）規約**:
+  - 横位置推奨オーバーレイ画面（旧 `LandscapeWrapper`）は廃止。
+  - タイトル画面（`TitleScreen`）および「選手登録」ダイアログは縦画面・横画面の双方に対応し、縦持ちでもソフトウェアキーボードで快適に名前入力が可能。
+  - 対戦画面（`GamePage`）開始時は `SystemChrome.setPreferredOrientations` で横向きを要求するとともに、縦長画面（`maxWidth < maxHeight`）のまま開始された場合でも画面の向きを検知して `RotatedBox(quarterTurns: 1)` により自動的に横画面レイアウトへ回転して表示する。
 - **コード品質管理**: `flutter_lints` 準拠、`flutter analyze` エラー・警告0件、`flutter test` 全件通過をコミット基準とする。
 - **外部支援体制**: Android Studio内蔵エージェントによる実装を基本とし、複雑な課題・全体設計は外部サポート（アンちゃん）が客観的事実に基づき俯瞰して指示を行う。
 
@@ -68,11 +72,12 @@
 
 ### E. UI / HUD・操作系・音響 (`SoundManager`)
 1. **タイトル画面 (`TitleScreen`)**:
-   - 横画面時は4つのメニューボタン（「試合開始」「選手登録」「心得」「設定」）を `Wrap` で横並びに配置。
+   - 横画面時はメニューボタン（「試合開始」「選手登録」「心得」「設定」）を `Wrap` で横並びに配置し、縦画面時は `Column` で縦並びに配置する（横位置推奨画面は出さず、どちらの向きでも直接操作可能）。
    - ※ `lib/screens/title_screen.dart` 内の「心得」テキストはユーザーが手動管理しているため、自動上書きを行わないこと。
 2. **対戦HUD (`FightingHudOverlay`)**:
    - 1P・2PのHPゲージはストリートファイター2方式（画面外側から中央タイマー側へ向かって減る：`Align` + `FractionallySizedBox`）で描画される。
    - 画面左右下の半透明円インジケータ（赤円＝攻撃、青円＝防御）が敵との左右位置関係（`isEnemyOnRightNotifier`）に応じて自動で入れ替わる。
+   - タップ操作は `LayoutBuilder` のローカル幅（`constraints.maxWidth`）と `event.localPosition.dx` に基づいて左右判定を行うため、縦画面からの自動回転表示時（`RotatedBox`）でもそのまま正確に動作する。
 3. **効果音 (`SoundManager`)**:
    - 初期値は `isEnabled = false`（切）。設定画面での変更内容は `ScoreManager.setSoundEnabled` を通じて `SharedPreferences` に保存され、次回起動時にも保持される。
    - `assets/audio/sfx/guard.mp3`（防御音）および `assets/audio/sfx/hit.mp3`（打撃音）を `audioplayers` の `AssetSource` で再生する（チャージ音は無効化維持）。
