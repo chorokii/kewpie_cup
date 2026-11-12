@@ -57,7 +57,7 @@ void main() {
     expect(find.text('30'), findsOneWidget);
   });
 
-  testWidgets('Portrait screen does NOT show landscape warning overlay and automatically rotates GamePage to landscape',
+  testWidgets('Portrait screen does NOT show landscape warning overlay and allows playing directly in portrait without RotatedBox',
       (WidgetTester tester) async {
     // Simulate portrait smartphone screen (width 400 < height 800)
     tester.view.physicalSize = const Size(400, 800);
@@ -67,6 +67,7 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
+    await ScoreManager.setPlayerName('剣士');
     await tester.pumpWidget(const KewpieCupApp());
     await tester.pump();
 
@@ -79,11 +80,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Verify GamePage automatically rotates to landscape via RotatedBox(quarterTurns: 1)
-    final rotatedBoxFinder = find.byKey(const ValueKey('auto_landscape_rotated_box'));
-    expect(rotatedBoxFinder, findsOneWidget);
-    final rotatedBox = tester.widget<RotatedBox>(rotatedBoxFinder);
-    expect(rotatedBox.quarterTurns, equals(1));
+    // Verify GamePage is rendered directly in portrait without RotatedBox
+    expect(find.byKey(const ValueKey('auto_landscape_rotated_box')), findsNothing);
+    expect(find.byType(RotatedBox), findsNothing);
+    expect(find.textContaining('1P 剣士'), findsOneWidget);
+    expect(find.text('30'), findsOneWidget);
   });
 
   testWidgets('Health bars deplete from outer edges toward center (Street Fighter II style)',
