@@ -9,8 +9,11 @@ import 'widgets/fighting_hud.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // タイトル画面や選手登録を縦画面でも操作できるよう、初期状態では全方向を許可する
-  await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+  // モバイル端末を横持ちに持ち替えた際のOS再描画・画面縮小を防ぐため、
+  // 画面の向きは portraitUp（縦向き基準）に固定し、対戦画面は RotatedBox で横表示する
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
 
   runApp(const KewpieCupApp());
 }
@@ -49,10 +52,10 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    // 対戦画面開始時にOS側へ横画面への切り替えを要求する
+    // 端末を横持ちにした際にOS・ブラウザの再描画で背景やキャラが縮小されるのを防ぐため、
+    // 縦向き固定を維持したまま RotatedBox(quarterTurns: 1) の比率で横画面表示を行う
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
     ]);
     game = KendoGame();
     game.isDebugVisibleNotifier.value = widget.isDebugEnabled;
@@ -60,8 +63,9 @@ class _GamePageState extends State<GamePage> {
 
   @override
   void dispose() {
-    // タイトル画面へ戻る際は縦画面・横画面のどちらでも操作できるよう全方向許可に戻す
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
     super.dispose();
   }
 
@@ -81,7 +85,7 @@ class _GamePageState extends State<GamePage> {
             initialActiveOverlays: const ['HudOverlay'],
           );
 
-          // 縦画面状態で対戦が開始された場合でも、自動的に90度回転して横画面表示にする
+          // 縦長画面（スマホ等）では常時90度回転して、縮小のない最適な比率で横画面表示にする
           if (isPortrait) {
             return RotatedBox(
               key: const ValueKey('auto_landscape_rotated_box'),

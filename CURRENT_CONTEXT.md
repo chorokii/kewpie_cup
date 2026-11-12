@@ -6,8 +6,9 @@
 - **対象プラットフォーム**: Web (PWA対応), Android, Windows
 - **画面の向き（オリエンテーション）規約**:
   - 横位置推奨オーバーレイ画面（旧 `LandscapeWrapper`）は廃止。
-  - タイトル画面（`TitleScreen`）および「選手登録」ダイアログは縦画面・横画面の双方に対応し、縦持ちでもソフトウェアキーボードで快適に名前入力が可能。
-  - 対戦画面（`GamePage`）開始時は `SystemChrome.setPreferredOrientations` で横向きを要求するとともに、縦長画面（`maxWidth < maxHeight`）のまま開始された場合でも画面の向きを検知して `RotatedBox(quarterTurns: 1)` により自動的に横画面レイアウトへ回転して表示する。
+  - アプリ全体で `SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])` を指定し、スマートフォンを横持ちに傾けた際にOS・ブラウザの再描画によってゲーム画面（背景およびキャラクター）が縮小される現象を防止する。
+  - タイトル画面（`TitleScreen`）および「選手登録」ダイアログは縦画面・横長ウィンドウ（PC等）の双方に対応し、縦持ちでもソフトウェアキーボードで快適に名前入力が可能。
+  - 対戦画面（`GamePage`）では、縦長画面（`maxWidth < maxHeight`）のときに `RotatedBox(quarterTurns: 1)` により90度回転して横画面構成で表示する。これにより、縦状態で開始してそのまま端末を横持ちに持ち替えても、再描画や縮小を起こさず最適な画面比率を維持する。
 - **コード品質管理**: `flutter_lints` 準拠、`flutter analyze` エラー・警告0件、`flutter test` 全件通過をコミット基準とする。
 - **外部支援体制**: Android Studio内蔵エージェントによる実装を基本とし、複雑な課題・全体設計は外部サポート（アンちゃん）が客観的事実に基づき俯瞰して指示を行う。
 
