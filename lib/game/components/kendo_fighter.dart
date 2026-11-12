@@ -26,7 +26,11 @@ class KendoFighter extends PositionComponent {
     priority = 10; // Foreground layer (in front of background stage)
   }
 
-  final String name;
+  static const double zekkenWidth = 12.0;
+  static const double zekkenHeight = 21.0; // 従来(14.0)の1.5倍
+  static const Color zekkenBackgroundColor = Color(0xFF102040); // 垂ネーム紺色背景
+
+  String name;
   final bool isPlayer;
   final Color keikogiColor;
   final Color ribbonColor;
@@ -481,6 +485,7 @@ class KendoFighter extends PositionComponent {
     required String text,
     required TextStyle style,
     required Offset position,
+    bool centerVertically = false,
   }) {
     canvas.save();
     canvas.translate(position.dx, position.dy);
@@ -493,9 +498,57 @@ class KendoFighter extends PositionComponent {
         style: style,
       ),
       textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
     )..layout();
-    textPainter.paint(canvas, Offset(-textPainter.width / 2, 0));
+    final offsetY = centerVertically ? -textPainter.height / 2 : 0.0;
+    textPainter.paint(canvas, Offset(-textPainter.width / 2, offsetY));
     canvas.restore();
+  }
+
+  void _drawZekken(Canvas canvas, double stepBounce) {
+    // 縦の長さを従来(14.0)の1.5倍(21.0)にした垂ネーム枠
+    final zekkenRect = Rect.fromLTWH(
+      -zekkenWidth / 2,
+      -48 + stepBounce,
+      zekkenWidth,
+      zekkenHeight,
+    );
+
+    // 背景：紺色
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(zekkenRect, const Radius.circular(1.5)),
+      Paint()..color = zekkenBackgroundColor,
+    );
+
+    // 外枠：白色の細枠
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(zekkenRect, const Radius.circular(1.5)),
+      Paint()
+        ..color = Colors.white70
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8,
+    );
+
+    // 垂ネーム文字（2文字または3文字を縦書き・白色で中央描画）
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+
+    final chars = trimmed.runes.map((r) => String.fromCharCode(r)).take(3).toList();
+    final verticalText = chars.join('\n');
+    final fontSize = chars.length >= 3 ? 5.2 : 7.0;
+
+    _drawUnflippedText(
+      canvas,
+      text: verticalText,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: fontSize,
+        fontWeight: FontWeight.bold,
+        height: 1.05,
+      ),
+      position: zekkenRect.center,
+      centerVertically: true,
+    );
   }
 
   void _drawKendoFighter(Canvas canvas) {
@@ -752,35 +805,7 @@ class KendoFighter extends PositionComponent {
       footPaint,
     );
 
-    // 2. Tare
-    final tarePaint = Paint()..color = const Color(0xFF212121);
-    final tareOutline = Paint()
-      ..color = const Color(0xFF757575)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final tareRect = Rect.fromLTWH(-16, -50 + stepBounce, 32, 22);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(tareRect, const Radius.circular(2)),
-      tarePaint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(tareRect, const Radius.circular(2)),
-      tareOutline,
-    );
-
-    // Name tag
-    final zekkenRect = Rect.fromLTWH(-6, -46 + stepBounce, 12, 14);
-    canvas.drawRect(zekkenRect, Paint()..color = const Color(0xFFFFFFFF));
-    canvas.drawRect(
-      zekkenRect,
-      Paint()
-        ..color = Colors.black
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-
-    // 3. Keikogi & Do
+    // 2. Keikogi & Do
     final giPaint = Paint()..color = keikogiColor;
     canvas.drawRect(
       Rect.fromLTWH(-18, -75 + stepBounce, 36, 28),
@@ -799,6 +824,26 @@ class KendoFighter extends PositionComponent {
       Rect.fromLTWH(-15, -62 + stepBounce, 30, 4),
       doHighlight,
     );
+
+    // 3. Tare & Zekken (垂・垂ネーム: 縦1.5倍の垂ネームが胴の下端に隠れないよう胴の前面に描画)
+    final tarePaint = Paint()..color = const Color(0xFF212121);
+    final tareOutline = Paint()
+      ..color = const Color(0xFF757575)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final tareRect = Rect.fromLTWH(-16, -50 + stepBounce, 32, 23);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(tareRect, const Radius.circular(2)),
+      tarePaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(tareRect, const Radius.circular(2)),
+      tareOutline,
+    );
+
+    // Name tag (垂ネーム: 縦1.5倍、背景紺色、白文字2〜3字縦書き)
+    _drawZekken(canvas, stepBounce);
 
     // 4. Men
     final menBackPaint = Paint()..color = const Color(0xFF1A1A1A);

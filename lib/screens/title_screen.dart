@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../game/components/kendo_fighter.dart';
 import '../game/score/score_manager.dart';
@@ -98,6 +99,219 @@ class _TitleScreenState extends State<TitleScreen> {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _openPlayerRegistrationDialog() {
+    final playerController = TextEditingController(
+      text: ScoreManager.playerNameNotifier.value,
+    );
+    final cpuControllers = ScoreManager.cpuNamesNotifier.value
+        .map((name) => TextEditingController(text: name))
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.grey.shade900,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.amber, width: 2),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.badge, color: Colors.amberAccent),
+                  SizedBox(width: 8),
+                  Text(
+                    '選手登録（垂ネーム設定）',
+                    style: TextStyle(
+                      color: Colors.amberAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        '※垂ネームは漢字2〜3文字（最大3文字）で描画されます。',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSectionHeader('【自分の名前（1種）】'),
+                      const SizedBox(height: 6),
+                      TextField(
+                        key: const ValueKey('player_name_input'),
+                        controller: playerController,
+                        maxLength: 3,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(3),
+                        ],
+                        style: const TextStyle(color: Colors.white, fontSize: 15),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          hintText: '例: 佐藤（2〜3文字）',
+                          hintStyle: const TextStyle(color: Colors.white38),
+                          filled: true,
+                          fillColor: Colors.black54,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Colors.amber),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Colors.white38),
+                          ),
+                        ),
+                      ),
+                      const Divider(color: Colors.white24, height: 22),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildSectionHeader(
+                            '【相手の名前（${cpuControllers.length}/${ScoreManager.maxCpuNamesCount}種）】',
+                          ),
+                          if (cpuControllers.length < ScoreManager.maxCpuNamesCount)
+                            ElevatedButton.icon(
+                              key: const ValueKey('add_cpu_name_button'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber.shade800,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              ),
+                              onPressed: () {
+                                setDialogState(() {
+                                  cpuControllers.add(TextEditingController(text: ''));
+                                });
+                              },
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('追加', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ...List.generate(cpuControllers.length, (index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 32,
+                                child: Text(
+                                  '${index + 1}.',
+                                  style: const TextStyle(
+                                    color: Colors.amberAccent,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  key: ValueKey('cpu_name_input_$index'),
+                                  controller: cpuControllers[index],
+                                  maxLength: 3,
+                                  inputFormatters: [
+                                    LengthLimitingTextInputFormatter(3),
+                                  ],
+                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    hintText: '相手の苗字（2〜3文字）',
+                                    hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                                    filled: true,
+                                    fillColor: Colors.black54,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(color: Colors.white24),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              IconButton(
+                                key: ValueKey('delete_cpu_name_button_$index'),
+                                tooltip: '削除',
+                                onPressed: cpuControllers.length > 1
+                                    ? () {
+                                        setDialogState(() {
+                                          final removed = cpuControllers.removeAt(index);
+                                          removed.dispose();
+                                        });
+                                      }
+                                    : null,
+                                icon: Icon(
+                                  Icons.remove_circle_outline,
+                                  color: cpuControllers.length > 1
+                                      ? Colors.redAccent
+                                      : Colors.white24,
+                                  size: 22,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text(
+                    'キャンセル',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ),
+                ElevatedButton(
+                  key: const ValueKey('save_player_registration_button'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade900,
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.amber, width: 1.5),
+                  ),
+                  onPressed: () async {
+                    final newPlayerName = playerController.text.trim();
+                    final newCpuNames = cpuControllers
+                        .map((c) => c.text.trim())
+                        .where((name) => name.isNotEmpty)
+                        .toList();
+
+                    await ScoreManager.setPlayerName(newPlayerName);
+                    await ScoreManager.setCpuNames(newCpuNames);
+
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  },
+                  child: const Text(
+                    '保存',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -352,7 +566,7 @@ class _TitleScreenState extends State<TitleScreen> {
                 builder: (context, constraints) {
                   final isLandscape = constraints.maxWidth > constraints.maxHeight;
                   final isCompactHeight = constraints.maxHeight < 420;
-                  final buttonWidth = isLandscape ? 180.0 : 240.0;
+                  final buttonWidth = isLandscape ? 160.0 : 240.0;
                   final buttonHeight = isCompactHeight ? 44.0 : 48.0;
 
                   return Center(
@@ -448,10 +662,10 @@ class _TitleScreenState extends State<TitleScreen> {
                           ),
                           SizedBox(height: isCompactHeight ? 14 : 20),
 
-                          // 3 Menu Choice Buttons: 横画面時は横並び、縦画面時は縦並び
+                          // Menu Choice Buttons: 横画面時は横並び、縦画面時は縦並び
                           if (isLandscape)
                             Wrap(
-                              spacing: 16,
+                              spacing: 12,
                               runSpacing: 12,
                               alignment: WrapAlignment.center,
                               children: [
@@ -470,6 +684,14 @@ class _TitleScreenState extends State<TitleScreen> {
                                       ),
                                     );
                                   },
+                                ),
+                                _buildMenuButton(
+                                  icon: Icons.badge,
+                                  label: '選手登録',
+                                  color: Colors.indigo.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openPlayerRegistrationDialog,
                                 ),
                                 _buildMenuButton(
                                   icon: Icons.auto_stories,
@@ -509,7 +731,16 @@ class _TitleScreenState extends State<TitleScreen> {
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 14),
+                                const SizedBox(height: 12),
+                                _buildMenuButton(
+                                  icon: Icons.badge,
+                                  label: '選手登録',
+                                  color: Colors.indigo.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openPlayerRegistrationDialog,
+                                ),
+                                const SizedBox(height: 12),
                                 _buildMenuButton(
                                   icon: Icons.auto_stories,
                                   label: '心得',
@@ -518,7 +749,7 @@ class _TitleScreenState extends State<TitleScreen> {
                                   height: buttonHeight,
                                   onPressed: _openGuideDialog,
                                 ),
-                                const SizedBox(height: 14),
+                                const SizedBox(height: 12),
                                 _buildMenuButton(
                                   icon: Icons.settings,
                                   label: '設定',
@@ -557,7 +788,7 @@ class _TitleScreenState extends State<TitleScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: const BorderSide(color: Colors.amber, width: 1.5),
@@ -565,13 +796,13 @@ class _TitleScreenState extends State<TitleScreen> {
           elevation: 6,
         ),
         onPressed: onPressed,
-        icon: Icon(icon, color: Colors.amberAccent, size: 22),
+        icon: Icon(icon, color: Colors.amberAccent, size: 20),
         label: Text(
           label,
           style: const TextStyle(
-            fontSize: 17,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
-            letterSpacing: 2,
+            letterSpacing: 1.5,
           ),
         ),
       ),

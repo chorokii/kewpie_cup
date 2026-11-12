@@ -45,6 +45,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final p2HealthNotifier = ValueNotifier<double>(100.0);
   final p1WinsNotifier = ValueNotifier<int>(0);
   final p2WinsNotifier = ValueNotifier<int>(0);
+  final p1NameNotifier = ValueNotifier<String>(ScoreManager.defaultPlayerName);
+  final p2NameNotifier = ValueNotifier<String>(ScoreManager.defaultCpuNames.first);
   final overlayTextNotifier = ValueNotifier<String>('');
   final isPausedNotifier = ValueNotifier<bool>(false);
   final isDebugVisibleNotifier = ValueNotifier<bool>(false); // デバッグ座標表示（入/切）
@@ -171,9 +173,14 @@ class KendoGame extends FlameGame with KeyboardEvents {
     );
     world.add(stage);
 
+    final initialP1Name = ScoreManager.playerNameNotifier.value;
+    final initialP2Name = ScoreManager.pickRandomCpuName();
+    p1NameNotifier.value = initialP1Name;
+    p2NameNotifier.value = initialP2Name;
+
     // 3. Player 1 (Red Ribbon / White Keikogi / Navy Hakama / Red Do Band)
     p1 = KendoFighter(
-      name: '剣士1',
+      name: initialP1Name,
       isPlayer: true,
       startX: -260.0,
       groundY: fighterGroundY,
@@ -186,7 +193,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
     // 4. Player 2 / CPU (White Ribbon / Navy Keikogi / Black Hakama / White Do Band)
     p2 = KendoFighter(
-      name: '剣士2',
+      name: initialP2Name,
       isPlayer: false,
       startX: 440.0,
       groundY: fighterGroundY,
@@ -336,6 +343,15 @@ class KendoGame extends FlameGame with KeyboardEvents {
     matchOverResultTimer = 0.0;
     pendingIpponCallText = '';
     pendingMatchResultText = '';
+
+    // 自分の名前と相手の名前（前回と連続しないランダム選択）を更新
+    final updatedP1Name = ScoreManager.playerNameNotifier.value;
+    final updatedP2Name = ScoreManager.pickRandomCpuName(previousName: p2.name);
+    p1.name = updatedP1Name;
+    p2.name = updatedP2Name;
+    p1NameNotifier.value = updatedP1Name;
+    p2NameNotifier.value = updatedP2Name;
+
     p1.resetMatch(startX: -260.0);
     p2.resetMatch(startX: 440.0);
     gameStateNotifier.value = KendoGameState.playing;

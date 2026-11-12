@@ -19,7 +19,7 @@ void main() {
     SoundManager.isEnabled = false;
   });
 
-  testWidgets('Kewpie_cup title screen loads with 3 menu options and starts match',
+  testWidgets('Kewpie_cup title screen loads with 4 menu options and starts match',
       (WidgetTester tester) async {
     await ScoreManager.clearScore();
     await tester.pumpWidget(const KewpieCupApp());
@@ -27,6 +27,7 @@ void main() {
 
     // Verify Title Screen menu buttons
     expect(find.text('試合開始'), findsOneWidget);
+    expect(find.text('選手登録'), findsOneWidget);
     expect(find.text('心得'), findsOneWidget);
     expect(find.text('設定'), findsOneWidget);
 
@@ -49,8 +50,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verify Game HUD text and action buttons are rendered
-    expect(find.textContaining('1P 剣士1'), findsOneWidget);
-    expect(find.text('2P 剣士2 (CPU)'), findsOneWidget);
+    expect(find.textContaining('1P'), findsOneWidget);
+    expect(find.textContaining('2P'), findsOneWidget);
     expect(find.text('30'), findsOneWidget);
   });
 
@@ -90,7 +91,27 @@ void main() {
     expect(p2FillRect.right, lessThan(p2BarRect.right - 10.0));
   });
 
-  group('ScoreManager persistent score tracking and clear tests', () {
+  group('ScoreManager persistent score, settings and player registration tests', () {
+    test('setPlayerName and setCpuNames normalize names and avoid consecutive duplicates in pickRandomCpuName', () async {
+      await ScoreManager.setPlayerName('赤胴');
+      expect(ScoreManager.playerNameNotifier.value, equals('赤胴'));
+
+      await ScoreManager.setCpuNames(['佐藤', '鈴木']);
+      expect(ScoreManager.cpuNamesNotifier.value, equals(['佐藤', '鈴木']));
+
+      // pickRandomCpuName with previousName='佐藤' must return '鈴木'
+      final chosen1 = ScoreManager.pickRandomCpuName(previousName: '佐藤');
+      expect(chosen1, equals('鈴木'));
+
+      // pickRandomCpuName with previousName='鈴木' must return '佐藤'
+      final chosen2 = ScoreManager.pickRandomCpuName(previousName: '鈴木');
+      expect(chosen2, equals('佐藤'));
+
+      // Reset to defaults
+      await ScoreManager.setPlayerName(ScoreManager.defaultPlayerName);
+      await ScoreManager.setCpuNames(ScoreManager.defaultCpuNames);
+    });
+
     test('setSoundEnabled and setDebugEnabled persist settings across loadScore calls', () async {
       // Save settings directly in SharedPreferences for testing persistence
       final prefs = await SharedPreferences.getInstance();

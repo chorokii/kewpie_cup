@@ -103,24 +103,29 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ValueListenableBuilder<int>(
-                            valueListenable: ScoreManager.streakNotifier,
-                            builder: (context, streak, _) {
-                              final streakText = streak >= 2 ? ' ($streak連勝中)' : '';
+                          ValueListenableBuilder<String>(
+                            valueListenable: widget.game.p1NameNotifier,
+                            builder: (context, p1Name, _) {
                               return ValueListenableBuilder<int>(
-                                valueListenable: ScoreManager.winsNotifier,
-                                builder: (context, totalWins, _) {
+                                valueListenable: ScoreManager.streakNotifier,
+                                builder: (context, streak, _) {
+                                  final streakText = streak >= 2 ? ' ($streak連勝中)' : '';
                                   return ValueListenableBuilder<int>(
-                                    valueListenable: ScoreManager.lossesNotifier,
-                                    builder: (context, totalLosses, _) {
-                                      return Text(
-                                        '1P 剣士1 [$totalWins勝$totalLosses敗$streakText]',
-                                        style: const TextStyle(
-                                          color: Colors.yellowAccent,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                                        ),
+                                    valueListenable: ScoreManager.winsNotifier,
+                                    builder: (context, totalWins, _) {
+                                      return ValueListenableBuilder<int>(
+                                        valueListenable: ScoreManager.lossesNotifier,
+                                        builder: (context, totalLosses, _) {
+                                          return Text(
+                                            '1P $p1Name [$totalWins勝$totalLosses敗$streakText]',
+                                            style: const TextStyle(
+                                              color: Colors.yellowAccent,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   );
@@ -185,14 +190,19 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                             valueListenable: widget.game.p2WinsNotifier,
                             builder: (context, wins, _) => _buildWinIndicators(wins),
                           ),
-                          const Text(
-                            '2P 剣士2 (CPU)',
-                            style: TextStyle(
-                              color: Colors.cyanAccent,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                            ),
+                          ValueListenableBuilder<String>(
+                            valueListenable: widget.game.p2NameNotifier,
+                            builder: (context, p2Name, _) {
+                              return Text(
+                                '2P $p2Name (CPU)',
+                                style: const TextStyle(
+                                  color: Colors.cyanAccent,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
