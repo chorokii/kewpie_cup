@@ -67,6 +67,7 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
+    await ScoreManager.clearScore();
     await ScoreManager.setPlayerName('剣士');
     await tester.pumpWidget(const KewpieCupApp());
     await tester.pump();
@@ -244,6 +245,7 @@ void main() {
 
   group('Pre-round start sequence and facing direction tests ("はじめ！" / "二本目！" / "勝負！")', () {
     test('Round 1 displays はじめ！ only for 1.2s then starts fight', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
 
@@ -262,6 +264,7 @@ void main() {
     });
 
     test('Round title text is はじめ！ for round 1, 二本目！ for round 2, and 勝負！ for round 3', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
 
@@ -278,6 +281,7 @@ void main() {
     });
 
     test('Fighters face inward (each other) immediately when Round 2 starts even if swapped in Round 1', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -617,6 +621,7 @@ void main() {
     });
 
     test('Counter Opportunity: 3 hits (34.0 damage each) reduce health from 100.0 to 0.0 and score Ippon', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -669,6 +674,70 @@ void main() {
     });
   });
 
+  group('Boss Battle (10-win streak 師範戦) tests', () {
+    test('10-win streak triggers Boss Battle with 師範, gold attire, and 師範撃破！ on victory', () async {
+      await ScoreManager.clearScore();
+      for (int i = 0; i < 10; i++) {
+        await ScoreManager.recordWin();
+      }
+      expect(ScoreManager.streakNotifier.value, equals(10));
+      expect(ScoreManager.isBossMatchTriggered, isTrue);
+
+      final game = KendoGame();
+      await game.onLoad();
+
+      // Verify Boss Battle initialization
+      expect(game.isBossBattleNotifier.value, isTrue);
+      expect(game.p2.isBoss, isTrue);
+      expect(game.p2.name, equals('師範'));
+      expect(game.p2NameNotifier.value, equals('師範'));
+      expect(game.p2.ribbonColor, equals(const Color(0xFFFFD700)));
+      expect(game.p2.doBandColor, equals(const Color(0xFFFFD700)));
+      expect(game.overlayTextNotifier.value, equals('師範戦！ はじめ！'));
+
+      // Start fight and simulate Just Guard against Boss (1.1s vulnerable window)
+      game.isRoundStarting = false;
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p1.startGuard();
+      game.p2.attack(blinkDuration: 0.2);
+      game.p2.update(0.75); // 0.2s blink + 0.5s hold = 0.70s+ strike phase
+      game.update(0.01);
+
+      expect(game.p2.cpuVulnerableTimer, closeTo(1.1, 0.05));
+
+      // Clear hitStun/hitStop so P1 can attack
+      game.hitStopTimer = 0.0;
+      game.p1.hitStunTimer = 0.0;
+      game.p2.hitStunTimer = 0.0;
+
+      // Simulate P1 winning 2nd round against Boss -> "師範撃破！ あなたの勝ち" and streak becomes 11 (next match returns to normal)
+      game.p1.winCount = 1;
+      game.p2.health = 34.0;
+      game.p2.cpuVulnerableTimer = 1.1;
+      game.p1.attack();
+      game.p1.update(0.20);
+      game.update(0.01);
+
+      expect(game.gameStateNotifier.value, equals(KendoGameState.matchOver));
+      expect(ScoreManager.streakNotifier.value, equals(11));
+      expect(ScoreManager.isBossMatchTriggered, isFalse);
+
+      // Advance past matchOver announcement (0.06s hitStop + 2.3s)
+      game.update(0.06);
+      game.update(2.30);
+      expect(game.overlayTextNotifier.value, equals('師範撃破！ あなたの勝ち'));
+
+      // Rematch at 11-win streak returns to normal CPU match
+      game.resetMatch();
+      expect(game.isBossBattleNotifier.value, isFalse);
+      expect(game.p2.isBoss, isFalse);
+      expect(game.p2.name, isNot(equals('師範')));
+
+      await ScoreManager.clearScore();
+    });
+  });
+
   group('KendoGame pause function tests', () {
     test('togglePause toggles isPausedNotifier and suppresses movement', () async {
       final game = KendoGame();
@@ -707,7 +776,8 @@ void main() {
       expect(game.rollIpponCallText(0.99), equals('胴あり'));
     });
 
-    test('30-second time-out awards Ippon to CPU and displays やめ！ then 勝負あり！ on 2nd win', () async {
+    test('30-second time-out awards Ippon to CPU and displays やめ！ then 勝誤あり！ on 2nd win', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -823,6 +893,7 @@ void main() {
     });
 
     test('2 wins displays Ippon call (1.2s) -> 勝負あり！ (1.0s) -> あなたの勝ち or あなたの負け', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -981,6 +1052,7 @@ void main() {
 
   group('Fighter customization and Zekken (垂ネーム) tests', () {
     test('P1 and P2 have distinct Hakama and Do Band colors, and 1.5x vertical Zekken dimensions', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
 
@@ -999,6 +1071,7 @@ void main() {
     });
 
     test('resetMatch selects non-repeating CPU name when multiple CPU names exist', () async {
+      await ScoreManager.clearScore();
       await ScoreManager.setPlayerName('赤胴');
       await ScoreManager.setCpuNames(['佐藤', '鈴木', '高橋']);
       ScoreManager.resetLastSelectedCpuName();

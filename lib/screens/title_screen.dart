@@ -633,7 +633,7 @@ class _TitleScreenState extends State<TitleScreen> {
                           ),
                           SizedBox(height: isCompactHeight ? 12 : 20),
 
-                          // Persistent Score & Win Streak Badge (2連勝以上から表示)
+                          // Persistent Score & Win Streak Badge (2連勝以上から表示、10の倍数連勝時はボス戦予告)
                           ValueListenableBuilder<int>(
                             valueListenable: ScoreManager.winsNotifier,
                             builder: (context, wins, _) {
@@ -643,7 +643,10 @@ class _TitleScreenState extends State<TitleScreen> {
                                   return ValueListenableBuilder<int>(
                                     valueListenable: ScoreManager.streakNotifier,
                                     builder: (context, streak, _) {
-                                      final streakText = streak >= 2 ? ' ($streak連勝中！)' : '';
+                                      final isBossReady = ScoreManager.isBossMatchTriggered;
+                                      final streakText = isBossReady
+                                          ? ' ($streak連勝中！ 次戦：師範戦！)'
+                                          : (streak >= 2 ? ' ($streak連勝中！)' : '');
                                       return Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                                         decoration: BoxDecoration(
@@ -670,103 +673,115 @@ class _TitleScreenState extends State<TitleScreen> {
                           SizedBox(height: isCompactHeight ? 14 : 20),
 
                           // Menu Choice Buttons: 横画面時は横並び、縦画面時は縦並び
-                          if (isLandscape)
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                _buildMenuButton(
-                                  icon: Icons.play_arrow,
-                                  label: '試合開始',
-                                  color: Colors.red.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => GamePage(
-                                          isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                _buildMenuButton(
-                                  icon: Icons.badge,
-                                  label: '選手登録',
-                                  color: Colors.indigo.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: _openPlayerRegistrationDialog,
-                                ),
-                                _buildMenuButton(
-                                  icon: Icons.auto_stories,
-                                  label: '心得',
-                                  color: Colors.amber.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: _openGuideDialog,
-                                ),
-                                _buildMenuButton(
-                                  icon: Icons.settings,
-                                  label: '設定',
-                                  color: Colors.blueGrey.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: _openSettingsDialog,
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildMenuButton(
-                                  icon: Icons.play_arrow,
-                                  label: '試合開始',
-                                  color: Colors.red.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => GamePage(
-                                          isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                                _buildMenuButton(
-                                  icon: Icons.badge,
-                                  label: '選手登録',
-                                  color: Colors.indigo.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: _openPlayerRegistrationDialog,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildMenuButton(
-                                  icon: Icons.auto_stories,
-                                  label: '心得',
-                                  color: Colors.amber.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: _openGuideDialog,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildMenuButton(
-                                  icon: Icons.settings,
-                                  label: '設定',
-                                  color: Colors.blueGrey.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: _openSettingsDialog,
-                                ),
-                              ],
-                            ),
+                          ValueListenableBuilder<int>(
+                            valueListenable: ScoreManager.streakNotifier,
+                            builder: (context, _, _) {
+                              final isBossReady = ScoreManager.isBossMatchTriggered;
+                              final startLabel = isBossReady ? 'ボス戦開始' : '試合開始';
+                              final startColor = isBossReady
+                                  ? Colors.deepOrange.shade900
+                                  : Colors.red.shade900;
+
+                              if (isLandscape) {
+                                return Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  alignment: WrapAlignment.center,
+                                  children: [
+                                    _buildMenuButton(
+                                      icon: Icons.play_arrow,
+                                      label: startLabel,
+                                      color: startColor,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => GamePage(
+                                              isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildMenuButton(
+                                      icon: Icons.badge,
+                                      label: '選手登録',
+                                      color: Colors.indigo.shade900,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: _openPlayerRegistrationDialog,
+                                    ),
+                                    _buildMenuButton(
+                                      icon: Icons.auto_stories,
+                                      label: '心得',
+                                      color: Colors.amber.shade900,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: _openGuideDialog,
+                                    ),
+                                    _buildMenuButton(
+                                      icon: Icons.settings,
+                                      label: '設定',
+                                      color: Colors.blueGrey.shade900,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: _openSettingsDialog,
+                                    ),
+                                  ],
+                                );
+                              } else {
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildMenuButton(
+                                      icon: Icons.play_arrow,
+                                      label: startLabel,
+                                      color: startColor,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => GamePage(
+                                              isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildMenuButton(
+                                      icon: Icons.badge,
+                                      label: '選手登録',
+                                      color: Colors.indigo.shade900,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: _openPlayerRegistrationDialog,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildMenuButton(
+                                      icon: Icons.auto_stories,
+                                      label: '心得',
+                                      color: Colors.amber.shade900,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: _openGuideDialog,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildMenuButton(
+                                      icon: Icons.settings,
+                                      label: '設定',
+                                      color: Colors.blueGrey.shade900,
+                                      width: buttonWidth,
+                                      height: buttonHeight,
+                                      onPressed: _openSettingsDialog,
+                                    ),
+                                  ],
+                                );
+                              }
+                            },
+                          ),
                         ],
                       ),
                     ),

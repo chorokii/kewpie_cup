@@ -200,20 +200,27 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                               ),
                               const SizedBox(width: 4),
                               Expanded(
-                                child: ValueListenableBuilder<String>(
-                                  valueListenable: widget.game.p2NameNotifier,
-                                  builder: (context, p2Name, _) {
-                                    return Text(
-                                      '2P $p2Name (CPU)',
-                                      textAlign: TextAlign.end,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      style: const TextStyle(
-                                        color: Colors.cyanAccent,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                                      ),
+                                child: ValueListenableBuilder<bool>(
+                                  valueListenable: widget.game.isBossBattleNotifier,
+                                  builder: (context, isBoss, _) {
+                                    return ValueListenableBuilder<String>(
+                                      valueListenable: widget.game.p2NameNotifier,
+                                      builder: (context, p2Name, _) {
+                                        final roleLabel = isBoss ? 'BOSS' : 'CPU';
+                                        final nameColor = isBoss ? Colors.amberAccent : Colors.cyanAccent;
+                                        return Text(
+                                          '2P $p2Name ($roleLabel)',
+                                          textAlign: TextAlign.end,
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            color: nameColor,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),

@@ -14,6 +14,7 @@ class ScoreManager {
   static final ValueNotifier<bool> debugEnabledNotifier = ValueNotifier<bool>(false);
 
   static const String defaultPlayerName = '剣士';
+  static const String bossName = '師範';
   static const List<String> defaultCpuNames = [
     '佐藤',
     '鈴木',
@@ -39,6 +40,10 @@ class ScoreManager {
   static const String _keyDebugEnabled = 'kewpie_debug_enabled';
   static const String _keyPlayerName = 'kewpie_player_name';
   static const String _keyCpuNames = 'kewpie_cpu_names';
+
+  /// 10連勝（10の倍数の連勝）達成時にボスバトル（師範戦）を発動する判定
+  static bool get isBossMatchTriggered =>
+      streakNotifier.value > 0 && streakNotifier.value % 10 == 0;
 
   static Future<void> loadScore() async {
     try {

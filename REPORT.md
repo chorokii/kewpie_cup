@@ -1,31 +1,34 @@
-# 開発報告書: リリースに向けたデッドコード整理（リファクタリング）および CURRENT_CONTEXT.md の最適化
+# 開発報告書: 10連勝達成時の「ボスバトル（師範戦）」機能の追加
 
 ## 1. 概要
-- リリースに向けて、不採用となったチャージ音関連のデッドコード削除、未使用パッケージ（`flame_audio`）の削除、および選手登録ダイアログにおける `TextEditingController` の確実なリソース解放処理を実装しました。
-- 現在の実装仕様（道場背景スプライトの適用、縦・横全方向許可、効果音2種構成）に合わせて `CURRENT_CONTEXT.md` を最適化しました。
+- 通算連勝数が10の倍数（`streak > 0 && streak % 10 == 0`）に到達した次の試合で、特別な強敵「師範」が登場するボスバトル機能を実装しました。
 
 ---
 
 ## 2. 実施内容
-- `pubspec.yaml`:
-  - 未使用であった `flame_audio` パッケージを `dependencies` から削除。
-- `lib/game/audio/sound_manager.dart`:
-  - 廃止された `playCharge()` および `stopCharge()` メソッドを削除。
+- `lib/game/score/score_manager.dart`:
+  - `bossName = '師範'` および `isBossMatchTriggered` 判定ゲッターを追加。
+- `lib/game/components/kendo_fighter.dart`:
+  - ボス戦用の装束設定（黒稽古着・黒袴・金目印・金胴帯・金枠垂ネーム）、歩行速度強化（`200.0`）、および高速化された白点滅時間（`[0.2, 0.35, 0.5]`）を切り替える `configureAsBoss` メソッドを実装。
 - `lib/game/kendo_game.dart`:
-  - `_hasStoppedChargeSound` フィールドおよび `SoundManager.playCharge()` / `stopCharge()` の呼び出しを削除。
+  - `isBossBattleNotifier` の追加、1本目開始宣告「師範戦！ はじめ！」、ボス撃破時宣告「師範撃破！ あなたの勝ち」、およびボスAIパラメータ（判断間隔 `0.18s`、反撃受付時間 `1.1s`、鍔迫り合い押し込み `28.0px`）を実装。
+- `lib/widgets/fighting_hud.dart`:
+  - ボス戦時の2P表示を `2P 師範 (BOSS)`（アンバー色）に切り替え。
 - `lib/screens/title_screen.dart`:
-  - `_openPlayerRegistrationDialog` の終了時（`finally` ブロック）に `playerController` および `cpuControllers` を `dispose()` する処理を追加（「心得」テキストは変更なし）。
-- `CURRENT_CONTEXT.md`:
-  - リリース版の仕様に合わせて記述を最適化。
+  - 10連勝達成時に連勝バッジへ「次戦：師範戦！」を表示し、開始ボタンを「ボス戦開始」に変更（「心得」テキストは変更なし）。
+- `test/widget_test.dart`:
+  - 10連勝達成時のボスバトル発動・パラメータ検証・撃破後の通常戦復帰を確認するテストを追加。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `pubspec.yaml`
-2. `lib/game/audio/sound_manager.dart`
+1. `lib/game/score/score_manager.dart`
+2. `lib/game/components/kendo_fighter.dart`
 3. `lib/game/kendo_game.dart`
-4. `lib/screens/title_screen.dart`
-5. `CURRENT_CONTEXT.md`
+4. `lib/widgets/fighting_hud.dart`
+5. `lib/screens/title_screen.dart`
+6. `test/widget_test.dart`
+7. `CURRENT_CONTEXT.md`
 
 ---
 
@@ -34,10 +37,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 2.7s)
+No issues found! (ran in 99.3s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:04 +36: All tests passed!
+00:05 +37: All tests passed!
 ```

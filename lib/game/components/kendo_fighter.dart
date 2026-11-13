@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../enums/facing_direction.dart';
+import '../score/score_manager.dart';
 
 class KendoFighter extends PositionComponent {
   KendoFighter({
@@ -15,6 +16,7 @@ class KendoFighter extends PositionComponent {
     required this.ribbonColor,
     this.hakamaColor = const Color(0xFF1A237E),
     this.doBandColor = const Color(0xFFD32F2F),
+    this.isBoss = false,
   }) {
     // 描画基準点(0, 0)が足元であるため、アンカーを Anchor.topCenter に設定
     // これにより position が直接足元のワールド座標と一致します
@@ -32,10 +34,11 @@ class KendoFighter extends PositionComponent {
 
   String name;
   final bool isPlayer;
-  final Color keikogiColor;
-  final Color ribbonColor;
-  final Color hakamaColor;
-  final Color doBandColor;
+  bool isBoss;
+  Color keikogiColor;
+  Color ribbonColor;
+  Color hakamaColor;
+  Color doBandColor;
 
   FacingDirection facingDirection = FacingDirection.right;
 
@@ -43,7 +46,7 @@ class KendoFighter extends PositionComponent {
   bool isMoving = false;
   double walkAnimationTimer = 0.0;
 
-  final double walkSpeed = 160.0;
+  double walkSpeed = 160.0;
   final double guardSpeedMultiplier = 0.3;
 
   // Combat stats
@@ -68,12 +71,13 @@ class KendoFighter extends PositionComponent {
   double farAdvanceTimer = 0.0;
   static const double farAdvanceDuration = 0.35; // 1踏み込み前進の持続時間 (0.35秒)
 
-  // CPU 3-Tier Attack Windup Flash Durations (短: 0.3s / 中: 0.5s / 長: 0.8s) & Fixed Hold Duration (0.5s)
+  // CPU 3-Tier Attack Windup Flash Durations (短: 0.3s / 中: 0.5s / 長: 0.8s) & Boss Windup Durations
   static const List<double> cpuBlinkDurations = [0.3, 0.5, 0.8];
+  static const List<double> bossBlinkDurations = [0.2, 0.35, 0.5];
   static const double postBlinkHoldDuration = 0.5; // 点滅終了後の固定タメ時間（0.5秒）
   double currentBlinkDuration = 0.5; // デフォルト中（0.5s）
 
-  // CPU Vulnerable Window / Guard-Break Timer (1.5s 反撃チャンス)
+  // CPU Vulnerable Window / Guard-Break Timer (反撃チャンス)
   double cpuVulnerableTimer = 0.0;
 
   // Visual Effect Timers (Just Guard Spark & Hit Impact Shockwave)
@@ -99,6 +103,26 @@ class KendoFighter extends PositionComponent {
   static const double turnaroundDuration = 0.28;
 
   double hitStunTimer = 0.0;
+
+  /// ボス（師範）モードと通常CPUモードの外観・能力パラメータを切り替える
+  void configureAsBoss(bool bossMode, {required String normalName}) {
+    isBoss = bossMode;
+    if (bossMode) {
+      name = ScoreManager.bossName;
+      keikogiColor = const Color(0xFF111111); // 黒稽古着
+      ribbonColor = const Color(0xFFFFD700); // 金目印
+      hakamaColor = const Color(0xFF0A0A0A); // 黒袴
+      doBandColor = const Color(0xFFFFD700); // 金胴帯
+      walkSpeed = 200.0;
+    } else {
+      name = normalName;
+      keikogiColor = const Color(0xFF1A237E); // 紺稽古着
+      ribbonColor = const Color(0xFFFFFFFF); // 白目印
+      hakamaColor = const Color(0xFF212121); // 黒袴
+      doBandColor = const Color(0xFFFAFAFA); // 白胴帯
+      walkSpeed = 160.0;
+    }
+  }
 
   void move(double directionInput) {
     if (isDisengaging || isPushedBack || isAttacking || isPassingThrough || isTurningAround) return;
@@ -520,28 +544,30 @@ class KendoFighter extends PositionComponent {
       Paint()..color = zekkenBackgroundColor,
     );
 
-    // 外枠：白色の細枠
+    // 外枠：ボス（師範）は金枠、通常は白色の細枠
+    final borderColor = isBoss ? const Color(0xFFFFD700) : Colors.white70;
     canvas.drawRRect(
       RRect.fromRectAndRadius(zekkenRect, const Radius.circular(1.5)),
       Paint()
-        ..color = Colors.white70
+        ..color = borderColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );
 
-    // 垂ネーム文字（2文字または3文字を縦書き・白色で中央描画）
+    // 垂ネーム文字（2文字または3文字を縦書き・中央描画）
     final trimmed = name.trim();
     if (trimmed.isEmpty) return;
 
     final chars = trimmed.runes.map((r) => String.fromCharCode(r)).take(3).toList();
     final verticalText = chars.join('\n');
     final fontSize = chars.length >= 3 ? 5.2 : 7.0;
+    final textColor = isBoss ? const Color(0xFFFFD700) : Colors.white;
 
     _drawUnflippedText(
       canvas,
       text: verticalText,
       style: TextStyle(
-        color: Colors.white,
+        color: textColor,
         fontSize: fontSize,
         fontWeight: FontWeight.bold,
         height: 1.05,
@@ -812,7 +838,7 @@ class KendoFighter extends PositionComponent {
       giPaint,
     );
 
-    // Do (Lacquered Chest Armor & Accent Band - 1P: Red, 2P: White)
+    // Do (Lacquered Chest Armor & Accent Band - 1P: Red, 2P: White, Boss: Gold)
     final doPaint = Paint()..color = const Color(0xFF111111);
     final doHighlight = Paint()..color = doBandColor;
     final doRect = Rect.fromLTWH(-15, -70 + stepBounce, 30, 22);
@@ -842,7 +868,7 @@ class KendoFighter extends PositionComponent {
       tareOutline,
     );
 
-    // Name tag (垂ネーム: 縦1.5倍、背景紺色、白文字2〜3字縦書き)
+    // Name tag (垂ネーム: 縦1.5倍、背景紺色、白または金文字2〜3字縦書き)
     _drawZekken(canvas, stepBounce);
 
     // 4. Men

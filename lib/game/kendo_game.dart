@@ -47,6 +47,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final p2WinsNotifier = ValueNotifier<int>(0);
   final p1NameNotifier = ValueNotifier<String>(ScoreManager.defaultPlayerName);
   final p2NameNotifier = ValueNotifier<String>(ScoreManager.defaultCpuNames.first);
+  final isBossBattleNotifier = ValueNotifier<bool>(false); // 10連勝時のボスバトル（師範戦）フラグ
   final overlayTextNotifier = ValueNotifier<String>('');
   final isPausedNotifier = ValueNotifier<bool>(false);
   final isDebugVisibleNotifier = ValueNotifier<bool>(false); // デバッグ座標表示（入/切）
@@ -54,7 +55,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final bgFlashNotifier = ValueNotifier<double>(0.0); // 全画面打撃直前200ms背景フラッシュ警告
   final isEnemyOnRightNotifier = ValueNotifier<bool>(true); // 敵が右側にいるか（左右動的判定・ボタン色反転用）
 
-  // Pre-Round Start Banner Sequence (Round 1: "はじめ！", Round 2: "二本目！", Round 3: "勝負！" for 1.2s)
+  // Pre-Round Start Banner Sequence (Round 1: "はじめ！" / "師範戦！ はじめ！", Round 2: "二本目！", Round 3: "勝負！" for 1.2s)
   bool isRoundStarting = false;
   double roundStartTimer = 0.0;
   static const double totalRoundStartDelay = 1.2; // 開始宣告の表示時間 (1.2秒)
@@ -93,11 +94,11 @@ class KendoGame extends FlameGame with KeyboardEvents {
       !isRoundStarting &&
       gameStateNotifier.value == KendoGameState.playing;
 
-  /// 剣道審判規則に基づく各ラウンド開始時の宣告テキスト
+  /// 剣道審判規則に基づく各ラウンド開始時の宣告テキスト（ボス戦1本目は「師範戦！ はじめ！」）
   String get currentRoundTitleText {
     final totalWins = p1.winCount + p2.winCount;
     if (totalWins == 0) {
-      return 'はじめ！';
+      return isBossBattleNotifier.value ? '師範戦！ はじめ！' : 'はじめ！';
     } else if (totalWins == 1) {
       return '二本目！';
     } else {
@@ -173,9 +174,9 @@ class KendoGame extends FlameGame with KeyboardEvents {
     world.add(stage);
 
     final initialP1Name = ScoreManager.playerNameNotifier.value;
-    final initialP2Name = ScoreManager.pickRandomCpuName();
+    final bossTriggered = ScoreManager.isBossMatchTriggered;
+    final initialNormalP2Name = ScoreManager.pickRandomCpuName();
     p1NameNotifier.value = initialP1Name;
-    p2NameNotifier.value = initialP2Name;
 
     // 3. Player 1 (Red Ribbon / White Keikogi / Navy Hakama / Red Do Band)
     p1 = KendoFighter(
@@ -190,9 +191,9 @@ class KendoGame extends FlameGame with KeyboardEvents {
     );
     world.add(p1);
 
-    // 4. Player 2 / CPU (White Ribbon / Navy Keikogi / Black Hakama / White Do Band)
+    // 4. Player 2 / CPU or Boss
     p2 = KendoFighter(
-      name: initialP2Name,
+      name: initialNormalP2Name,
       isPlayer: false,
       startX: 440.0,
       groundY: fighterGroundY,
@@ -201,12 +202,15 @@ class KendoGame extends FlameGame with KeyboardEvents {
       hakamaColor: const Color(0xFF212121),
       doBandColor: const Color(0xFFFAFAFA),
     );
+    p2.configureAsBoss(bossTriggered, normalName: initialNormalP2Name);
+    isBossBattleNotifier.value = bossTriggered;
+    p2NameNotifier.value = p2.name;
     world.add(p2);
 
     // 5. Debug Grid Component (with isDebugVisibleNotifier)
     world.add(DebugGrid(isDebugVisible: isDebugVisibleNotifier));
 
-    // 6. Start Pre-Round Sequence ("はじめ！")
+    // 6. Start Pre-Round Sequence ("はじめ！" or "師範戦！ はじめ！")
     startRoundSequence();
   }
 
@@ -341,13 +345,19 @@ class KendoGame extends FlameGame with KeyboardEvents {
     pendingIpponCallText = '';
     pendingMatchResultText = '';
 
-    // 自分の名前と相手の名前（前回と連続しないランダム選択）を更新
+    // 自分の名前と相手の名前（10連勝達成時はボス「師範」、通常時は前回と連続しないランダム選択）を更新
     final updatedP1Name = ScoreManager.playerNameNotifier.value;
-    final updatedP2Name = ScoreManager.pickRandomCpuName(previousName: p2.name);
+    final bossTriggered = ScoreManager.isBossMatchTriggered;
+    final previousNormalName = p2.isBoss ? null : p2.name;
+    final updatedNormalP2Name =
+        ScoreManager.pickRandomCpuName(previousName: previousNormalName);
+
     p1.name = updatedP1Name;
-    p2.name = updatedP2Name;
     p1NameNotifier.value = updatedP1Name;
-    p2NameNotifier.value = updatedP2Name;
+
+    p2.configureAsBoss(bossTriggered, normalName: updatedNormalP2Name);
+    isBossBattleNotifier.value = bossTriggered;
+    p2NameNotifier.value = p2.name;
 
     p1.resetMatch(startX: -260.0);
     p2.resetMatch(startX: 440.0);
@@ -389,7 +399,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     // 1-B. Handle Match Over transition:
     // Phase 1 (0.0s .. 1.2s): 決まり手 ("面あり"/"小手あり"/"胴あり"/"やめ！")
     // Phase 2 (1.2s .. 2.2s): "勝負あり！"
-    // Phase 3 (2.2s+): "あなたの勝ち" / "あなたの負け"
+    // Phase 3 (2.2s+): "あなたの勝ち" / "師範撃破！ あなたの勝ち" / "あなたの負け"
     if (currentGameState == KendoGameState.matchOver && isMatchOverResultPending) {
       matchOverResultTimer += dt;
       if (matchOverResultTimer < matchOverIpponPhaseDuration) {
@@ -403,7 +413,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
       }
     }
 
-    // 2. Handle Pre-Round Start Sequence ("はじめ！" / "二本目！" / "勝負！" for 1.2s)
+    // 2. Handle Pre-Round Start Sequence ("はじめ！" / "師範戦！ はじめ！" / "二本目！" / "勝負！" for 1.2s)
     if (currentGameState == KendoGameState.playing && isRoundStarting) {
       roundStartTimer += dt;
       p1.stop();
@@ -584,9 +594,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
           if (rand < 0.50) {
             p2.disengage();
           } else {
-            // CPU pushes Player back during Tsubazeriai (押し合い判定)
+            // CPU pushes Player back during Tsubazeriai (ボス時は押し込み力を強化)
             final pushDir = p2.position.x > p1.position.x ? -1.0 : 1.0;
-            p1.position.x = (p1.position.x + pushDir * 18.0).clamp(stageMinX, stageMaxX);
+            final pushDistance = p2.isBoss ? 28.0 : 18.0;
+            p1.position.x = (p1.position.x + pushDir * pushDistance).clamp(stageMinX, stageMaxX);
           }
           cpuTsubazeriaiTimer = 0.0;
         }
@@ -654,7 +665,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
           attacker.isAttacking = false;
           attacker.attackTimer = 0.0;
           attacker.hitStunTimer = 0.3;
-          attacker.cpuVulnerableTimer = 1.5; // 1.5s Vulnerable Window!
+          // 通常CPUは1.5秒、ボス（師範）は1.1秒の反撃チャンス
+          attacker.cpuVulnerableTimer = attacker.isBoss ? 1.1 : 1.5;
           defender.hitStunTimer = 0.15;
         } else {
           // Player failed to guard -> Men strike hits Player! Play Hit SE!
@@ -694,7 +706,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
       matchOverResultTimer = 0.0;
 
       if (attacker.isPlayer) {
-        pendingMatchResultText = 'あなたの勝ち';
+        pendingMatchResultText =
+            isBossBattleNotifier.value ? '師範撃破！ あなたの勝ち' : 'あなたの勝ち';
         ScoreManager.recordWin();
       } else {
         pendingMatchResultText = 'あなたの負け';
@@ -712,9 +725,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
     if (p2.isPushedBack) return;
 
     final dist = (p1.position.x - p2.position.x).abs();
+    final decisionInterval = p2.isBoss ? 0.18 : 0.25;
 
     cpuDecisionTimer += dt;
-    if (cpuDecisionTimer >= 0.25) {
+    if (cpuDecisionTimer >= decisionInterval) {
       cpuDecisionTimer = 0.0;
 
       if (p2.cpuVulnerableTimer > 0) {
@@ -737,12 +751,16 @@ class KendoGame extends FlameGame with KeyboardEvents {
         p2.stop();
         if (!p2.isGuarding && !p2.isTsubazeriai && !p2.isPassingThrough && !p2.isTurningAround && !p2.isAttacking) {
           final rand = _random.nextDouble();
-          if (rand < 0.50) {
-            // CPU initiates 2-phase attack with randomly chosen flash duration (0.3s Short / 0.5s Medium / 0.8s Long)
-            final blinkDurations = KendoFighter.cpuBlinkDurations;
+          final attackThreshold = p2.isBoss ? 0.65 : 0.50;
+          final guardThreshold = p2.isBoss ? 0.85 : 0.70;
+          if (rand < attackThreshold) {
+            // ボス時は高速化された白点滅時間、通常時は標準3段階の白点滅時間を抽選
+            final blinkDurations = p2.isBoss
+                ? KendoFighter.bossBlinkDurations
+                : KendoFighter.cpuBlinkDurations;
             final chosenBlink = blinkDurations[_random.nextInt(blinkDurations.length)];
             p2.attack(blinkDuration: chosenBlink);
-          } else if (rand < 0.70) {
+          } else if (rand < guardThreshold) {
             p2.startGuard();
             cpuGuardTimer = 0.35;
           }
