@@ -1,34 +1,28 @@
-# 開発報告書: ボス（師範）撃破時の「勲章バッジ」表示およびスコアクリア連動リセットの実装
+# 開発報告書: タイトル画面における師範撃破数（★）表記の追加および「ボス戦(検証)」ボタンの削除
 
 ## 1. 概要
-- ボス戦（師範戦）に勝利した実績を判別できるよう、ボス撃破数を `ScoreManager` で永続化し、タイトル画面の成績バッジ横に金色の「師範撃破 ★×N」勲章バッジを表示する機能を実装しました。
-- 設定画面の「通算スコア：クリア」ボタンを押した際、通算勝敗数・連勝数とあわせてボス撃破数（勲章）もリセットされるように実装しました。
+- タイトル画面の「通算成績: 〇勝 〇敗」の右隣に、師範撃破数（`ScoreManager.bossWinsNotifier`）に応じて `★`（1回）、`★★`（2回）、`★★★`（3回）、`★×4`（4回以上）を表示する処理を実装しました。
+- メインメニューから検証用の「ボス戦(検証)」ボタンを削除し、「試合開始（ボス戦開始）」「選手登録」「心得」「設定」の4ボタン構成へ整理しました。
 
 ---
 
 ## 2. 実施内容
-- `lib/game/score/score_manager.dart`:
-  - `bossWinsNotifier` および永続化キー `_keyBossWins` を追加。
-  - `recordWin({bool isBossVictory = false})` にてボス撃破時のカウントアップ・保存処理を実装。
-  - `clearScore()` にて `bossWinsNotifier` および保存データのクリア処理を追加。
-- `lib/game/kendo_game.dart`:
-  - `_scoreIppon` にて、プレイヤー勝利時に `ScoreManager.recordWin(isBossVictory: isBossBattleNotifier.value)` を呼び出すように更新。
 - `lib/screens/title_screen.dart`:
-  - 通算成績バッジの横に、`bossWins > 0` のとき表示される金色の「師範撃破 ★×N」勲章バッジ（`boss_medal_badge`）を追加（「心得」テキストは変更なし）。
-  - 設定ダイアログの「クリア」ボタン押下時にダイアログ・画面の状態を更新し、勲章バッジも即座にリセットされるように更新。
+  - `_formatBossWinsStars(int bossWins)` メソッドを追加し、`ScoreManager.bossWinsNotifier` を監視して通算成績テキストの右隣に `★` / `★★` / `★★★` / `★×N` を表示するように更新。
+  - 設定ダイアログの「通算スコア：クリア」押下時に画面状態も再描画し、`★` 表記が即座に消えるよう更新。
+  - メニューボタン一覧から「ボス戦(検証)」ボタン（`debug_boss_battle_button`）を削除（「心得」テキストは変更なし）。
 - `test/widget_test.dart`:
-  - ボス戦勝利時の勲章バッジ表示、敗北時の維持、および設定画面の「クリア」ボタンによるリセットを検証するテストを追加。
+  - タイトル画面から「ボス戦(検証)」ボタンが削除されていることの確認テストに更新。
+  - 師範撃破数に応じた `★`、`★★`、`★★★`、`★×4` の表示と、設定画面のスコアクリアによるリセット動作を検証するテストを追加。
 - `CURRENT_CONTEXT.md`:
-  - 師範撃破勲章バッジおよびスコアクリア連動リセットの仕様を追記。
+  - ファイル末尾の不要なログ混入を整理し、師範撃破数（★）の表記仕様および4ボタン構成を反映。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `lib/game/score/score_manager.dart`
-2. `lib/game/kendo_game.dart`
-3. `lib/screens/title_screen.dart`
-4. `test/widget_test.dart`
-5. `CURRENT_CONTEXT.md`
+1. `lib/screens/title_screen.dart`
+2. `test/widget_test.dart`
+3. `CURRENT_CONTEXT.md`
 
 ---
 
@@ -37,10 +31,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 2.0s)
+No issues found! (ran in 5.1s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:05 +34: All tests passed!
+00:09 +34: All tests passed!
 ```

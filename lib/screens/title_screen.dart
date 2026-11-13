@@ -26,6 +26,14 @@ class _TitleScreenState extends State<TitleScreen> {
     }
   }
 
+  String _formatBossWinsStars(int bossWins) {
+    if (bossWins <= 0) return '';
+    if (bossWins == 1) return ' ★';
+    if (bossWins == 2) return ' ★★';
+    if (bossWins == 3) return ' ★★★';
+    return ' ★×$bossWins';
+  }
+
   void _openGuideDialog() {
     showDialog(
       context: context,
@@ -485,6 +493,7 @@ class _TitleScreenState extends State<TitleScreen> {
                             style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                           ElevatedButton.icon(
+                            key: const ValueKey('clear_score_button'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.shade900,
                               foregroundColor: Colors.white,
@@ -493,6 +502,10 @@ class _TitleScreenState extends State<TitleScreen> {
                             ),
                             onPressed: () async {
                               await ScoreManager.clearScore();
+                              setDialogState(() {});
+                              if (mounted) {
+                                setState(() {});
+                              }
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -633,7 +646,7 @@ class _TitleScreenState extends State<TitleScreen> {
                           ),
                           SizedBox(height: isCompactHeight ? 12 : 20),
 
-                          // Persistent Score & Win Streak Badge (2連勝以上から表示、10の倍数連勝時はボス戦予告)
+                          // Persistent Score, Boss Victory Stars & Win Streak Badge
                           ValueListenableBuilder<int>(
                             valueListenable: ScoreManager.winsNotifier,
                             builder: (context, wins, _) {
@@ -643,26 +656,33 @@ class _TitleScreenState extends State<TitleScreen> {
                                   return ValueListenableBuilder<int>(
                                     valueListenable: ScoreManager.streakNotifier,
                                     builder: (context, streak, _) {
-                                      final isBossReady = ScoreManager.isBossMatchTriggered;
-                                      final streakText = isBossReady
-                                          ? ' ($streak連勝中！ 次戦：師範戦！)'
-                                          : (streak >= 2 ? ' ($streak連勝中！)' : '');
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.8),
-                                          border: Border.all(color: Colors.amber, width: 1.5),
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: Text(
-                                          '通算成績: $wins勝 $losses敗$streakText',
-                                          style: const TextStyle(
-                                            color: Colors.amberAccent,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 1.5,
-                                          ),
-                                        ),
+                                      return ValueListenableBuilder<int>(
+                                        valueListenable: ScoreManager.bossWinsNotifier,
+                                        builder: (context, bossWins, _) {
+                                          final bossStarsText = _formatBossWinsStars(bossWins);
+                                          final isBossReady = ScoreManager.isBossMatchTriggered;
+                                          final streakText = isBossReady
+                                              ? ' ($streak連勝中！ 次戦：師範戦！)'
+                                              : (streak >= 2 ? ' ($streak連勝中！)' : '');
+                                          return Container(
+                                            key: const ValueKey('score_summary_badge'),
+                                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(alpha: 0.8),
+                                              border: Border.all(color: Colors.amber, width: 1.5),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              '通算成績: $wins勝 $losses敗$bossStarsText$streakText',
+                                              style: const TextStyle(
+                                                color: Colors.amberAccent,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 1.5,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   );
@@ -672,7 +692,7 @@ class _TitleScreenState extends State<TitleScreen> {
                           ),
                           SizedBox(height: isCompactHeight ? 14 : 20),
 
-                          // Menu Choice Buttons: 横画面時は横並び、縦画面時は縦並び
+                          // Menu Choice Buttons: 横画面時は横並び、縦画面時は縦並び（4ボタン構成）
                           ValueListenableBuilder<int>(
                             valueListenable: ScoreManager.streakNotifier,
                             builder: (context, _, _) {
@@ -694,24 +714,6 @@ class _TitleScreenState extends State<TitleScreen> {
                                       MaterialPageRoute(
                                         builder: (_) => GamePage(
                                           isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                _buildMenuButton(
-                                  buttonKey: const ValueKey('debug_boss_battle_button'),
-                                  icon: Icons.whatshot,
-                                  label: 'ボス戦(検証)',
-                                  color: Colors.purple.shade900,
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => GamePage(
-                                          isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
-                                          forceBossBattle: true,
                                         ),
                                       ),
                                     );

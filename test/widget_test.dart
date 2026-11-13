@@ -19,7 +19,7 @@ void main() {
     SoundManager.isEnabled = false;
   });
 
-  testWidgets('Kewpie_cup title screen loads with menu options including 選手登録 and ボス戦(検証), and starts match',
+  testWidgets('Kewpie_cup title screen loads with 4 menu options (without ボス戦(検証)) and starts match',
       (WidgetTester tester) async {
     await ScoreManager.clearScore();
     await ScoreManager.setPlayerName('剣士');
@@ -27,9 +27,9 @@ void main() {
     await tester.pumpWidget(const KewpieCupApp());
     await tester.pump();
 
-    // Verify Title Screen menu buttons
+    // Verify Title Screen menu buttons (ボス戦(検証) must not exist)
     expect(find.text('試合開始'), findsOneWidget);
-    expect(find.text('ボス戦(検証)'), findsOneWidget);
+    expect(find.text('ボス戦(検証)'), findsNothing);
     expect(find.text('選手登録'), findsOneWidget);
     expect(find.text('心得'), findsOneWidget);
     expect(find.text('設定'), findsOneWidget);
@@ -58,23 +58,51 @@ void main() {
     expect(find.text('30'), findsOneWidget);
   });
 
-  testWidgets('Debug Boss Battle button starts Boss Battle immediately regardless of win streak',
+  testWidgets('Title screen displays ★, ★★, ★★★, ★×4 next to win-loss record for Boss victories and clears via settings',
       (WidgetTester tester) async {
     await ScoreManager.clearScore();
-    await ScoreManager.setPlayerName('剣士');
     await tester.pumpWidget(const KewpieCupApp());
     await tester.pump();
 
-    expect(ScoreManager.streakNotifier.value, equals(0));
+    // 0 boss wins -> no ★
+    expect(find.text('通算成績: 0勝 0敗'), findsOneWidget);
+    expect(find.textContaining('★'), findsNothing);
 
-    // Tap 'ボス戦(検証)' button
-    await tester.tap(find.byKey(const ValueKey('debug_boss_battle_button')));
+    // 1st boss victory -> ★
+    await ScoreManager.recordWin(isBossVictory: true);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('通算成績: 1勝 0敗 ★'), findsOneWidget);
 
-    // Verify HUD shows 2P 師範 (BOSS) and pre-round banner shows "師範戦！ はじめ！"
-    expect(find.text('2P 師範 (BOSS)'), findsOneWidget);
-    expect(find.text('師範戦！ はじめ！'), findsOneWidget);
+    // 2nd boss victory (streak = 2) -> ★★
+    await ScoreManager.recordWin(isBossVictory: true);
+    await tester.pump();
+    expect(find.text('通算成績: 2勝 0敗 ★★ (2連勝中！)'), findsOneWidget);
+
+    // 3rd boss victory (streak = 3) -> ★★★
+    await ScoreManager.recordWin(isBossVictory: true);
+    await tester.pump();
+    expect(find.text('通算成績: 3勝 0敗 ★★★ (3連勝中！)'), findsOneWidget);
+
+    // 4th boss victory (streak = 4) -> ★×4
+    await ScoreManager.recordWin(isBossVictory: true);
+    await tester.pump();
+    expect(find.text('通算成績: 4勝 0敗 ★×4 (4連勝中！)'), findsOneWidget);
+
+    // Loss resets streak to 0, but preserves ★×4
+    await ScoreManager.recordLoss();
+    await tester.pump();
+    expect(find.text('通算成績: 4勝 1敗 ★×4'), findsOneWidget);
+
+    // Clear score via Settings dialog -> resets ★ as well
+    await tester.tap(find.text('設定'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('clear_score_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('完了'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('通算成績: 0勝 0敗'), findsOneWidget);
+    expect(find.textContaining('★'), findsNothing);
   });
 
   testWidgets('Portrait screen does NOT show landscape warning overlay and allows playing directly in portrait without RotatedBox',
@@ -237,29 +265,34 @@ void main() {
       expect(KendoFighter.guardActiveDuration, equals(0.4));
     });
 
-    test('recordWin increments wins and streak, recordLoss increments losses and resets streak', () async {
+    test('recordWin increments wins, streak, and bossWins (when isBossVictory=true), and clearScore resets all', () async {
       await ScoreManager.clearScore();
       expect(ScoreManager.winsNotifier.value, equals(0));
       expect(ScoreManager.lossesNotifier.value, equals(0));
       expect(ScoreManager.streakNotifier.value, equals(0));
+      expect(ScoreManager.bossWinsNotifier.value, equals(0));
 
       await ScoreManager.recordWin();
       expect(ScoreManager.winsNotifier.value, equals(1));
       expect(ScoreManager.streakNotifier.value, equals(1));
+      expect(ScoreManager.bossWinsNotifier.value, equals(0));
 
-      await ScoreManager.recordWin();
+      await ScoreManager.recordWin(isBossVictory: true);
       expect(ScoreManager.winsNotifier.value, equals(2));
       expect(ScoreManager.streakNotifier.value, equals(2));
+      expect(ScoreManager.bossWinsNotifier.value, equals(1));
 
       await ScoreManager.recordLoss();
       expect(ScoreManager.winsNotifier.value, equals(2));
       expect(ScoreManager.lossesNotifier.value, equals(1));
       expect(ScoreManager.streakNotifier.value, equals(0));
+      expect(ScoreManager.bossWinsNotifier.value, equals(1)); // Star count persists across losses
 
       await ScoreManager.clearScore();
       expect(ScoreManager.winsNotifier.value, equals(0));
       expect(ScoreManager.lossesNotifier.value, equals(0));
       expect(ScoreManager.streakNotifier.value, equals(0));
+      expect(ScoreManager.bossWinsNotifier.value, equals(0)); // Reset on clearScore
     });
   });
 
@@ -695,13 +728,14 @@ void main() {
     });
   });
 
-  group('Boss Battle (10-win streak 師範戦: 1.2x scale, 1-2 steps Chudan -> smooth Jodan, 50% damage, and forceBossBattle) tests', () {
-    test('10-win streak triggers Boss Battle with 1.2x scale (3.6), Chudan for first 1-2 steps then smooth Jodan transition, and 師範撃破！ on victory', () async {
+  group('Boss Battle (10-win streak 師範戦: 1.2x scale, 1-2 steps Chudan -> smooth Jodan, 50% damage, Medal recording, and forceBossBattle) tests', () {
+    test('10-win streak triggers Boss Battle with 1.2x scale (3.6), Chudan for first 1-2 steps then smooth Jodan transition, and increments bossWinsNotifier on victory', () async {
       await ScoreManager.clearScore();
       for (int i = 0; i < 10; i++) {
         await ScoreManager.recordWin();
       }
       expect(ScoreManager.streakNotifier.value, equals(10));
+      expect(ScoreManager.bossWinsNotifier.value, equals(0));
       expect(ScoreManager.isBossMatchTriggered, isTrue);
 
       final game = KendoGame();
@@ -759,7 +793,7 @@ void main() {
       game.p1.hitStunTimer = 0.0;
       game.p2.hitStunTimer = 0.0;
 
-      // Simulate P1 winning 2nd round against Boss -> "師範撃破！ あなたの勝ち" and streak becomes 11 (next match returns to normal)
+      // Simulate P1 winning 2nd round against Boss -> "師範撃破！ あなたの勝ち", bossWinsNotifier becomes 1, and streak becomes 11
       game.p1.winCount = 1;
       game.p2.health = 0.0;
       game.p2.cpuVulnerableTimer = 1.1;
@@ -769,6 +803,7 @@ void main() {
 
       expect(game.gameStateNotifier.value, equals(KendoGameState.matchOver));
       expect(ScoreManager.streakNotifier.value, equals(11));
+      expect(ScoreManager.bossWinsNotifier.value, equals(1));
       expect(ScoreManager.isBossMatchTriggered, isFalse);
 
       // Advance past matchOver announcement (0.06s hitStop + 2.3s)
@@ -784,6 +819,7 @@ void main() {
       expect(game.p2.name, isNot(equals('師範')));
 
       await ScoreManager.clearScore();
+      expect(ScoreManager.bossWinsNotifier.value, equals(0));
     });
 
     test('Boss attack deals 50.0 damage (50% health) per hit and scores Ippon in 2 hits', () async {
