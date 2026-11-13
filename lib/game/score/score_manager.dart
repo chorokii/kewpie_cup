@@ -10,6 +10,7 @@ class ScoreManager {
   static final ValueNotifier<int> winsNotifier = ValueNotifier<int>(0);
   static final ValueNotifier<int> lossesNotifier = ValueNotifier<int>(0);
   static final ValueNotifier<int> streakNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<int> bossWinsNotifier = ValueNotifier<int>(0);
   static final ValueNotifier<bool> soundEnabledNotifier = ValueNotifier<bool>(false);
   static final ValueNotifier<bool> debugEnabledNotifier = ValueNotifier<bool>(false);
 
@@ -35,6 +36,7 @@ class ScoreManager {
   static const String _keyWins = 'kewpie_wins';
   static const String _keyLosses = 'kewpie_losses';
   static const String _keyStreak = 'kewpie_streak';
+  static const String _keyBossWins = 'kewpie_boss_wins';
   static const String _keyGuardDuration = 'kewpie_guard_duration';
   static const String _keySoundEnabled = 'kewpie_sound_enabled';
   static const String _keyDebugEnabled = 'kewpie_debug_enabled';
@@ -51,6 +53,7 @@ class ScoreManager {
       winsNotifier.value = prefs.getInt(_keyWins) ?? 0;
       lossesNotifier.value = prefs.getInt(_keyLosses) ?? 0;
       streakNotifier.value = prefs.getInt(_keyStreak) ?? 0;
+      bossWinsNotifier.value = prefs.getInt(_keyBossWins) ?? 0;
 
       final savedDuration = prefs.getDouble(_keyGuardDuration) ?? 0.4;
       KendoFighter.guardActiveDuration = savedDuration.clamp(0.2, 1.0);
@@ -196,9 +199,12 @@ class ScoreManager {
     }
   }
 
-  static Future<void> recordWin() async {
+  static Future<void> recordWin({bool isBossVictory = false}) async {
     winsNotifier.value += 1;
     streakNotifier.value += 1;
+    if (isBossVictory) {
+      bossWinsNotifier.value += 1;
+    }
     await _save();
   }
 
@@ -212,11 +218,13 @@ class ScoreManager {
     winsNotifier.value = 0;
     lossesNotifier.value = 0;
     streakNotifier.value = 0;
+    bossWinsNotifier.value = 0;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_keyWins);
       await prefs.remove(_keyLosses);
       await prefs.remove(_keyStreak);
+      await prefs.remove(_keyBossWins);
     } catch (e) {
       debugPrint('ScoreManager clear warning: $e');
     }
@@ -228,6 +236,7 @@ class ScoreManager {
       await prefs.setInt(_keyWins, winsNotifier.value);
       await prefs.setInt(_keyLosses, lossesNotifier.value);
       await prefs.setInt(_keyStreak, streakNotifier.value);
+      await prefs.setInt(_keyBossWins, bossWinsNotifier.value);
     } catch (e) {
       debugPrint('ScoreManager save warning: $e');
     }

@@ -728,9 +728,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
       matchOverResultTimer = 0.0;
 
       if (attacker.isPlayer) {
+        final isBossWin = isBossBattleNotifier.value;
         pendingMatchResultText =
-            isBossBattleNotifier.value ? '師範撃破！ あなたの勝ち' : 'あなたの勝ち';
-        ScoreManager.recordWin();
+            isBossWin ? '師範撃破！ あなたの勝ち' : 'あなたの勝ち';
+        ScoreManager.recordWin(isBossVictory: isBossWin);
       } else {
         pendingMatchResultText = 'あなたの負け';
         ScoreManager.recordLoss();
