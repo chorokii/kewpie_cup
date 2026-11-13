@@ -2,8 +2,8 @@
 
 ## 0. プロジェクト前提条件
 - **プロジェクト名**: `Kewpie_cup` (対CPU 剣道2D格闘バトルゲーム)
-- **フレームワーク**: Flutter (Stable) + Flame 2D Game Engine (v1.x)
-- **対象プラットフォーム**: Web (PWA対応 / GitHub Pages デプロイ対応), Android, Windows
+- **フレームワーク**: Flutter (Stable, SDK制約 `^3.5.0`) + Flame 2D Game Engine (v1.x)
+- **対象プラットフォーム**: Web (PWA対応 / iOS Safari・Android Chrome対応 / GitHub Pages デプロイ対応), Android, Windows
 - **画面の向き（オリエンテーション）規約**:
   - 横位置推奨オーバーレイ画面（旧 `LandscapeWrapper`）および `RotatedBox` による90度強制回転は行わない。
   - アプリ全体で `SystemChrome.setPreferredOrientations(DeviceOrientation.values)`（全方向許可）とし、タイトル画面（`TitleScreen`）・「選手登録」ダイアログ・対戦画面（`GamePage`）のすべてにおいて、縦持ち・横持ちのどちらでもそのままの画面の向きで表示・操作可能とする（縦持ちでの対戦時は `FixedResolutionViewport(1280, 720)` により画面幅に合わせて縮小表示される）。
@@ -41,9 +41,6 @@
    - 間合い内で攻撃を入力した場合、2段階の踏み込み打突（`attackDuration = 0.45s`）を行う。
    - 平常時（`cpuVulnerableTimer <= 0`）のプレイヤー打突はCPUに自動防御される。**CPUが体勢崩れ（反撃チャンス）の間のみ打突ヒット**し、ダメージ **`34.0`（3回ヒットで1本: `100.0 -> 66.0 -> 32.0 -> 0.0`）**、衝撃波エフェクト、画面揺れ、打撃音（`hit.mp3`）、および背後へのすり抜け（Pass-Through）＋同時振り返り（Turnaround）が発生する。
    - 通常CPUの打突ダメージは `34.0`（3回ヒットで1本）だが、**ボス（師範）の打突ダメージは `50.0`（1回で50%奪い、2回ヒットで1本）** となる。
-4. **すれ違い時のCPU攻撃（すれ違いカウンター）と連発防止制御**:
-   - プレイヤーのすれ違い移動中（`p1.isPassingThrough`）または振り返り中（`p1.isTurningAround`）におけるCPUの攻撃開始は許容する。
-   - ただし、連続発生（連発）を防ぐため、1度すれ違い・振り返り中にCPUが攻撃を開始したらクールダウン（`isPassThroughAttackOnCooldown = true`）を有効化し、通常の正対状態でのジャスト防御成功または次ラウンド開始まで、次のすれ違い中の攻撃開始を抑制する。
 
 ### C. 鍔迫り合い・離脱・突き飛ばしルール
 1. **鍔迫り合い (`isTsubazeriai`)**:
@@ -80,14 +77,18 @@
    - 対戦HUDの2P表示が `2P 師範 (BOSS)`（アンバー色）に切り替わる。
    - 勝利すると師範撃破数が1加算され、`11連勝` となり次戦は通常のCPU戦に自動復帰する。
 
-### E. UI / HUD・操作系・音響 (`SoundManager`)
+### E. UI / HUD・操作系・音響 (`SoundManager`)・Web / PWA 設定
 1. **タイトル画面 (`TitleScreen`)**:
    - メニューボタンは「試合開始（またはボス戦開始）」「選手登録」「心得」「設定」の4ボタン構成とし、横画面時は `Wrap` で横並び、縦画面時は `Column` で縦並びに配置する。
    - ※ `lib/screens/title_screen.dart` 内の「心得」テキストはユーザーが手動管理しているため、自動上書きを行わないこと。
-2. **対戦HUD (`FightingHudOverlay`)**:
+2. **対戦HUD (`FightingHudOverlay`) と一時停止操作**:
    - 1P・2PのHPゲージはストリートファイター2方式（画面外側から中央タイマー側へ向かって減る：`Align` + `FractionallySizedBox`）で描画される。
+   - 上部中央のカウントダウンタイマー枠（`pause_timer_button`、ポーズアイコン併記）をタップすると一時停止（ポーズ）が切り替わる。
    - 画面左右下の半透明円インジケータ（赤円＝攻撃、青円＝防御）が敵との左右位置関係（`isEnemyOnRightNotifier`）に応じて自動で入れ替わる。
-   - タップ操作は `LayoutBuilder` のローカル幅（`constraints.maxWidth`）と `event.localPosition.dx` に基づいて画面の左右半分を判定する。
+   - タップ操作は `LayoutBuilder` のローカル幅（`constraints.maxWidth`）と `event.localPosition.dx` に基づいて画面の左右半分を判定する。ただし上部HUD領域（`dy < 80.0`）やポーズ中のタップでは攻撃・防御を発動しない。
 3. **効果音 (`SoundManager`)**:
    - 初期値は `isEnabled = false`（切）。設定画面での変更内容は `ScoreManager.setSoundEnabled` を通じて `SharedPreferences` に保存され、次回起動時にも保持される。
    - `assets/audio/sfx/guard.mp3`（防御音）および `assets/audio/sfx/hit.mp3`（打撃音）の2種を `audioplayers` の `AssetSource` で再生する。
+   - `KendoGame.onRemove()` 時は `SoundManager.stopAll()` で再生停止のみを行い、`AudioPlayer` インスタンス自体は保持して画面再遷移時の再初期化負荷を抑える。
+4. **モバイルWeb / iOS Safari タッチ操作干渉防止 (`web/index.html`)**:
+   - `html, body` に `touch-action: none; overscroll-behavior: none; -webkit-user-select: none; -webkit-touch-callout: none; position: fixed;` を指定し、iPhone（iOS Safari / PWA）でのダブルタップ拡大・長押しメニュー・バウンススクロールの干渉を抑制する。
