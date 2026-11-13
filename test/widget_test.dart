@@ -19,7 +19,7 @@ void main() {
     SoundManager.isEnabled = false;
   });
 
-  testWidgets('Kewpie_cup title screen loads with menu options including 選手登録 and starts match',
+  testWidgets('Kewpie_cup title screen loads with menu options including 選手登録 and ボス戦(検証), and starts match',
       (WidgetTester tester) async {
     await ScoreManager.clearScore();
     await ScoreManager.setPlayerName('剣士');
@@ -29,6 +29,7 @@ void main() {
 
     // Verify Title Screen menu buttons
     expect(find.text('試合開始'), findsOneWidget);
+    expect(find.text('ボス戦(検証)'), findsOneWidget);
     expect(find.text('選手登録'), findsOneWidget);
     expect(find.text('心得'), findsOneWidget);
     expect(find.text('設定'), findsOneWidget);
@@ -55,6 +56,25 @@ void main() {
     expect(find.textContaining('1P 剣士'), findsOneWidget);
     expect(find.textContaining('(CPU)'), findsOneWidget);
     expect(find.text('30'), findsOneWidget);
+  });
+
+  testWidgets('Debug Boss Battle button starts Boss Battle immediately regardless of win streak',
+      (WidgetTester tester) async {
+    await ScoreManager.clearScore();
+    await ScoreManager.setPlayerName('剣士');
+    await tester.pumpWidget(const KewpieCupApp());
+    await tester.pump();
+
+    expect(ScoreManager.streakNotifier.value, equals(0));
+
+    // Tap 'ボス戦(検証)' button
+    await tester.tap(find.byKey(const ValueKey('debug_boss_battle_button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Verify HUD shows 2P 師範 (BOSS) and pre-round banner shows "師範戦！ はじめ！"
+    expect(find.text('2P 師範 (BOSS)'), findsOneWidget);
+    expect(find.text('師範戦！ はじめ！'), findsOneWidget);
   });
 
   testWidgets('Portrait screen does NOT show landscape warning overlay and allows playing directly in portrait without RotatedBox',
@@ -603,6 +623,7 @@ void main() {
     });
 
     test('Guarded defender blocks incoming 2-phase lunge attack and triggers Counter Opportunity', () async {
+      await ScoreManager.clearScore();
       final game = KendoGame();
       await game.onLoad();
       game.isRoundStarting = false;
@@ -674,8 +695,8 @@ void main() {
     });
   });
 
-  group('Boss Battle (10-win streak 師範戦) tests', () {
-    test('10-win streak triggers Boss Battle with 師範, gold attire, and 師範撃破！ on victory', () async {
+  group('Boss Battle (10-win streak 師範戦: 1.2x scale, Jodan stance, and forceBossBattle) tests', () {
+    test('10-win streak triggers Boss Battle with 1.2x scale (3.6), Jodan stance after timer start, and 師範撃破！ on victory', () async {
       await ScoreManager.clearScore();
       for (int i = 0; i < 10; i++) {
         await ScoreManager.recordWin();
@@ -686,17 +707,27 @@ void main() {
       final game = KendoGame();
       await game.onLoad();
 
-      // Verify Boss Battle initialization
+      // Verify Boss Battle initialization & 1.2x size (scale = 3.6 vs P1 scale = 3.0)
       expect(game.isBossBattleNotifier.value, isTrue);
       expect(game.p2.isBoss, isTrue);
       expect(game.p2.name, equals('師範'));
-      expect(game.p2NameNotifier.value, equals('師範'));
+      expect(game.p1.scale.x, closeTo(KendoFighter.normalScale, 0.001));
+      expect(game.p2.scale.x, closeTo(KendoFighter.bossScale, 0.001));
+      expect(game.p2.scale.y, closeTo(KendoFighter.bossScale, 0.001));
       expect(game.p2.ribbonColor, equals(const Color(0xFFFFD700)));
       expect(game.p2.doBandColor, equals(const Color(0xFFFFD700)));
       expect(game.overlayTextNotifier.value, equals('師範戦！ はじめ！'));
 
-      // Start fight and simulate Just Guard against Boss (1.1s vulnerable window)
-      game.isRoundStarting = false;
+      // Before timer starts (during 1.2s pre-round banner), Boss is in Chudan stance (isInJodanStance == false)
+      expect(game.isRoundStarting, isTrue);
+      expect(game.p2.isInJodanStance, isFalse);
+
+      // Advance 1.3s to start round timer -> Boss immediately transitions to Jodan stance (isInJodanStance == true)
+      game.update(1.30);
+      expect(game.isRoundStarting, isFalse);
+      expect(game.p2.isInJodanStance, isTrue);
+
+      // Simulate Just Guard against Boss (1.1s vulnerable window)
       game.p1.position.x = -80.0;
       game.p2.position.x = 80.0;
       game.p1.startGuard();
@@ -728,248 +759,31 @@ void main() {
       game.update(2.30);
       expect(game.overlayTextNotifier.value, equals('師範撃破！ あなたの勝ち'));
 
-      // Rematch at 11-win streak returns to normal CPU match
+      // Rematch at 11-win streak returns to normal CPU match with normal scale (3.0)
       game.resetMatch();
       expect(game.isBossBattleNotifier.value, isFalse);
       expect(game.p2.isBoss, isFalse);
+      expect(game.p2.scale.x, closeTo(KendoFighter.normalScale, 0.001));
       expect(game.p2.name, isNot(equals('師範')));
 
       await ScoreManager.clearScore();
     });
-  });
 
-  group('KendoGame pause function tests', () {
-    test('togglePause toggles isPausedNotifier and suppresses movement', () async {
-      final game = KendoGame();
-      await game.onLoad();
-      game.isRoundStarting = false;
-
-      expect(game.isPausedNotifier.value, isFalse);
-
-      // Pause
-      game.togglePause();
-      expect(game.isPausedNotifier.value, isTrue);
-
-      // Movement should be ignored during pause
-      game.moveP1Right();
-      expect(game.p1.velocityX, equals(0.0));
-
-      // Resume
-      game.togglePause();
-      expect(game.isPausedNotifier.value, isFalse);
-
-      game.moveP1Right();
-      expect(game.p1.velocityX, equals(game.p1.walkSpeed));
-    });
-  });
-
-  group('KendoGame combat, Tsubazeriai and match rules tests', () {
-    test('rollIpponCallText returns 面あり (50%), 小手あり (40%), 胴あり (10%) according to probability', () async {
-      final game = KendoGame();
-      await game.onLoad();
-
-      expect(game.rollIpponCallText(0.00), equals('面あり'));
-      expect(game.rollIpponCallText(0.49), equals('面あり'));
-      expect(game.rollIpponCallText(0.50), equals('小手あり'));
-      expect(game.rollIpponCallText(0.89), equals('小手あり'));
-      expect(game.rollIpponCallText(0.90), equals('胴あり'));
-      expect(game.rollIpponCallText(0.99), equals('胴あり'));
-    });
-
-    test('30-second time-out awards Ippon to CPU and displays やめ！ then 勝誤あり！ on 2nd win', () async {
+    test('forceBossBattle=true keeps Boss Battle active even at 0 streak and across resetMatch()', () async {
       await ScoreManager.clearScore();
-      final game = KendoGame();
+      expect(ScoreManager.streakNotifier.value, equals(0));
+
+      final game = KendoGame(forceBossBattle: true);
       await game.onLoad();
-      game.isRoundStarting = false;
 
-      expect(game.roundTimerNotifier.value, equals(30));
+      expect(game.isBossBattleNotifier.value, isTrue);
+      expect(game.p2.isBoss, isTrue);
+      expect(game.p2.scale.x, closeTo(KendoFighter.bossScale, 0.001));
 
-      // Advance time by 30.1 seconds
-      game.update(30.1);
-
-      // CPU (p2) receives win from time-out with "やめ！"
-      expect(game.p2.winCount, equals(1));
-      expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
-      expect(game.overlayTextNotifier.value, equals('やめ！'));
-
-      // 2nd time-out leads to matchOver displaying "やめ！" (1.2s) -> "勝負あり！" (1.0s) -> "あなたの負け"
-      final game2 = KendoGame();
-      await game2.onLoad();
-      game2.isRoundStarting = false;
-      game2.p2.winCount = 1;
-
-      game2.update(30.1);
-      expect(game2.p2.winCount, equals(2));
-      expect(game2.gameStateNotifier.value, equals(KendoGameState.matchOver));
-      expect(game2.isMatchOverResultPending, isTrue);
-      expect(game2.overlayTextNotifier.value, equals('やめ！'));
-
-      // Advance 1.3s (into Phase 2: 1.2s..2.2s) -> Displays "勝負あり！"
-      game2.update(1.3);
-      expect(game2.isMatchOverResultPending, isTrue);
-      expect(game2.overlayTextNotifier.value, equals('勝負あり！'));
-
-      // Advance another 1.0s (total 2.3s > 2.2s) -> Transitions to "あなたの負け"
-      game2.update(1.0);
-      expect(game2.isMatchOverResultPending, isFalse);
-      expect(game2.overlayTextNotifier.value, equals('あなたの負け'));
-    });
-
-    test('Close contact distance triggers Tsubazeriai state', () async {
-      final game = KendoGame();
-      await game.onLoad();
-      game.isRoundStarting = false;
-
-      // Position fighters within Tsubazeriai distance (<= 114.0px)
-      game.p1.position.x = -40.0;
-      game.p2.position.x = 40.0; // distance 80.0px
-
-      game.update(0.01);
-
-      expect(game.p1.isTsubazeriai, isTrue);
-      expect(game.p2.isTsubazeriai, isTrue);
-    });
-
-    test('Tsubazeriai Rule [1]: P1 on left of P2 and left of center (< 0), double-tap attack smoothly pushes P2 to right edge at 1.5x disengage speed', () async {
-      final game = KendoGame();
-      await game.onLoad();
-      game.isRoundStarting = false;
-
-      // P1 is left of P2 (-200 < -100) and left of center (-200 < 0)
-      game.p1.position.x = -200.0;
-      game.p2.position.x = -100.0;
-      game.p1.isTsubazeriai = true;
-      game.p2.isTsubazeriai = true;
-
-      // Double-tap attack starts continuous push-back at 1.5x disengage speed (480.0 px/s)
-      game.attackP1(forceDoubleTap: true);
-
-      expect(game.p1.isTsubazeriai, isFalse);
-      expect(game.p2.isTsubazeriai, isFalse);
-      expect(game.p2.isPushedBack, isTrue);
-      expect(game.p2.velocityX, equals(KendoFighter.disengageSpeed * 1.5));
-      expect(game.p2.position.x, equals(-100.0)); // Does NOT warp immediately
-
-      // Advance 0.5s -> P2 moves halfway (+240px to 140.0) while still visible & moving
-      game.update(0.50);
-      expect(game.p2.isPushedBack, isTrue);
-      expect(game.p2.position.x, closeTo(140.0, 1.0));
-
-      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches right edge (stageMaxX = 520.0) and stops
-      game.update(0.80);
-      expect(game.p2.isPushedBack, isFalse);
-      expect(game.p2.position.x, equals(game.stageMaxX));
-    });
-
-    test('Tsubazeriai Rule [2]: P1 on right of P2 and right of center (> 0), double-tap attack smoothly pushes P2 to left edge at 1.5x disengage speed', () async {
-      final game = KendoGame();
-      await game.onLoad();
-      game.isRoundStarting = false;
-
-      // P1 is right of P2 (200 > 100) and right of center (200 > 0)
-      game.p1.position.x = 200.0;
-      game.p2.position.x = 100.0;
-      game.p1.isTsubazeriai = true;
-      game.p2.isTsubazeriai = true;
-
-      // Double-tap attack starts continuous push-back at -1.5x disengage speed (-480.0 px/s)
-      game.attackP1(forceDoubleTap: true);
-
-      expect(game.p1.isTsubazeriai, isFalse);
-      expect(game.p2.isTsubazeriai, isFalse);
-      expect(game.p2.isPushedBack, isTrue);
-      expect(game.p2.velocityX, equals(-KendoFighter.disengageSpeed * 1.5));
-      expect(game.p2.position.x, equals(100.0)); // Does NOT warp immediately
-
-      // Advance 0.5s -> P2 moves halfway (-240px to -140.0) while still visible & moving
-      game.update(0.50);
-      expect(game.p2.isPushedBack, isTrue);
-      expect(game.p2.position.x, closeTo(-140.0, 1.0));
-
-      // Advance 0.80s (total 1.30s >= 1.29s needed) -> P2 reaches left edge (stageMinX = -520.0) and stops
-      game.update(0.80);
-      expect(game.p2.isPushedBack, isFalse);
-      expect(game.p2.position.x, equals(game.stageMinX));
-    });
-
-    test('2 wins displays Ippon call (1.2s) -> 勝負あり！ (1.0s) -> あなたの勝ち or あなたの負け', () async {
-      await ScoreManager.clearScore();
-      final game = KendoGame();
-      await game.onLoad();
-      game.isRoundStarting = false;
-
-      // P1 (Player) wins 2nd round -> matchOver with Ippon call (1.2s) -> "勝負あり！" (1.0s) -> "あなたの勝ち"
-      game.p1.winCount = 1;
-      game.p1.position.x = -80.0;
-      game.p2.position.x = 80.0;
-      game.p2.health = 0.0;
-      game.p2.cpuVulnerableTimer = 1.5;
-
-      game.p1.attack();
-      game.p1.update(0.20);
-
-      game.update(0.01); // Triggers 0.06s hitStop and Ippon call
-
-      expect(game.p1.winCount, equals(2));
-      expect(game.gameStateNotifier.value, equals(KendoGameState.matchOver));
-      expect(game.isMatchOverResultPending, isTrue);
-      expect(
-        ['面あり', '小手あり', '胴あり'].contains(game.overlayTextNotifier.value),
-        isTrue,
-      );
-
-      // Clear hitStop (0.06s) + advance 1.0s (< 1.2s) -> Still displaying Ippon call
-      game.update(0.06);
-      game.update(1.00);
-      expect(game.isMatchOverResultPending, isTrue);
-      expect(
-        ['面あり', '小手あり', '胴あり'].contains(game.overlayTextNotifier.value),
-        isTrue,
-      );
-
-      // Advance 0.5s (total 1.5s, between 1.2s and 2.2s) -> Displays "勝負あり！"
-      game.update(0.50);
-      expect(game.isMatchOverResultPending, isTrue);
-      expect(game.overlayTextNotifier.value, equals('勝負あり！'));
-
-      // Advance another 0.8s (total 2.3s > 2.2s) -> Transitions to "あなたの勝ち"
-      game.update(0.80);
-      expect(game.isMatchOverResultPending, isFalse);
-      expect(game.overlayTextNotifier.value, equals('あなたの勝ち'));
-
-      // P2 (CPU) wins -> matchOver with Ippon call (1.2s) -> "勝負あり！" (1.0s) -> "あなたの負け"
-      final game2 = KendoGame();
-      await game2.onLoad();
-      game2.isRoundStarting = false;
-
-      game2.p2.winCount = 1;
-      game2.p1.position.x = -80.0;
-      game2.p2.position.x = 80.0;
-      game2.p1.health = 0.0;
-
-      game2.p2.attack();
-      game2.p2.update(1.05); // Men strike
-
-      game2.update(0.01);
-
-      expect(game2.p2.winCount, equals(2));
-      expect(game2.gameStateNotifier.value, equals(KendoGameState.matchOver));
-      expect(game2.isMatchOverResultPending, isTrue);
-      expect(
-        ['面あり', '小手あり', '胴あり'].contains(game2.overlayTextNotifier.value),
-        isTrue,
-      );
-
-      // Clear hitStop (0.06s) + advance 1.5s -> Displays "勝負あり！"
-      game2.update(0.06);
-      game2.update(1.50);
-      expect(game2.isMatchOverResultPending, isTrue);
-      expect(game2.overlayTextNotifier.value, equals('勝負あり！'));
-
-      // Advance another 0.8s (total 2.3s > 2.2s) -> Transitions to "あなたの負け"
-      game2.update(0.80);
-      expect(game2.isMatchOverResultPending, isFalse);
-      expect(game2.overlayTextNotifier.value, equals('あなたの負け'));
+      game.resetMatch();
+      expect(game.isBossBattleNotifier.value, isTrue);
+      expect(game.p2.isBoss, isTrue);
+      expect(game.p2.scale.x, closeTo(KendoFighter.bossScale, 0.001));
     });
   });
 

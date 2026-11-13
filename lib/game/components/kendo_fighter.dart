@@ -23,10 +23,13 @@ class KendoFighter extends PositionComponent {
     size = Vector2(60, 100);
     anchor = Anchor.topCenter;
     position = Vector2(startX, groundY);
-    scale = Vector2.all(3.0); // 3倍拡大
+    scale = Vector2.all(isBoss ? bossScale : normalScale);
     facingDirection = startX < 0 ? FacingDirection.right : FacingDirection.left;
     priority = 10; // Foreground layer (in front of background stage)
   }
+
+  static const double normalScale = 3.0; // 通常サイズ（3倍拡大）
+  static const double bossScale = 3.6; // ボスサイズ（通常の1.2倍 = 3.6倍拡大）
 
   static const double zekkenWidth = 12.0;
   static const double zekkenHeight = 21.0; // 従来(14.0)の1.5倍
@@ -35,6 +38,7 @@ class KendoFighter extends PositionComponent {
   String name;
   final bool isPlayer;
   bool isBoss;
+  bool isInJodanStance = false; // ボス専用：試合開始後の上段の構えフラグ
   Color keikogiColor;
   Color ribbonColor;
   Color hakamaColor;
@@ -104,11 +108,13 @@ class KendoFighter extends PositionComponent {
 
   double hitStunTimer = 0.0;
 
-  /// ボス（師範）モードと通常CPUモードの外観・能力パラメータを切り替える
+  /// ボス（師範）モードと通常CPUモードの外観・サイズ・能力パラメータを切り替える
   void configureAsBoss(bool bossMode, {required String normalName}) {
     isBoss = bossMode;
+    isInJodanStance = false; // 試合開始前のコール中は常に中段の構えから開始
     if (bossMode) {
       name = ScoreManager.bossName;
+      scale = Vector2.all(bossScale); // 1.2倍サイズ (3.6)
       keikogiColor = const Color(0xFF111111); // 黒稽古着
       ribbonColor = const Color(0xFFFFD700); // 金目印
       hakamaColor = const Color(0xFF0A0A0A); // 黒袴
@@ -116,6 +122,7 @@ class KendoFighter extends PositionComponent {
       walkSpeed = 200.0;
     } else {
       name = normalName;
+      scale = Vector2.all(normalScale); // 通常サイズ (3.0)
       keikogiColor = const Color(0xFF1A237E); // 紺稽古着
       ribbonColor = const Color(0xFFFFFFFF); // 白目印
       hakamaColor = const Color(0xFF212121); // 黒袴
@@ -176,6 +183,7 @@ class KendoFighter extends PositionComponent {
     isTurningAround = false;
     turnaroundTimer = 0.0;
     cpuVulnerableTimer = 0.0;
+    isInJodanStance = false;
   }
 
   void triggerJustGuardEffect() {
@@ -333,6 +341,7 @@ class KendoFighter extends PositionComponent {
     justGuardEffectTimer = 0.0;
     hitImpactEffectTimer = 0.0;
     currentBlinkDuration = 0.5;
+    isInJodanStance = false;
   }
 
   void resetMatch({required double startX}) {
@@ -581,7 +590,11 @@ class KendoFighter extends PositionComponent {
     // Stepping bounce: feet step upward (-2px max) during sliding walk, planted at Y = 0
     final stepBounce = isMoving ? -(math.sin(walkAnimationTimer).abs() * 2.0) : 0.0;
 
+    // 通常の構え位置（中段の構え：胸元 X = 8, Y = -60）
+    double kotePivotX = 8.0;
+    double kotePivotY = -60.0 + stepBounce;
     double shinaiAngle = 0.0;
+
     if (isTurningAround) {
       if (turnaroundTimer < 0.16) {
         shinaiAngle = -1.2;
@@ -608,11 +621,27 @@ class KendoFighter extends PositionComponent {
         // CPU Attack Posture: Phase 1 Windup (High) -> Phase 2 Men Strike (Down)
         final totalWindup = currentBlinkDuration + postBlinkHoldDuration;
         if (attackTimer < totalWindup) {
-          shinaiAngle = -1.3;
+          if (isBoss && isInJodanStance) {
+            // ボス上段の構えからの攻撃予兆：さらに頭上後方へ深く引き絞る
+            kotePivotX = -2.0;
+            kotePivotY = -88.0 + stepBounce;
+            shinaiAngle = -1.45;
+          } else {
+            shinaiAngle = -1.3;
+          }
         } else {
           shinaiAngle = 0.6;
         }
       }
+    } else if (!isPlayer && cpuVulnerableTimer > 0) {
+      // 「スキあり」（ジャスト防御された直後の体勢崩れ）時は上段が崩れて竹刀が下がる
+      shinaiAngle = 0.25;
+    } else if (isBoss && isInJodanStance) {
+      // ボス（師範）の上段の構え（タイマースタート後の待機・移動時：両手を頭上に掲げる）
+      kotePivotX = 2.0;
+      kotePivotY = -84.0 + stepBounce;
+      final moveSway = isMoving ? math.sin(walkAnimationTimer * 0.8) * 0.04 : 0.0;
+      shinaiAngle = -1.05 + moveSway;
     } else if (isMoving) {
       shinaiAngle = math.sin(walkAnimationTimer * 0.8) * 0.05;
     }
@@ -904,9 +933,9 @@ class KendoFighter extends PositionComponent {
       ribbonPaint,
     );
 
-    // 5. Shinai
+    // 5. Shinai (中段の構え時は胸元 kotePivot=(8, -60)、ボス上段の構え時は頭上 kotePivot=(2, -84) 等に移動)
     canvas.save();
-    canvas.translate(8, -60 + stepBounce);
+    canvas.translate(kotePivotX, kotePivotY);
     canvas.rotate(shinaiAngle);
 
     // Hands

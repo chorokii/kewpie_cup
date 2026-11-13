@@ -682,101 +682,82 @@ class _TitleScreenState extends State<TitleScreen> {
                                   ? Colors.deepOrange.shade900
                                   : Colors.red.shade900;
 
+                              final menuButtons = <Widget>[
+                                _buildMenuButton(
+                                  icon: Icons.play_arrow,
+                                  label: startLabel,
+                                  color: startColor,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => GamePage(
+                                          isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                _buildMenuButton(
+                                  buttonKey: const ValueKey('debug_boss_battle_button'),
+                                  icon: Icons.whatshot,
+                                  label: 'ボス戦(検証)',
+                                  color: Colors.purple.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => GamePage(
+                                          isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
+                                          forceBossBattle: true,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                _buildMenuButton(
+                                  icon: Icons.badge,
+                                  label: '選手登録',
+                                  color: Colors.indigo.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openPlayerRegistrationDialog,
+                                ),
+                                _buildMenuButton(
+                                  icon: Icons.auto_stories,
+                                  label: '心得',
+                                  color: Colors.amber.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openGuideDialog,
+                                ),
+                                _buildMenuButton(
+                                  icon: Icons.settings,
+                                  label: '設定',
+                                  color: Colors.blueGrey.shade900,
+                                  width: buttonWidth,
+                                  height: buttonHeight,
+                                  onPressed: _openSettingsDialog,
+                                ),
+                              ];
+
                               if (isLandscape) {
                                 return Wrap(
                                   spacing: 12,
                                   runSpacing: 12,
                                   alignment: WrapAlignment.center,
-                                  children: [
-                                    _buildMenuButton(
-                                      icon: Icons.play_arrow,
-                                      label: startLabel,
-                                      color: startColor,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => GamePage(
-                                              isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildMenuButton(
-                                      icon: Icons.badge,
-                                      label: '選手登録',
-                                      color: Colors.indigo.shade900,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: _openPlayerRegistrationDialog,
-                                    ),
-                                    _buildMenuButton(
-                                      icon: Icons.auto_stories,
-                                      label: '心得',
-                                      color: Colors.amber.shade900,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: _openGuideDialog,
-                                    ),
-                                    _buildMenuButton(
-                                      icon: Icons.settings,
-                                      label: '設定',
-                                      color: Colors.blueGrey.shade900,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: _openSettingsDialog,
-                                    ),
-                                  ],
+                                  children: menuButtons,
                                 );
                               } else {
                                 return Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    _buildMenuButton(
-                                      icon: Icons.play_arrow,
-                                      label: startLabel,
-                                      color: startColor,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => GamePage(
-                                              isDebugEnabled: ScoreManager.debugEnabledNotifier.value,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildMenuButton(
-                                      icon: Icons.badge,
-                                      label: '選手登録',
-                                      color: Colors.indigo.shade900,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: _openPlayerRegistrationDialog,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildMenuButton(
-                                      icon: Icons.auto_stories,
-                                      label: '心得',
-                                      color: Colors.amber.shade900,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: _openGuideDialog,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildMenuButton(
-                                      icon: Icons.settings,
-                                      label: '設定',
-                                      color: Colors.blueGrey.shade900,
-                                      width: buttonWidth,
-                                      height: buttonHeight,
-                                      onPressed: _openSettingsDialog,
-                                    ),
+                                    for (int i = 0; i < menuButtons.length; i++) ...[
+                                      if (i > 0) const SizedBox(height: 12),
+                                      menuButtons[i],
+                                    ],
                                   ],
                                 );
                               }
@@ -796,6 +777,7 @@ class _TitleScreenState extends State<TitleScreen> {
   }
 
   Widget _buildMenuButton({
+    Key? buttonKey,
     required IconData icon,
     required String label,
     required Color color,
@@ -807,6 +789,7 @@ class _TitleScreenState extends State<TitleScreen> {
       width: width,
       height: height,
       child: ElevatedButton.icon(
+        key: buttonKey,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,

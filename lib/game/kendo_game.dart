@@ -20,6 +20,13 @@ enum KendoGameState {
 }
 
 class KendoGame extends FlameGame with KeyboardEvents {
+  KendoGame({
+    this.forceBossBattle = false,
+  });
+
+  /// デバッグ・検証用に連勝数に関わらず強制的にボス戦（師範戦）を開始するフラグ
+  final bool forceBossBattle;
+
   static const double stageWidth = 1280.0; // 1280x720 16:9 full background resolution
   static const double stageGroundY = 0.0; // Stage floor world Y coordinate
   static const double fighterGroundY = 250.0; // Target position Y = 250.0
@@ -47,7 +54,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   final p2WinsNotifier = ValueNotifier<int>(0);
   final p1NameNotifier = ValueNotifier<String>(ScoreManager.defaultPlayerName);
   final p2NameNotifier = ValueNotifier<String>(ScoreManager.defaultCpuNames.first);
-  final isBossBattleNotifier = ValueNotifier<bool>(false); // 10連勝時のボスバトル（師範戦）フラグ
+  final isBossBattleNotifier = ValueNotifier<bool>(false); // 10連勝時または検証時のボスバトル（師範戦）フラグ
   final overlayTextNotifier = ValueNotifier<String>('');
   final isPausedNotifier = ValueNotifier<bool>(false);
   final isDebugVisibleNotifier = ValueNotifier<bool>(false); // デバッグ座標表示（入/切）
@@ -150,7 +157,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     roundStartTimer = 0.0;
     overlayTextNotifier.value = currentRoundTitleText;
     p1.stopAllActions();
-    p2.stopAllActions();
+    p2.stopAllActions(); // 試合開始前のコール中は isInJodanStance = false (中段の構え)
     _syncFacingDirections();
   }
 
@@ -174,7 +181,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     world.add(stage);
 
     final initialP1Name = ScoreManager.playerNameNotifier.value;
-    final bossTriggered = ScoreManager.isBossMatchTriggered;
+    final bossTriggered = forceBossBattle || ScoreManager.isBossMatchTriggered;
     final initialNormalP2Name = ScoreManager.pickRandomCpuName();
     p1NameNotifier.value = initialP1Name;
 
@@ -345,9 +352,9 @@ class KendoGame extends FlameGame with KeyboardEvents {
     pendingIpponCallText = '';
     pendingMatchResultText = '';
 
-    // 自分の名前と相手の名前（10連勝達成時はボス「師範」、通常時は前回と連続しないランダム選択）を更新
+    // 自分の名前と相手の名前（強制ボス戦フラグまたは10連勝達成時はボス「師範」、通常時は前回と連続しないランダム選択）を更新
     final updatedP1Name = ScoreManager.playerNameNotifier.value;
-    final bossTriggered = ScoreManager.isBossMatchTriggered;
+    final bossTriggered = forceBossBattle || ScoreManager.isBossMatchTriggered;
     final previousNormalName = p2.isBoss ? null : p2.name;
     final updatedNormalP2Name =
         ScoreManager.pickRandomCpuName(previousName: previousNormalName);
@@ -426,6 +433,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
         isRoundStarting = false;
         roundStartTimer = 0.0;
         overlayTextNotifier.value = '';
+        // ゲーム開始（タイマースタート）と同時に、ボスは中段から「上段の構え」へ移行する
+        if (p2.isBoss) {
+          p2.isInJodanStance = true;
+        }
       }
       return;
     }

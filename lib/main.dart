@@ -35,9 +35,11 @@ class GamePage extends StatefulWidget {
   const GamePage({
     super.key,
     this.isDebugEnabled = false,
+    this.forceBossBattle = false,
   });
 
   final bool isDebugEnabled;
+  final bool forceBossBattle;
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -49,7 +51,7 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    game = KendoGame();
+    game = KendoGame(forceBossBattle: widget.forceBossBattle);
     game.isDebugVisibleNotifier.value = widget.isDebugEnabled;
   }
 
