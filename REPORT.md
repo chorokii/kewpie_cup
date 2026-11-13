@@ -1,29 +1,30 @@
-# 開発報告書: ボス（師範）の上段の構え角度修正および攻撃力50%（2回ヒットで一本）への変更
+# 開発報告書: ボス（師範）の立ち合い開始直後1〜2歩の中段維持・上段への滑らかな移行および攻撃力50%実装
 
 ## 1. 概要
-- ボス（師範）の待機・移動時における上段の構えの竹刀角度を修正し、剣先が持ち手（小手）より後ろ（背中側）へ下がるシルエットに変更しました。
-- ボス（師範）の1回あたりの攻撃ダメージを 50.0（体力の50%）に変更し、2回攻撃ヒットで一本となる仕様に更新しました。
+- 実際の剣道の立ち合い所作に合わせ、ボス（師範）が試合開始（タイマースタート）直後の最初の1〜2歩（`0.45秒間`）までは中段の構えを維持し、その後 `0.35秒` かけて「すっと」滑らかに上段の構え（剣先を持ち手より後方へ下げる姿勢）へ移行するように実装しました。
+- ボス（師範）の1回あたりの攻撃ダメージを `50.0`（体力の50%）とし、2回ヒットで一本となる仕様を適用しました。
 
 ---
 
 ## 2. 実施内容
-- lib/game/components/kendo_fighter.dart:
-  - ボス上段の構え（isBoss && isInJodanStance）における竹刀の角度を -1.05 から -1.75 に変更し、剣先が持ち手より後ろに下がるように修正。
-  - 上段からの攻撃予兆時の引き絞り角度を -1.45 から -2.05 に変更。
-- lib/game/kendo_game.dart:
-  - bossStrikeDamage = 50.0 定数を追加し、ボスの攻撃ヒット時にプレイヤーへ 50.0 ダメージ（2回で一本）を与えるように _checkAttack を更新。
-- test/widget_test.dart:
-  - ボスの攻撃が1回につき50.0ダメージを与え、2回ヒットで一本になることを検証する単体テストを追加。
-- CURRENT_CONTEXT.md:
-  - ボスの上段構え角度および攻撃ダメージ仕様を追記。
+- `lib/game/components/kendo_fighter.dart`:
+  - `activateBossJodanSequence()`、`jodanDelayTimer`（`0.45s`）、および `jodanTransitionProgress`（`0.35s` で `0.0` から `1.0` へ補間）を追加。
+  - `_drawKendoFighter` にて `lerpDouble` を用い、中段の小手位置 `(8.0, -60.0)`・角度 `0.0` から上段の小手位置 `(2.0, -84.0)`・角度 `-1.75`（剣先が持ち手より後ろ）へ滑らかに移行する描画を実装。
+- `lib/game/kendo_game.dart`:
+  - ラウンド開始コール終了（タイマースタート）時に `p2.activateBossJodanSequence()` を呼び出すように更新。
+  - `bossStrikeDamage = 50.0` によるボス打撃ダメージ（2回ヒットで一本）を適用。
+- `test/widget_test.dart`:
+  - タイマースタート直後の1〜2歩（`0.45s`）の中段維持、その後の滑らかな上段移行、およびボス攻撃2回ヒットで一本になることを検証するテストを更新・追加。
+- `CURRENT_CONTEXT.md`:
+  - ボスの立ち合い時の中段→上段移行仕様および攻撃力50%仕様を反映。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. lib/game/components/kendo_fighter.dart
-2. lib/game/kendo_game.dart
-3. test/widget_test.dart
-4. CURRENT_CONTEXT.md
+1. `lib/game/components/kendo_fighter.dart`
+2. `lib/game/kendo_game.dart`
+3. `test/widget_test.dart`
+4. `CURRENT_CONTEXT.md`
 
 ---
 
@@ -32,10 +33,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 3.3s)
+No issues found! (ran in 2.3s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:05 +39: All tests passed!
+00:04 +39: All tests passed!
 ```

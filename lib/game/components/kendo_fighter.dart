@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +39,15 @@ class KendoFighter extends PositionComponent {
   String name;
   final bool isPlayer;
   bool isBoss;
-  bool isInJodanStance = false; // ボス専用：試合開始後の上段の構えフラグ
+
+  // ボス専用：上段の構え移行制御
+  // 試合開始直後の最初の1〜2歩（0.45秒間）は中段を維持し、その後0.35秒かけてすっと上段へ移行する
+  bool isInJodanStance = false;
+  static const double jodanInitialChudanDuration = 0.45; // 試合開始後の中段維持時間（1〜2歩分）
+  static const double jodanTransitionDuration = 0.35; // 中段から上段へすっと移行する補間時間
+  double jodanDelayTimer = 0.0;
+  double jodanTransitionProgress = 0.0; // 0.0 (中段) ～ 1.0 (完全な上段)
+
   Color keikogiColor;
   Color ribbonColor;
   Color hakamaColor;
@@ -112,6 +121,8 @@ class KendoFighter extends PositionComponent {
   void configureAsBoss(bool bossMode, {required String normalName}) {
     isBoss = bossMode;
     isInJodanStance = false; // 試合開始前のコール中は常に中段の構えから開始
+    jodanDelayTimer = 0.0;
+    jodanTransitionProgress = 0.0;
     if (bossMode) {
       name = ScoreManager.bossName;
       scale = Vector2.all(bossScale); // 1.2倍サイズ (3.6)
@@ -129,6 +140,14 @@ class KendoFighter extends PositionComponent {
       doBandColor = const Color(0xFFFAFAFA); // 白胴帯
       walkSpeed = 160.0;
     }
+  }
+
+  /// ボス戦のラウンド開始（タイマースタート）時に呼び出し、1〜2歩目の中段維持後に上段へ移行するシーケンスを開始する
+  void activateBossJodanSequence() {
+    if (!isBoss) return;
+    isInJodanStance = false;
+    jodanDelayTimer = jodanInitialChudanDuration;
+    jodanTransitionProgress = 0.0;
   }
 
   void move(double directionInput) {
@@ -184,6 +203,8 @@ class KendoFighter extends PositionComponent {
     turnaroundTimer = 0.0;
     cpuVulnerableTimer = 0.0;
     isInJodanStance = false;
+    jodanDelayTimer = 0.0;
+    jodanTransitionProgress = 0.0;
   }
 
   void triggerJustGuardEffect() {
@@ -342,6 +363,8 @@ class KendoFighter extends PositionComponent {
     hitImpactEffectTimer = 0.0;
     currentBlinkDuration = 0.5;
     isInJodanStance = false;
+    jodanDelayTimer = 0.0;
+    jodanTransitionProgress = 0.0;
   }
 
   void resetMatch({required double startX}) {
@@ -371,6 +394,20 @@ class KendoFighter extends PositionComponent {
     if (hitImpactEffectTimer > 0) {
       hitImpactEffectTimer -= dt;
       if (hitImpactEffectTimer < 0) hitImpactEffectTimer = 0;
+    }
+
+    // ボス専用：試合開始後の1〜2歩目（0.45秒）は中段を維持し、その後0.35秒かけてすっと上段へ移行する
+    if (isBoss && !isPlayer) {
+      if (jodanDelayTimer > 0.0) {
+        jodanDelayTimer -= dt;
+        if (jodanDelayTimer <= 0.0) {
+          jodanDelayTimer = 0.0;
+          isInJodanStance = true;
+        }
+      } else if (isInJodanStance && jodanTransitionProgress < 1.0) {
+        jodanTransitionProgress =
+            (jodanTransitionProgress + dt / jodanTransitionDuration).clamp(0.0, 1.0);
+      }
     }
 
     // Handle Push-Back movement (鍔迫り合い突き飛ばし時の連続移動: 後退速度の1.5倍 = 480.0px/s)
@@ -637,11 +674,13 @@ class KendoFighter extends PositionComponent {
       // 「スキあり」（ジャスト防御された直後の体勢崩れ）時は上段が崩れて竹刀が下がる
       shinaiAngle = 0.25;
     } else if (isBoss && isInJodanStance) {
-      // ボス（師範）の上段の構え（タイマースタート後の待機・移動時：剣先を持ち手より後ろへ下げる）
-      kotePivotX = 2.0;
-      kotePivotY = -84.0 + stepBounce;
-      final moveSway = isMoving ? math.sin(walkAnimationTimer * 0.8) * 0.04 : 0.0;
-      shinaiAngle = -1.75 + moveSway;
+      // ボス（師範）の上段の構え（1〜2歩目の中段から jodanTransitionProgress 0.0->1.0 で「すっと」滑らかに上段へ移行）
+      final t = jodanTransitionProgress.clamp(0.0, 1.0);
+      kotePivotX = lerpDouble(8.0, 2.0, t)!;
+      kotePivotY = lerpDouble(-60.0, -84.0, t)! + stepBounce;
+      final chudanSway = isMoving ? math.sin(walkAnimationTimer * 0.8) * 0.05 : 0.0;
+      final jodanSway = isMoving ? math.sin(walkAnimationTimer * 0.8) * 0.04 : 0.0;
+      shinaiAngle = lerpDouble(chudanSway, -1.75 + jodanSway, t)!;
     } else if (isMoving) {
       shinaiAngle = math.sin(walkAnimationTimer * 0.8) * 0.05;
     }

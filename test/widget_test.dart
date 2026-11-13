@@ -695,8 +695,8 @@ void main() {
     });
   });
 
-  group('Boss Battle (10-win streak 師範戦: 1.2x scale, Jodan stance, and forceBossBattle) tests', () {
-    test('10-win streak triggers Boss Battle with 1.2x scale (3.6), Jodan stance after timer start, and 師範撃破！ on victory', () async {
+  group('Boss Battle (10-win streak 師範戦: 1.2x scale, 1-2 steps Chudan -> smooth Jodan, 50% damage, and forceBossBattle) tests', () {
+    test('10-win streak triggers Boss Battle with 1.2x scale (3.6), Chudan for first 1-2 steps then smooth Jodan transition, and 師範撃破！ on victory', () async {
       await ScoreManager.clearScore();
       for (int i = 0; i < 10; i++) {
         await ScoreManager.recordWin();
@@ -718,14 +718,31 @@ void main() {
       expect(game.p2.doBandColor, equals(const Color(0xFFFFD700)));
       expect(game.overlayTextNotifier.value, equals('師範戦！ はじめ！'));
 
-      // Before timer starts (during 1.2s pre-round banner), Boss is in Chudan stance (isInJodanStance == false)
+      // Before timer starts (during 1.2s pre-round banner), Boss is in Chudan stance
       expect(game.isRoundStarting, isTrue);
       expect(game.p2.isInJodanStance, isFalse);
 
-      // Advance 1.3s to start round timer -> Boss immediately transitions to Jodan stance (isInJodanStance == true)
+      // Advance 1.3s to start round timer -> Boss starts in Chudan stance for first 1-2 steps (0.45s delay)
       game.update(1.30);
       expect(game.isRoundStarting, isFalse);
+      expect(game.p2.isInJodanStance, isFalse);
+      expect(game.p2.jodanDelayTimer, closeTo(KendoFighter.jodanInitialChudanDuration, 0.01));
+
+      // Advance 0.25s (during first 1-2 steps) -> still in Chudan stance
+      game.update(0.25);
+      expect(game.p2.isInJodanStance, isFalse);
+      expect(game.p2.jodanTransitionProgress, equals(0.0));
+
+      // Advance another 0.30s (total 0.55s > 0.45s) -> Jodan stance activated, smoothly transitioning
+      game.update(0.30);
       expect(game.p2.isInJodanStance, isTrue);
+      expect(game.p2.jodanTransitionProgress, greaterThanOrEqualTo(0.0));
+      expect(game.p2.jodanTransitionProgress, lessThan(1.0));
+
+      // Advance another 0.40s -> Jodan transition completes smoothly at 1.0
+      game.update(0.40);
+      expect(game.p2.isInJodanStance, isTrue);
+      expect(game.p2.jodanTransitionProgress, equals(1.0));
 
       // Simulate Just Guard against Boss (1.1s vulnerable window)
       game.p1.position.x = -80.0;
@@ -744,7 +761,7 @@ void main() {
 
       // Simulate P1 winning 2nd round against Boss -> "師範撃破！ あなたの勝ち" and streak becomes 11 (next match returns to normal)
       game.p1.winCount = 1;
-      game.p2.health = 34.0;
+      game.p2.health = 0.0;
       game.p2.cpuVulnerableTimer = 1.1;
       game.p1.attack();
       game.p1.update(0.20);
@@ -767,6 +784,44 @@ void main() {
       expect(game.p2.name, isNot(equals('師範')));
 
       await ScoreManager.clearScore();
+    });
+
+    test('Boss attack deals 50.0 damage (50% health) per hit and scores Ippon in 2 hits', () async {
+      await ScoreManager.clearScore();
+      final game = KendoGame(forceBossBattle: true);
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // Hit 1 by Boss: P1 health 100.0 -> 50.0
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p1.facingDirection = FacingDirection.right;
+      game.p2.facingDirection = FacingDirection.left;
+      game.p2.attack(blinkDuration: 0.2);
+      game.p2.update(0.75); // 0.2s blink + 0.5s hold = 0.70s+ strike window
+      game.update(0.01);
+
+      expect(game.p1.health, equals(50.0));
+      expect(game.p2.winCount, equals(0));
+      expect(game.gameStateNotifier.value, equals(KendoGameState.playing));
+
+      // Clear hitStop & passThrough for Hit 2 by Boss: P1 health 50.0 -> 0.0 (Ippon!)
+      game.hitStopTimer = 0.0;
+      game.p1.stopAllActions();
+      game.p2.stopAllActions();
+      game.p1.hitStunTimer = 0.0;
+      game.p2.hitStunTimer = 0.0;
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p1.facingDirection = FacingDirection.right;
+      game.p2.facingDirection = FacingDirection.left;
+      game.p2.attack(blinkDuration: 0.2);
+      game.p2.update(0.75);
+      game.update(0.01);
+
+      expect(game.p1.health, equals(0.0));
+      expect(game.p2.winCount, equals(1));
+      expect(game.gameStateNotifier.value, equals(KendoGameState.roundOver));
     });
 
     test('forceBossBattle=true keeps Boss Battle active even at 0 streak and across resetMatch()', () async {

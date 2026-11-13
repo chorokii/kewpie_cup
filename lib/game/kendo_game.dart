@@ -434,9 +434,9 @@ class KendoGame extends FlameGame with KeyboardEvents {
         isRoundStarting = false;
         roundStartTimer = 0.0;
         overlayTextNotifier.value = '';
-        // ゲーム開始（タイマースタート）と同時に、ボスは中段から「上段の構え」へ移行する
+        // ゲーム開始（タイマースタート）時、ボスは最初の1〜2歩（0.45秒）は中段を維持し、そこからすっと上段へ移行する
         if (p2.isBoss) {
-          p2.isInJodanStance = true;
+          p2.activateBossJodanSequence();
         }
       }
       return;
