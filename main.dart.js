@@ -85943,11 +85943,11 @@ else r=s<0.38?-1.3+1.9*B.c.c3((s-0.18)/0.2,0,1):0.6
 q=d1}else{s=c8.a3
 if(c8.a2<s+0.5)if(c8.p3&&c8.p4){q=-88+d0
 d2=-2
-r=-1.45}else{q=d1
+r=-2.05}else{q=d1
 r=-1.3}else{q=d1
 r=0.6}}else if(!c8.p2&&c8.a4>0){q=d1
 r=0.25}else if(c8.p3&&c8.p4){q=-84+d0
-r=-1.05+(c8.x2?Math.sin(c8.xr*0.8)*0.04:0)
+r=-1.75+(c8.x2?Math.sin(c8.xr*0.8)*0.04:0)
 d2=2}else{r=c8.x2?Math.sin(c8.xr*0.8)*0.05:0
 q=d1}$.T()
 p=A.a3()
@@ -86544,7 +86544,7 @@ o.hZ=0.06
 o.mA=0.15
 o.h2=12
 q=b.aB
-b.Zl(34)
+b.Zl(a.p3?50:34)
 if(!(q<=0)?b.aB<=0:r)o.S3(a,b)
 else o.Th(a,b)}}}},
 S4(a,b,c){var s,r,q,p=this;++a.p
