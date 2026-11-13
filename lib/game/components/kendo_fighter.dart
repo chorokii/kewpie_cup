@@ -622,10 +622,10 @@ class KendoFighter extends PositionComponent {
         final totalWindup = currentBlinkDuration + postBlinkHoldDuration;
         if (attackTimer < totalWindup) {
           if (isBoss && isInJodanStance) {
-            // ボス上段の構えからの攻撃予兆：さらに頭上後方へ深く引き絞る
+            // ボス上段の構えからの攻撃予兆：剣先をさらに後方（背中側）へ深く引き絞る
             kotePivotX = -2.0;
             kotePivotY = -88.0 + stepBounce;
-            shinaiAngle = -1.45;
+            shinaiAngle = -2.05;
           } else {
             shinaiAngle = -1.3;
           }
@@ -637,11 +637,11 @@ class KendoFighter extends PositionComponent {
       // 「スキあり」（ジャスト防御された直後の体勢崩れ）時は上段が崩れて竹刀が下がる
       shinaiAngle = 0.25;
     } else if (isBoss && isInJodanStance) {
-      // ボス（師範）の上段の構え（タイマースタート後の待機・移動時：両手を頭上に掲げる）
+      // ボス（師範）の上段の構え（タイマースタート後の待機・移動時：剣先を持ち手より後ろへ下げる）
       kotePivotX = 2.0;
       kotePivotY = -84.0 + stepBounce;
       final moveSway = isMoving ? math.sin(walkAnimationTimer * 0.8) * 0.04 : 0.0;
-      shinaiAngle = -1.05 + moveSway;
+      shinaiAngle = -1.75 + moveSway;
     } else if (isMoving) {
       shinaiAngle = math.sin(walkAnimationTimer * 0.8) * 0.05;
     }

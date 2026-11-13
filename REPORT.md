@@ -1,43 +1,29 @@
-# 開発報告書: 10連勝ボスバトル（師範戦：1.2倍サイズ・上段の構え）およびボス戦検証用開始ボタンの実装
+# 開発報告書: ボス（師範）の上段の構え角度修正および攻撃力50%（2回ヒットで一本）への変更
 
 ## 1. 概要
-- 10連勝達成時（`streak > 0 && streak % 10 == 0`）または検証用ボタンから発動する「ボスバトル（師範戦）」を実装しました。
-- ボス（師範）の外見サイズを通常の1.2倍（`scale = 3.6`）とし、試合開始（タイマースタート）と同時に中段から「上段の構え」へ移行する描画・戦闘ロジックを実装しました。
-- タイトル画面に常時ボス戦を開始できる「ボス戦(検証)」ボタンを一時的に設置しました。
+- ボス（師範）の待機・移動時における上段の構えの竹刀角度を修正し、剣先が持ち手（小手）より後ろ（背中側）へ下がるシルエットに変更しました。
+- ボス（師範）の1回あたりの攻撃ダメージを 50.0（体力の50%）に変更し、2回攻撃ヒットで一本となる仕様に更新しました。
 
 ---
 
 ## 2. 実施内容
-- `lib/game/score/score_manager.dart`:
-  - `bossName = '師範'` および `isBossMatchTriggered` 判定ゲッターを追加。
-- `lib/game/components/kendo_fighter.dart`:
-  - ボス時の1.2倍サイズ（`bossScale = 3.6`）および装束設定を切り替える `configureAsBoss` メソッドを実装。
-  - 試合開始後に移行する「上段の構え（`isInJodanStance`）」の竹刀・小手位置描画、上段からの攻撃予兆モーション、および体勢崩れ時の構え解除を実装。
-- `lib/game/kendo_game.dart`:
-  - `forceBossBattle` フラグおよび `isBossBattleNotifier` を追加。
-  - ラウンド開始コール終了（タイマースタート）時に `p2.isInJodanStance = true` へ切り替える制御、専用宣告「師範戦！ はじめ！」・「師範撃破！ あなたの勝ち」、およびボスAIパラメータを実装。
-- `lib/main.dart`:
-  - `GamePage` に `forceBossBattle` パラメータを追加。
-- `lib/widgets/fighting_hud.dart`:
-  - ボス戦時の2P表記を `2P 師範 (BOSS)`（アンバー色）に更新。
-- `lib/screens/title_screen.dart`:
-  - メニューに「ボス戦(検証)」ボタンを追加（「心得」テキストは変更なし）。
-- `test/widget_test.dart`:
-  - 10連勝時のボスバトル発動、1.2倍スケール、タイマースタート時の上段構え移行、および「ボス戦(検証)」ボタンの動作テストを追加。
-- `CURRENT_CONTEXT.md`:
-  - ボスバトル仕様および検証ボタン仕様を追記。
+- lib/game/components/kendo_fighter.dart:
+  - ボス上段の構え（isBoss && isInJodanStance）における竹刀の角度を -1.05 から -1.75 に変更し、剣先が持ち手より後ろに下がるように修正。
+  - 上段からの攻撃予兆時の引き絞り角度を -1.45 から -2.05 に変更。
+- lib/game/kendo_game.dart:
+  - bossStrikeDamage = 50.0 定数を追加し、ボスの攻撃ヒット時にプレイヤーへ 50.0 ダメージ（2回で一本）を与えるように _checkAttack を更新。
+- test/widget_test.dart:
+  - ボスの攻撃が1回につき50.0ダメージを与え、2回ヒットで一本になることを検証する単体テストを追加。
+- CURRENT_CONTEXT.md:
+  - ボスの上段構え角度および攻撃ダメージ仕様を追記。
 
 ---
 
 ## 3. 修正ファイル一覧
-1. `lib/game/score/score_manager.dart`
-2. `lib/game/components/kendo_fighter.dart`
-3. `lib/game/kendo_game.dart`
-4. `lib/main.dart`
-5. `lib/widgets/fighting_hud.dart`
-6. `lib/screens/title_screen.dart`
-7. `test/widget_test.dart`
-8. `CURRENT_CONTEXT.md`
+1. lib/game/components/kendo_fighter.dart
+2. lib/game/kendo_game.dart
+3. test/widget_test.dart
+4. CURRENT_CONTEXT.md
 
 ---
 
@@ -46,10 +32,10 @@
 ### flutter analyze の実行結果
 ```bash
 Analyzing kewpie_cup...
-No issues found! (ran in 2.9s)
+No issues found! (ran in 3.3s)
 ```
 
 ### flutter test の実行結果
 ```bash
-00:05 +38: All tests passed!
+00:05 +39: All tests passed!
 ```
