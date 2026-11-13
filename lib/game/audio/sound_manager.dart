@@ -60,7 +60,17 @@ class SoundManager {
     }
   }
 
-  /// リソース解放
+  /// 画面遷移時等にAudioPlayerインスタンスを保持したまま再生中の効果音のみを停止する
+  static Future<void> stopAll() async {
+    try {
+      await _guardPlayer?.stop();
+      await _hitPlayer?.stop();
+    } catch (e) {
+      debugPrint('SoundManager stopAll warning: $e');
+    }
+  }
+
+  /// アプリ終了時等の完全リソース解放
   static void dispose() {
     try {
       _guardPlayer?.dispose();

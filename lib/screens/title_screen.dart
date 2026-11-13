@@ -695,7 +695,7 @@ class _TitleScreenState extends State<TitleScreen> {
                           // Menu Choice Buttons: 横画面時は横並び、縦画面時は縦並び（4ボタン構成）
                           ValueListenableBuilder<int>(
                             valueListenable: ScoreManager.streakNotifier,
-                            builder: (context, _, _) {
+                            builder: (context, streak, __) {
                               final isBossReady = ScoreManager.isBossMatchTriggered;
                               final startLabel = isBossReady ? 'ボス戦開始' : '試合開始';
                               final startColor = isBossReady

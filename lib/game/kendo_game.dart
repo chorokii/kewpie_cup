@@ -229,7 +229,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
 
   @override
   void onRemove() {
-    SoundManager.dispose();
+    // AudioPlayerインスタンスを破棄せず、再生中の音声のみを停止して次回遷移時の再初期化負荷を防ぐ
+    SoundManager.stopAll();
     super.onRemove();
   }
 

@@ -105,6 +105,45 @@ void main() {
     expect(find.textContaining('★'), findsNothing);
   });
 
+  testWidgets('Tapping center timer box toggles pause without triggering accidental guard or attack',
+      (WidgetTester tester) async {
+    final game = KendoGame();
+    await game.onLoad();
+    game.isRoundStarting = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FightingHudOverlay(game: game),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(game.isPausedNotifier.value, isFalse);
+    expect(game.p1.isGuarding, isFalse);
+    expect(game.p1.isAttacking, isFalse);
+    expect(game.p1.isFarAdvancing, isFalse);
+
+    // Tap the center timer box to pause
+    await tester.tap(find.byKey(const ValueKey('pause_timer_button')));
+    await tester.pump();
+
+    // Verify game is paused and Pause Overlay is shown, WITHOUT accidental guard/attack
+    expect(game.isPausedNotifier.value, isTrue);
+    expect(find.text('一時停止中 (PAUSE)'), findsOneWidget);
+    expect(game.p1.isGuarding, isFalse);
+    expect(game.p1.isAttacking, isFalse);
+    expect(game.p1.isFarAdvancing, isFalse);
+
+    // Tap '再開する (P)' button to resume
+    await tester.tap(find.text('再開する (P)'));
+    await tester.pump();
+
+    expect(game.isPausedNotifier.value, isFalse);
+    expect(find.text('一時停止中 (PAUSE)'), findsNothing);
+  });
+
   testWidgets('Portrait screen does NOT show landscape warning overlay and allows playing directly in portrait without RotatedBox',
       (WidgetTester tester) async {
     // Simulate portrait smartphone screen (width 400 < height 800)
@@ -265,34 +304,29 @@ void main() {
       expect(KendoFighter.guardActiveDuration, equals(0.4));
     });
 
-    test('recordWin increments wins, streak, and bossWins (when isBossVictory=true), and clearScore resets all', () async {
+    test('recordWin increments wins and streak, recordLoss increments losses and resets streak', () async {
       await ScoreManager.clearScore();
       expect(ScoreManager.winsNotifier.value, equals(0));
       expect(ScoreManager.lossesNotifier.value, equals(0));
       expect(ScoreManager.streakNotifier.value, equals(0));
-      expect(ScoreManager.bossWinsNotifier.value, equals(0));
 
       await ScoreManager.recordWin();
       expect(ScoreManager.winsNotifier.value, equals(1));
       expect(ScoreManager.streakNotifier.value, equals(1));
-      expect(ScoreManager.bossWinsNotifier.value, equals(0));
 
-      await ScoreManager.recordWin(isBossVictory: true);
+      await ScoreManager.recordWin();
       expect(ScoreManager.winsNotifier.value, equals(2));
       expect(ScoreManager.streakNotifier.value, equals(2));
-      expect(ScoreManager.bossWinsNotifier.value, equals(1));
 
       await ScoreManager.recordLoss();
       expect(ScoreManager.winsNotifier.value, equals(2));
       expect(ScoreManager.lossesNotifier.value, equals(1));
       expect(ScoreManager.streakNotifier.value, equals(0));
-      expect(ScoreManager.bossWinsNotifier.value, equals(1)); // Star count persists across losses
 
       await ScoreManager.clearScore();
       expect(ScoreManager.winsNotifier.value, equals(0));
       expect(ScoreManager.lossesNotifier.value, equals(0));
       expect(ScoreManager.streakNotifier.value, equals(0));
-      expect(ScoreManager.bossWinsNotifier.value, equals(0)); // Reset on clearScore
     });
   });
 

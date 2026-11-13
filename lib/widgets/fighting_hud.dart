@@ -19,6 +19,9 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
   int _lastGuardTapTime = 0;
   static const int _doubleTapThresholdMs = 300;
 
+  /// 上部HUD領域（タイマー・ポーズボタン等）のタップで攻撃・防御が暴発しないための除外高さ
+  static const double _topHudExclusionHeight = 80.0;
+
   void _handleGuardSideInputDown() {
     final now = DateTime.now().millisecondsSinceEpoch;
     final timeDiff = now - _lastGuardTapTime;
@@ -47,6 +50,13 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                 child: Listener(
                   behavior: HitTestBehavior.translucent,
                   onPointerDown: (event) {
+                    // ポーズ中や試合終了時、または上部HUD領域（中央タイマー/ポーズボタン等）のタップ時は攻撃・防御を発動しない
+                    if (widget.game.isPausedNotifier.value ||
+                        widget.game.gameStateNotifier.value == KendoGameState.matchOver ||
+                        event.localPosition.dy < _topHudExclusionHeight) {
+                      return;
+                    }
+
                     final isTouchOnLeft = event.localPosition.dx < hudWidth / 2;
                     final isEnemyOnRight = widget.game.p1.position.x < widget.game.p2.position.x;
 
@@ -161,28 +171,45 @@ class _FightingHudOverlayState extends State<FightingHudOverlay> {
                       ),
                     ),
 
-                    // Center Timer / VS Emblem (30-second countdown)
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade900,
-                        border: Border.all(color: Colors.amber, width: 2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: ValueListenableBuilder<int>(
-                        valueListenable: widget.game.roundTimerNotifier,
-                        builder: (context, seconds, _) {
-                          return Text(
-                            seconds.toString().padLeft(2, '0'),
-                            style: const TextStyle(
-                              color: Colors.amberAccent,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
+                    // Center Timer & Pause Button (タップで一時停止)
+                    GestureDetector(
+                      key: const ValueKey('pause_timer_button'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: widget.game.togglePause,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade900,
+                          border: Border.all(color: Colors.amber, width: 2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ValueListenableBuilder<int>(
+                              valueListenable: widget.game.roundTimerNotifier,
+                              builder: (context, seconds, _) {
+                                return Text(
+                                  seconds.toString().padLeft(2, '0'),
+                                  style: const TextStyle(
+                                    color: Colors.amberAccent,
+                                    fontSize: 18,
+                                    height: 1.0,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
+                            const SizedBox(height: 2),
+                            const Icon(
+                              Icons.pause,
+                              color: Colors.white70,
+                              size: 12,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
