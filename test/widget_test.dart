@@ -843,6 +843,38 @@ void main() {
   });
 
   group('Pass-Through and Turnaround action tests', () {
+    test('Pass-through CPU attack is allowed once, then suppressed by cooldown until normal Just Guard resets it', () async {
+      await ScoreManager.clearScore();
+      final game = KendoGame();
+      await game.onLoad();
+      game.isRoundStarting = false;
+
+      // Simulate P1 in pass-through near P2 while cooldown is true -> CPU must NOT start attack
+      game.p1.position.x = -50.0;
+      game.p2.position.x = 50.0;
+      game.p1.isPassingThrough = true;
+      game.p1.passThroughTargetX = 300.0;
+      game.isPassThroughAttackOnCooldown = true;
+
+      for (int i = 0; i < 20; i++) {
+        game.cpuDecisionTimer = 0.25;
+        game.update(0.01);
+        expect(game.p2.isAttacking, isFalse);
+      }
+
+      // When P1 finishes pass-through and successfully Just Guards a normal CPU attack, cooldown resets to false
+      game.p1.isPassingThrough = false;
+      game.p1.isTurningAround = false;
+      game.p1.position.x = -80.0;
+      game.p2.position.x = 80.0;
+      game.p1.startGuard();
+      game.p2.attack(blinkDuration: 0.5);
+      game.p2.update(1.05);
+      game.update(0.01);
+
+      expect(game.isPassThroughAttackOnCooldown, isFalse);
+    });
+
     test('Attack triggers pass-through even when defender is cornered near stage edge', () async {
       final game = KendoGame();
       await game.onLoad();

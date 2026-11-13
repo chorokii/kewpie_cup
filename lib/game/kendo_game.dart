@@ -96,6 +96,10 @@ class KendoGame extends FlameGame with KeyboardEvents {
   double cpuGuardTimer = 0.0;
   double cpuTsubazeriaiTimer = 0.0;
 
+  /// すれ違い時のCPU攻撃（すれ違いカウンター）の連発防止フラグ
+  /// true の間は、プレイヤーがすれ違い・振り返り中にCPUが連続して攻撃を開始しないよう制限する
+  bool isPassThroughAttackOnCooldown = false;
+
   /// 試合中（playing）かつラウンド開始演出中やポーズ中でない場合のみ操作を受け付ける
   bool get _canControlP1 =>
       !isPausedNotifier.value &&
@@ -156,6 +160,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
   void startRoundSequence() {
     isRoundStarting = true;
     roundStartTimer = 0.0;
+    isPassThroughAttackOnCooldown = false;
     overlayTextNotifier.value = currentRoundTitleText;
     p1.stopAllActions();
     p2.stopAllActions(); // 試合開始前のコール中は isInJodanStance = false (中段の構え)
@@ -352,6 +357,7 @@ class KendoGame extends FlameGame with KeyboardEvents {
     matchOverResultTimer = 0.0;
     pendingIpponCallText = '';
     pendingMatchResultText = '';
+    isPassThroughAttackOnCooldown = false;
 
     // 自分の名前と相手の名前（強制ボス戦フラグまたは10連勝達成時はボス「師範」、通常時は前回と連続しないランダム選択）を更新
     final updatedP1Name = ScoreManager.playerNameNotifier.value;
@@ -680,6 +686,8 @@ class KendoGame extends FlameGame with KeyboardEvents {
           // 通常CPUは1.5秒、ボス（師範）は1.1秒の反撃チャンス
           attacker.cpuVulnerableTimer = attacker.isBoss ? 1.1 : 1.5;
           defender.hitStunTimer = 0.15;
+          // 通常の正対した攻防（ジャスト防御成功）を経た場合は、すれ違い攻撃のクールダウンを解除する
+          isPassThroughAttackOnCooldown = false;
         } else {
           // Player failed to guard -> Men strike hits Player! Play Hit SE!
           SoundManager.playHit();
@@ -752,6 +760,17 @@ class KendoGame extends FlameGame with KeyboardEvents {
         return;
       }
 
+      // プレイヤーがすれ違い移動中または振り返り中かどうかを判定
+      final isPlayerPassingOrTurning = p1.isPassingThrough || p1.isTurningAround;
+
+      // 直前にすれ違い中の攻撃（すれ違いカウンター）を行っていた場合、
+      // 連発を防ぐため、今回のすれ違い・振り返りが終わるまではCPUは行動せず待機する
+      if (isPlayerPassingOrTurning && isPassThroughAttackOnCooldown) {
+        p2.stop();
+        p2.stopGuard();
+        return;
+      }
+
       if (dist > 240.0) { // Scaled 3x (80.0 -> 240.0)
         // Approach player
         if (p2.position.x > p1.position.x) {
@@ -774,6 +793,11 @@ class KendoGame extends FlameGame with KeyboardEvents {
                 : KendoFighter.cpuBlinkDurations;
             final chosenBlink = blinkDurations[_random.nextInt(blinkDurations.length)];
             p2.attack(blinkDuration: chosenBlink);
+
+            // プレイヤーのすれ違い・振り返り中に攻撃を開始した場合、クールダウンを有効化して連発を防止する
+            if (isPlayerPassingOrTurning) {
+              isPassThroughAttackOnCooldown = true;
+            }
           } else if (rand < guardThreshold) {
             p2.startGuard();
             cpuGuardTimer = 0.35;
